@@ -177,6 +177,21 @@ The practical pattern is:
 
 This keeps the wiki discoverable without requiring the human to restate the same instruction repeatedly.
 
+## Private Content Boundary
+
+This public repository is only the scaffold.
+
+It should not contain your private personal knowledge or private project knowledge.
+
+Recommended setup:
+
+- keep this repository public as the framework
+- keep the actual personal/project wiki in a separate private vault or private repository
+- copy the bootstrap templates into each private project workspace
+- let the private vault point back to this scaffold for conventions and prompts
+
+This is the cleanest way to open-source the system without open-sourcing the content.
+
 ## Supported Ingest Formats
 
 Direct text extraction is currently supported for:
