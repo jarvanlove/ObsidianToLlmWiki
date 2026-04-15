@@ -161,6 +161,7 @@ bootstrap 至少要声明这些信息：
 
 如果你愿意，我已经把标准模板整理成：
 
+- `30_shared/prompts/项目首次接入提示词.md`
 - `30_shared/prompts/项目接入提示词.md`
 - `30_shared/prompts/项目启动清单.md`
 
