@@ -1,13 +1,13 @@
 # Private Vault Initialization Checklist
 
-Use this checklist to create `ObsidianToWiki-private` as your real working vault.
+Use this checklist to create your own private vault as your real working vault.
 
 ## 1. Create the private vault
 
 Create a private repository or private folder named something like:
 
 ```text
-ObsidianToWiki-private/
+ObsidianToWiki-private/  (example)
 ```
 
 Keep it separate from the public scaffold repo.
@@ -53,7 +53,7 @@ Create private root bootstrap files:
 - `AGENTS.md`
 - `CLAUDE.md`
 
-These should point to the private vault root and the private project pages.
+These should point to your private vault root and the private project pages.
 
 ## 5. Create the first working indexes
 
@@ -84,7 +84,7 @@ For each real project, create:
 
 ## 7. Wire agent startup
 
-Make the project workspace bootstrap point back to the private vault.
+Make the project workspace bootstrap point back to your private vault.
 
 The agent should read the workspace bootstrap before touching the project.
 

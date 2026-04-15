@@ -172,7 +172,7 @@ The practical pattern is:
 
 - each project workspace carries a tiny `AGENTS.md` / `CLAUDE.md` bootstrap
 - that bootstrap points to the central wiki root and current project page
-- the bootstrap must live in the project repository root and must name the private vault path explicitly
+- the bootstrap must live in the project repository root and must name your private vault path explicitly
 - the agent reads that bootstrap at task start
 - the agent then opens the relevant project wiki pages automatically
 
@@ -187,9 +187,9 @@ It should not contain your private personal knowledge or private project knowled
 Recommended setup:
 
 - keep this repository public as the framework
-- keep the actual personal/project wiki in a separate private vault or private repository
+- keep the actual personal/project wiki in your own separate private vault or private repository
 - copy the bootstrap templates into each private project workspace
-- let the private vault point back to this scaffold for conventions and prompts
+- let your private vault point back to this scaffold for conventions and prompts
 
 Framework changes happen here; private content stays in the private vault.
 
