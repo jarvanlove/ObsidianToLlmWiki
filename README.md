@@ -172,6 +172,7 @@ The practical pattern is:
 
 - each project workspace carries a tiny `AGENTS.md` / `CLAUDE.md` bootstrap
 - that bootstrap points to the central wiki root and current project page
+- the bootstrap must live in the project repository root and must name the private vault path explicitly
 - the agent reads that bootstrap at task start
 - the agent then opens the relevant project wiki pages automatically
 

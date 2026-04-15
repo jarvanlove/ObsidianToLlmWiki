@@ -146,6 +146,9 @@ ObsidianToWiki/
 1. 在每个项目工作区放一个最小 bootstrap。
 2. 让 agent 在任务开始时自动读取这个 bootstrap，再去打开中心 wiki。
 
+这个 bootstrap 必须放在项目仓库根目录，并且明确写出私有 vault 的绝对路径。
+否则 agent 只能看到当前项目仓库，无法知道应该把知识写到哪里。
+
 bootstrap 至少要声明这些信息：
 
 - `wiki_root`
