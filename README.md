@@ -164,6 +164,19 @@ Recommended backlinks:
 
 The goal is not maximal linking. The goal is that any page can lead back to the project spine without becoming isolated.
 
+## Agent Bootstrapping
+
+The wiki is not meant to depend on a manual reminder in every session.
+
+The practical pattern is:
+
+- each project workspace carries a tiny `AGENTS.md` / `CLAUDE.md` bootstrap
+- that bootstrap points to the central wiki root and current project page
+- the agent reads that bootstrap at task start
+- the agent then opens the relevant project wiki pages automatically
+
+This keeps the wiki discoverable without requiring the human to restate the same instruction repeatedly.
+
 ## Supported Ingest Formats
 
 Direct text extraction is currently supported for:

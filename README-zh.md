@@ -137,6 +137,31 @@ ObsidianToWiki/
 
 这样做的目的不是“链接越多越好”，而是让你从任意一页都能顺着链接回到项目主干，不会陷在孤立页面里。
 
+## 怎么让 Agent 自动找到 wiki
+
+你担心的点是对的：如果每次都要手工提醒，wiki 就只是“辅助笔记”，还不是“项目记忆系统”。
+
+正确做法是两层：
+
+1. 在每个项目工作区放一个最小 bootstrap。
+2. 让 agent 在任务开始时自动读取这个 bootstrap，再去打开中心 wiki。
+
+bootstrap 至少要声明这些信息：
+
+- `wiki_root`
+- `project_slug`
+- `project_index`
+- `project_overview`
+- `project_tasks`
+
+这样一来，Codex / Claude Code 不需要你每次都口头提醒“记得用 wiki”，它们只要按工作区规则启动，就会自己找到对应项目页。
+
+如果你愿意，我已经把标准模板整理成：
+
+- `30_shared/prompts/项目接入提示词.md`
+
+这个模板就是以后复制到新项目工作区的起点。
+
 ## 这套系统当前已经完成什么
 
 已经完成：
