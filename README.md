@@ -192,6 +192,8 @@ Recommended setup:
 
 This is the cleanest way to open-source the system without open-sourcing the content.
 
+See also: [docs/private-vault-setup.md](docs/private-vault-setup.md)
+
 ## Supported Ingest Formats
 
 Direct text extraction is currently supported for:
