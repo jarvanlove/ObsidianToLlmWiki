@@ -190,6 +190,8 @@ Recommended setup:
 - copy the bootstrap templates into each private project workspace
 - let the private vault point back to this scaffold for conventions and prompts
 
+Framework changes happen here; private content stays in the private vault.
+
 This is the cleanest way to open-source the system without open-sourcing the content.
 
 See also: [docs/private-vault-setup.md](docs/private-vault-setup.md)

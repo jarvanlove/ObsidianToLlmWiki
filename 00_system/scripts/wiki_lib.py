@@ -12,6 +12,7 @@ LOG_PATH = VAULT_ROOT / "log.md"
 EXCLUDED_PARTS = {
     ".obsidian",
     "__pycache__",
+    "docs",
 }
 
 EXCLUDED_PATH_SNIPPETS = (

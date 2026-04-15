@@ -33,6 +33,7 @@ PrivateVault/
 5. For each project workspace, add a minimal `AGENTS.md` and `CLAUDE.md` bootstrap.
 6. Point those bootstrap files at the private vault root.
 7. Let Codex / Claude Code read the bootstrap first, then open the project wiki pages.
+8. Use [docs/private-vault-initialization-checklist.md](docs/private-vault-initialization-checklist.md) as the exact build order.
 
 ## What to Copy
 
@@ -44,6 +45,11 @@ Copy these from the public scaffold:
 - prompts
 - conventions
 - startup checklists
+
+For root bootstrap files, use:
+
+- [docs/templates/private-AGENTS.md](docs/templates/private-AGENTS.md)
+- [docs/templates/private-CLAUDE.md](docs/templates/private-CLAUDE.md)
 
 ## What Not to Copy
 

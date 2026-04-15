@@ -207,6 +207,8 @@ bootstrap 至少要声明这些信息：
 4. 只把框架更新从公开仓库同步过去
 5. 不要把真实个人笔记、项目源文件、项目文档同步回公开仓库
 
+更具体的执行顺序见 [docs/private-vault-initialization-checklist.md](docs/private-vault-initialization-checklist.md)。
+
 更完整的落地步骤见 [docs/private-vault-setup.md](docs/private-vault-setup.md)。
 
 ## 这套系统当前已经完成什么
