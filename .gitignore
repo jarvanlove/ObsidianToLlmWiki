@@ -1,5 +1,6 @@
 .obsidian/workspace.json
 .obsidian/workspaces.json
+.obsidian/graph.json
 .trash/
 __pycache__/
 .DS_Store
@@ -7,3 +8,7 @@ __pycache__/
 .smtcmp_vector_db.tar.gz
 Thumbs.db
 desktop.ini
+40_outputs/analyses/知识库体检-*.md
+docs/plans/version-status.md
+docs/plans/version-closure-report.md
+docs/plans/2026-04-16-version-closure-checklist.md

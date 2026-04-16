@@ -2,7 +2,7 @@
 title: ObsidianToWiki v2 Design
 status: draft
 updated: 2026-04-16
-summary: 基于 llm_wiki 与 Hermes Agent 思路，对 ObsidianToWiki 的自学习、自进化、快速接入和跨项目记忆能力进行升级设计。
+summary: 基于 llm-wiki 与 Hermes Agent 思路，对 ObsidianToWiki 的自学习、自进化、快速接入和跨项目记忆能力进行升级设计。
 ---
 
 # ObsidianToWiki v2 Design
@@ -28,7 +28,7 @@ ObsidianToWiki 当前已经具备可用的本地 wiki 脚手架：
 
 这次 v2 设计同时吸收两条上游思路：
 
-- `llm_wiki`：强调原始资料、wiki 页面、索引/日志、frontmatter、wikilinks、ingest/query/lint 的长期维护框架。
+- `llm-wiki`：强调原始资料、wiki 页面、索引/日志、frontmatter、wikilinks、ingest/query/lint 的长期维护框架。
 - `Hermes Agent`：强调上下文文件接入、长期记忆、技能生成、会话后学习、自我改进的闭环。
 
 ## 2. Design Goals
@@ -387,5 +387,4 @@ python 00_system/scripts/attach_project.py --repo-root /path/to/repo --project d
 ## References
 
 - Karpathy `llm-wiki`: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
-- Nash Su `llm_wiki`: https://github.com/nashsu/llm_wiki/blob/main/README_CN.md
 - Nous Research `Hermes Agent`: https://github.com/NousResearch/hermes-agent

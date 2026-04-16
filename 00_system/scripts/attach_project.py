@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import json
 import os
 import subprocess
@@ -148,11 +147,24 @@ def main() -> None:
     project_slug = slugify(project_name)
     tags = normalize_tags(args.tags)
 
-    os.environ["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
-    create_page_module = importlib.import_module("create_page")
-    create_page_module = importlib.reload(create_page_module)
-    ensure_project_fn = create_page_module.ensure_project
-    ensure_project_fn(project_name=project_name, tags=tags, status="活跃", summary=f"{project_name} 的项目知识库。")
+    env = dict(os.environ)
+    env["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
+    subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT_DIR / "create_page.py"),
+            "--title",
+            project_name,
+            "--type",
+            "项目",
+            "--tags",
+            ",".join(tags),
+            "--summary",
+            f"{project_name} 的项目知识库。",
+        ],
+        check=True,
+        env=env,
+    )
 
     write_text(repo_root / "wiki.context.json", render_context(repo_root, wiki_root, project_slug))
     bootstrap = render_bootstrap("AGENTS.md", repo_root, wiki_root, project_slug)
@@ -173,8 +185,6 @@ def main() -> None:
         f"接入 {project_name}",
         f"repo_root: {repo_root} | wiki_root: {wiki_root} | project_slug: {project_slug}",
     )
-    env = dict(os.environ)
-    env["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
     subprocess.run([sys.executable, str(SCRIPT_DIR / "rebuild_indexes.py")], check=True, env=env)
     print(repo_root / "wiki.context.json")
 

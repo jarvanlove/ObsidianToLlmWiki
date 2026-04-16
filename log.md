@@ -3,7 +3,7 @@
 ## [2026-04-16T13:19:31] 更新 | 补充方法论来源并新增 v2 设计文档
 
 - actor: agent
-- details: 更新 README.md、README-zh.md，并新增 docs/plans/2026-04-16-obsidiantowiki-v2-design.md，纳入 llm_wiki 与 Hermes Agent 的改造设计。
+- details: 更新 README.md、README-zh.md，并新增 docs/plans/2026-04-16-obsidiantowiki-v2-design.md，纳入 llm-wiki 与 Hermes Agent 的改造设计。
 
 ## [2026-04-16T13:26:22] 更新 | 新增项目快速接入协议与跨项目主干页
 

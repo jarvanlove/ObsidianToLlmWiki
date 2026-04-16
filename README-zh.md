@@ -1,309 +1,434 @@
 # ObsidianToWiki
 
-面向 Obsidian 的 LLM 持续维护型个人与项目知识库脚手架。
+面向 Obsidian 的 LLM 持续维护型知识系统脚手架。
 
-英文版见 [README.md](README.md)。
+这份 README 负责讲清楚 4 件事：
 
-## 这是什么
+1. 这套系统是干什么的
+2. 架构设计是什么
+3. 完整目录结构是什么
+4. 每份入口文档分别负责什么
 
-ObsidianToWiki 的目标不是做一次性问答，而是让 LLM 把原始资料逐步整理成一个持续维护的 Wiki。
+## 这套系统是干什么的
 
-这套脚手架的方法论来源于 Nash Su 开源的 `llm_wiki`，而 `llm_wiki` 又是在实现 Andrej Karpathy 提出的 `llm-wiki` 方法：
+这套系统的目标不是做一次性问答，而是把：
 
-- Karpathy 方法论原文：https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+- 原始资料
+- 项目过程记忆
+- 可复用经验
+- 有价值的分析结论
 
-它服务两类知识：
+持续沉淀成一个可长期维护的本地 wiki。
+
+它同时服务两个方向：
 
 - 个人长期知识
 - 项目级现场记忆
 
-核心分层是：
+## 公开仓库和私有仓库的关系
 
-- 原始资料层
-- Wiki 页面层
-- Agent 规则与自动化层
+建议把系统拆成两部分：
 
-ObsidianToWiki 继承了这条方法论链路里的几个核心原则：
+1. `ObsidianToWiki`
+   当前这个公开仓库，负责脚手架、脚本、模板、规则、文档。
+2. `ObsidianToWiki-private`
+   你的私有知识库，负责存放真实的个人知识、项目知识、原始资料和沉淀结果。
 
-- 原始资料不可随意改写
-- Wiki 页面由 LLM 持续维护
-- `index.md` 负责导航，`log.md` 负责记录演化
-- 用 frontmatter 和双向链接维持结构化知识网络
-- 人负责判断价值，Agent 负责整理、链接、更新和回写
+所以：
 
-当前这个仓库不是桌面应用，而是一个更轻量、Obsidian 优先、便于在任意项目工作区快速接入的本地知识脚手架。
+- 当前仓库负责“系统怎么工作”
+- 私有仓库负责“你的真实内容”
 
-## 目录结构
+它们不是自动双向同步。
+
+当前支持的是：
+
+- 公开脚手架同步到私有库
+- 私有内容不自动回写到公开仓库
+
+## 这套系统解决什么问题
+
+它主要解决 4 个问题：
+
+1. 资料收进来了，但没人持续整理
+2. 项目上下文容易丢，换个会话就断
+3. 有价值的问答只停留在聊天窗口
+4. 一个项目里踩过的坑，另一个项目还会重踩
+
+## 架构设计
+
+这套系统可以理解成 3 层架构。
+
+### 1. 输入层
+
+这一层负责接住原始输入：
+
+- 原始文件
+- 剪藏
+- 临时材料
+
+它对应：
+
+- `01_inbox/`
+- 项目内 `sources/`
+- 项目内 `source-notes/`
+
+### 2. 记忆层
+
+这一层负责长期沉淀结构化知识：
+
+- `10_personal/` 个人知识
+- `20_projects/` 项目知识
+- `30_shared/` 共享知识
+- `40_outputs/` 输出沉淀
+
+这一层才是系统真正的“知识主体”。
+
+### 3. 自动化层
+
+这一层负责维护系统运转：
+
+- 创建页面
+- 摄入资料
+- 接入项目
+- 搜索召回
+- 回写沉淀
+- 体检治理
+- 同步私有库
+
+它对应：
+
+- `00_system/scripts/`
+- `00_system/templates/`
+- `00_system/registry/`
+
+整个系统的工作模型是：
+
+- 人负责判断价值和边界
+- agent 负责整理、链接、回写、维护
+- Markdown 页面仍然是最终事实来源
+
+## 完整目录结构
 
 ```text
 ObsidianToWiki/
+├─ .obsidian/                         Obsidian 本地配置
 ├─ 00_system/
-│  ├─ scripts/     Python 核心逻辑 + `.ps1` / `.sh` 包装脚本
-│  └─ templates/   页面模板
+│  ├─ registry/                      schema、注册表、同步清单
+│  ├─ scripts/                       自动化脚本
+│  └─ templates/                     页面模板
 ├─ 01_inbox/
-│  ├─ raw/         原始资料
-│  ├─ clips/       收集箱来源笔记
-│  └─ scratch/     临时工作材料
+│  ├─ clips/                         尚未完全沉淀的来源笔记
+│  ├─ raw/                           原始资料
+│  └─ scratch/                       临时材料
 ├─ 10_personal/
-│  ├─ areas/       长期领域
-│  ├─ concepts/    概念
-│  ├─ entities/    实体
-│  ├─ syntheses/   综合整理页
-│  └─ 索引.md
+│  └─ 索引.md                         个人知识入口
 ├─ 20_projects/
-│  ├─ active/      进行中的项目
-│  │  └─ <project>/
-│  │     ├─ notes/
-│  │     ├─ source-notes/
-│  │     ├─ sources/
-│  │     ├─ 概览.md
-│  │     ├─ 架构.md
-│  │     ├─ 决策.md
-│  │     ├─ 经验.md
-│  │     ├─ 来源.md
-│  │     ├─ 任务.md
-│  │     └─ 索引.md
-│  ├─ archive/     已归档项目
-│  │  └─ <project>/...
-│  └─ 索引.md
+│  ├─ active/                        进行中的项目子 wiki
+│  ├─ archive/                       归档项目
+│  ├─ 关系索引.md                     跨项目关系索引
+│  └─ 索引.md                         项目知识入口
 ├─ 30_shared/
-│  ├─ architectures/  可复用架构
-│  ├─ patterns/       可复用模式
-│  ├─ prompts/        可复用提示词
-│  ├─ tools/          工具记录
-│  └─ 索引.md
+│  ├─ architectures/                 可复用架构
+│  ├─ patterns/                      可复用模式
+│  ├─ prompts/                       可复用提示词
+│  ├─ tools/                         工具说明
+│  └─ 索引.md                         共享知识入口
 ├─ 40_outputs/
-│  ├─ analyses/      分析结果
-│  ├─ briefings/     简报与摘要
-│  └─ 索引.md
-├─ 90_archive/       归档
-├─ Home.md         人工入口页
-├─ index.md        总索引
-├─ log.md          操作日志
-├─ AGENTS.md       Codex 规则
-├─ CLAUDE.md       Claude Code 规则
-├─ README.md       英文开源首页
-├─ README-zh.md    中文说明
-├─ 使用手册.md     日常使用说明
-└─ 会话启动页.md   可直接复制给 Agent 的会话模板
+│  ├─ analyses/                      分析沉淀
+│  ├─ briefings/                     简报和摘要
+│  ├─ reflections/                   学习候选和反思
+│  └─ 索引.md                         输出入口
+├─ 90_archive/                       低频但保留检索价值的内容
+├─ docs/
+│  ├─ plans/                         设计文档和背景方案
+│  └─ templates/                     根入口和 bootstrap 模板
+├─ AGENTS.md                         当前公开脚手架给 Codex 的规则
+├─ CHANGELOG.md                      开源仓库版本记录
+├─ CLAUDE.md                         当前公开脚手架给 Claude Code 的规则
+├─ CONTRIBUTING.md                   开源协作说明
+├─ Home.md                           人类入口页
+├─ index.md                          总索引
+├─ LICENSE                           开源许可证
+├─ log.md                            追加式操作日志
+├─ README.md                         英文说明
+├─ README-zh.md                      中文说明
+├─ SECURITY.md                       安全说明
+├─ 会话启动页.md                      给 agent 复制用的模板
+├─ 使用手册.md                        日常使用说明
+└─ 快速开始.md                        第一次上手说明
 ```
 
-## 为什么目录改成英文
+## 各层目录分别负责什么
 
-如果仓库要开源，英文路径更稳定：
+### `00_system/`
 
-- GitHub 上更容易理解
-- 不依赖中文文件系统习惯
-- 脚本路径在多平台环境里更统一
-- 其他人 fork 或协作时摩擦更小
+这是系统层，不是内容层。
 
-## 改成英文后会不会更难用
+主要放：
 
-不会，前提是区分“磁盘路径”和“阅读界面”。
+- 脚本
+- 模板
+- schema
+- 注册表
+- 同步清单
 
-这套仓库的处理方式是：
+你平时主要“调用”这里，而不是往这里写知识。
 
-- 磁盘目录、脚本名、仓库结构用英文
-- 页面标题继续可以用中文
-- 页面正文继续可以用中文
-- Obsidian 链接显示名继续可以用中文
+### `01_inbox/`
 
-也就是说：
+这是输入层。
 
-- GitHub 看到的是干净的英文结构
-- 你在 Obsidian 里看到的仍然是中文知识网络
+资料先收进来，再决定怎么沉淀。
 
-真正需要记住的英文路径其实很少，主要只有：
+### `10_personal/`
 
-- `00_system/scripts/`
-- `01_inbox/raw/`
-- `20_projects/active/`
-- `30_shared/prompts/`
+这是个人长期知识层。
 
-项目内部真正需要记住的，也只有这几类：
+适合放：
 
-- `notes/`
-- `source-notes/`
-- `sources/`
-- `概览.md`、`架构.md`、`决策.md`、`经验.md`、`来源.md`、`任务.md`、`索引.md`
+- 认知总结
+- 长期方法论
+- 工作流
+- 个人稳定偏好
 
-日常大多数时候你不直接敲路径，而是从 `Home.md`、`index.md` 和 `会话启动页.md` 进入。
+### `20_projects/`
 
-## 项目页面应该怎么互链
+这是项目知识层。
 
-新项目建起来后，建议先把这几页连成一个小闭环：
+每个项目是一套子 wiki。
 
-- `索引.md` 作为项目入口和目录
-- `概览.md` 作为项目总览
-- `架构.md` 作为系统结构说明
-- `决策.md` 作为关键决策记录
-- `任务.md` 作为推进跟踪
-- `来源.md` 作为原始资料登记
+标准结构是：
 
-推荐的最小互链方式是：
+```text
+20_projects/active/<project-slug>/
+├─ notes/
+├─ source-notes/
+├─ sources/
+├─ project.memory.md
+├─ 任务.md
+├─ 关系.md
+├─ 决策.md
+├─ 时间线.md
+├─ 架构.md
+├─ 来源.md
+├─ 概览.md
+├─ 索引.md
+└─ 风险.md
+```
 
-- `索引.md` 链向 `概览`、`架构`、`决策`、`任务`、`来源`
-- `概览.md` 链向 `架构`、`决策`、`任务`、`来源`
-- `架构.md` 链向 `概览`、`决策`、`来源`
-- `决策.md` 链向 `概览`、`架构`、`来源`
-- `任务.md` 链向 `概览`、`决策`、`来源`
-- `来源.md` 链向 `索引`，必要时再链向 `概览` 或 `架构`
+核心页面含义：
 
-这样做的目的不是“链接越多越好”，而是让你从任意一页都能顺着链接回到项目主干，不会陷在孤立页面里。
+- `索引.md`：项目入口
+- `概览.md`：项目是做什么的
+- `架构.md`：系统结构
+- `决策.md`：为什么这么做
+- `任务.md`：当前推进什么
+- `来源.md`：项目资料入口
+- `project.memory.md`：给 agent 快速读取的运行记忆
 
-## 怎么让 Agent 自动找到 wiki
+### `30_shared/`
 
-你担心的点是对的：如果每次都要手工提醒，wiki 就只是“辅助笔记”，还不是“项目记忆系统”。
+这是跨项目复用层。
 
-正确做法是两层：
+一个项目里沉淀出来、其他项目也可能复用的知识，应该往这里提升。
 
-1. 在每个项目工作区放一个最小 bootstrap。
-2. 让 agent 在任务开始时自动读取这个 bootstrap，再去打开中心 wiki。
+### `40_outputs/`
 
-这个 bootstrap 必须放在项目仓库根目录，并且明确写出你自己的私有 vault 绝对路径。
-否则 agent 只能看到当前项目仓库，无法知道应该把知识写到哪里。
+这是输出沉淀层。
 
-bootstrap 至少要声明这些信息：
+分析、问答、简报、复盘结果，先落在这里，再决定是否进一步提升。
 
-- `wiki_root`
-- `project_slug`
-- `project_index`
-- `project_overview`
-- `project_tasks`
+### `90_archive/`
 
-这样一来，Codex / Claude Code 不需要你每次都口头提醒“记得用 wiki”，它们只要按工作区规则启动，就会自己找到对应项目页。
+这是归档层。
 
-如果你愿意，我已经把标准模板整理成：
+低频访问，但保留检索价值的内容放这里。
 
-- `30_shared/prompts/项目首次接入提示词.md`
-- `30_shared/prompts/项目接入提示词.md`
-- `30_shared/prompts/项目启动清单.md`
+## 这套系统平时怎么用
 
-这个模板就是以后复制到新项目工作区的起点。
-
-## 为什么还需要项目仓库里的 AGENTS.md / CLAUDE.md
-
-这两个文件不是重复劳动，而是给不同 agent 一个统一的入口。
-
-- `AGENTS.md` 是给 Codex 的
-- `CLAUDE.md` 是给 Claude Code 的
-
-它们的作用不是写很多说明，而是写最小启动信息，让 agent 知道：
-
-- wiki 在哪
-- 当前项目是谁
-- 应该先读哪几页
-- 输出应该写回哪一层
-
-如果没有这两个 bootstrap，你就只能靠口头提示每个窗口，这会让“自动接入”退化成“人工记忆”。
-
-## 为什么还需要启动清单
-
-启动清单是把“应该怎么做”固定成步骤。
-
-它的必要性主要在于：
-
-- 多窗口时减少遗漏
-- 新任务接手时减少歧义
-- 不同 agent 的行为更一致
-- 容易写进项目模板和团队规范
-
-所以我的建议是：
-
-- `AGENTS.md` / `CLAUDE.md` 负责“这个项目接入谁”
-- `项目启动清单.md` 负责“接入后按什么顺序做”
-
-## 项目只接入一次
-
-同一个项目只需要做一次 wiki 接入。
-
-第一次接入时完成：
-
-- 识别项目名和仓库
-- 在你自己的私有 vault 里建项目页
-- 在项目仓库里放最小 `AGENTS.md` / `CLAUDE.md`
-- 建立项目索引和项目页闭环
-
-之后就不需要重复接入了，只需要在同一套项目页里持续沉淀。
-
-## 私有仓库怎么落地
-
-这个公开仓库只负责框架，不负责承载你的真实个人内容和项目内容。
-
-如果你要真正长期使用，建议把真实内容放到你自己的私有 vault 或私有仓库里，然后：
-
-1. 从这个公开仓库复制目录结构和模板过去
-2. 在私有 vault 里保留同样的 `Home.md`、`index.md`、`AGENTS.md`、`CLAUDE.md`
-3. 把每个项目工作区的 bootstrap 指向你自己的私有 vault
-4. 只把框架更新从公开仓库同步过去
-5. 不要把真实个人笔记、项目源文件、项目文档同步回公开仓库
-
-更具体的执行顺序见 [docs/private-vault-initialization-checklist.md](docs/private-vault-initialization-checklist.md)。
-
-更完整的落地步骤见 [docs/private-vault-setup.md](docs/private-vault-setup.md)。
-
-## 这套系统当前已经完成什么
-
-已经完成：
-
-- Obsidian 可直接打开的 vault 结构
-- Codex / Claude Code 双入口规则
-- 项目仓库快速接入脚本
-- 来源状态同步脚本
-- 查询回写脚本
-- 项目关系同步脚本
-- 学习候选记录脚本
-- 学习候选升级脚本
-- 学习候选自动发现脚本
-- 私有 vault 同步脚本
-- 资料摄入
-- 页面创建
-- 搜索
-- 索引重建
-- 体检
-- 项目子 wiki 脚手架
-- Windows 与 macOS/Linux 包装脚本
-
-还需要靠真实使用持续积累的部分：
-
-- 真实资料摄入
-- 真实项目沉淀
-- 共享层知识回流
-
-## 推荐入口
-
-- `Home.md`
-- `使用手册.md`
-- `会话启动页.md`
-
-## 项目快速接入
-
-现在可以把任意项目仓库快速接入这套 wiki：
+### 1. 接入项目
 
 ```powershell
-.\00_system\scripts\attach_project.ps1 -仓库根目录 "C:\path\to\repo" -项目名 "demo-saas" -Wiki根目录 "C:\path\to\private-vault"
+python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
 ```
 
-这个命令会：
+作用：
 
-- 在中心 wiki 创建或确认项目骨架
-- 在项目仓库写入 `wiki.context.json`
-- 在项目仓库写入最小 `AGENTS.md` / `CLAUDE.md`
-- 注册项目到 `00_system/registry/projects.json`
+- 在项目仓库生成 `wiki.context.json`、`AGENTS.md`、`CLAUDE.md`
+- 在 wiki 里创建项目主干页
 
-如果不显式传 `-Wiki根目录`，脚本会优先使用当前公开仓库同级目录中的 `ObsidianToWiki-private` 作为目标 vault；如果不存在，再回退到当前仓库。
+### 2. 摄入资料
 
-这样无论用 Codex 还是 Claude Code，只要打开项目仓库，就能先从本地 bootstrap 找到中心 wiki。
+```powershell
+python 00_system/scripts/ingest_source.py --source "C:\path\to\prd.docx" --title "PRD v1" --project "demo-saas"
+```
 
-每个项目现在还会默认维护一个 `project.memory.md`，作为 agent 会话启动时优先读取的运行态摘要页。
+作用：
 
-## 开源注意事项
+- 复制原始文件
+- 生成来源笔记
+- 更新日志和索引
 
-不要提交：
+### 3. 搜索
 
-- 私人资料
-- 本机绝对路径
-- 本地缓存数据库
-- 个人使用过程中生成的噪音日志
+```powershell
+python 00_system/scripts/search_wiki.py "权限 设计" --show-relations
+```
 
-许可证：MIT。
+### 4. 回写结论
+
+```powershell
+python 00_system/scripts/file_back_query.py --title "权限方案评估" --question "当前项目该用 RBAC 还是 ABAC？" --conclusion "先用 RBAC，保留 ABAC 扩展点。" --project "demo-saas"
+```
+
+## 任意窗口中的项目工作流
+
+这套系统创建出来，核心就是为了让“项目在任意窗口里都能持续使用项目 wiki”，而不是只能在当前这个脚手架窗口里使用。
+
+### 项目只接入一次
+
+每个项目只需要正式接入一次：
+
+```powershell
+python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
+```
+
+接入后，项目仓库根目录会生成：
+
+- `wiki.context.json`
+- `AGENTS.md`
+- `CLAUDE.md`
+
+这三个文件就是“项目仓库 -> 私有 wiki”的桥。
+
+### 任意窗口如何使用项目 wiki
+
+以后无论你从哪个窗口打开这个项目仓库，只要这个窗口能看到项目根目录，它就能通过上面的 3 个文件找到项目 wiki。
+
+在任意项目窗口里，推荐 agent 的启动顺序是：
+
+1. 先读项目仓库根目录的 `wiki.context.json`
+2. 再读项目仓库根目录的 `AGENTS.md` 或 `CLAUDE.md`
+3. 再打开项目 wiki 的：
+   - `索引.md`
+   - `project.memory.md`
+   - `任务.md`
+   - 必要时再读 `概览.md`、`架构.md`、`决策.md`、`来源.md`
+
+### 开发过程中怎么持续积累知识
+
+项目开发时，不要把“知识积累”理解成额外工作，而是把它理解成任务完成后的固定回写动作。
+
+推荐工作方式：
+
+1. 做任务前
+   先读 `project.memory.md` 和 `任务.md`，知道当前上下文。
+2. 做任务时
+   如果遇到新资料、设计约束、架构说明、会议纪要，先摄入到项目来源层。
+3. 做任务后
+   把稳定结论写回项目 wiki，而不是只停留在聊天窗口或 commit 里。
+
+对应的回写原则：
+
+- 项目定位变化，更新 `概览.md`
+- 系统结构变化，更新 `架构.md`
+- 为什么这么做，更新 `决策.md`
+- 当前推进状态，更新 `任务.md`
+- 新资料和外部文档，进入 `来源.md` 和 `source-notes/`
+- 临时分析但以后还会用，进入 `notes/` 或 `40_outputs/`
+- 可跨项目复用的内容，提升到 `30_shared/`
+
+### 项目窗口中的标准指令
+
+如果你在任意项目窗口中想让 agent 正确使用项目 wiki，可以直接这样说：
+
+```text
+请按当前项目的 wiki 规则工作。
+
+开始前先读：
+1. 项目仓库根目录的 wiki.context.json
+2. 项目仓库根目录的 AGENTS.md 或 CLAUDE.md
+3. 对应项目 wiki 的 索引.md、project.memory.md、任务.md
+
+要求：
+- 完成当前任务
+- 如有新资料，先摄入来源
+- 如有稳定结论，写回项目 wiki
+- 如有可复用内容，提升到共享层
+```
+
+### 项目 wiki 到底怎么用
+
+项目 wiki 不是“项目文档备份区”，而是项目的长期记忆层。
+
+它主要承担 4 个作用：
+
+1. 让任意新窗口快速恢复上下文
+2. 让设计决策和架构认知不只停留在代码里
+3. 让资料、分析、任务、风险有统一入口
+4. 让项目经验可以持续提升到共享层
+
+一句话说：
+
+- 代码仓库负责交付物
+- 项目 wiki 负责记忆、解释、回写和复盘
+
+## 旧知识库迁移策略
+
+如果你以前已经在别的 Obsidian 或第二大脑里为某个项目写过笔记，例如：
+
+- `C:\Work\note\ObsidianNoteBook\记忆库\语义记忆\ResearchClaw`
+
+那么不要手工复制粘贴到新系统里。
+
+正确做法是：
+
+1. 把旧笔记当作项目来源材料
+2. 优先选择高价值文档逐个摄入
+3. 再把真正稳定的内容整理进当前项目 wiki 主干页
+
+建议优先迁移的内容：
+
+- 项目工作页
+- 架构图与系统拓扑说明
+- 功能实现总结
+- 设计方案
+- 来源页 / 任务页
+
+也就是说，旧第二大脑不是废掉，而是作为“历史来源层”进入新系统。
+
+## 顶层文档之间是什么关系
+
+- `README.md` / `README-zh.md`
+  负责讲系统全貌、架构设计、目录结构、运行方式。
+- `Home.md`
+  负责导航入口。
+- `快速开始.md`
+  负责第一次上手。
+- `使用手册.md`
+  负责日常操作说明。
+- `会话启动页.md`
+  负责给 agent 直接复制使用的模板。
+- `index.md`
+  负责导航，不承担完整说明职责。
+
+## 私有库如何同步
+
+先预览：
+
+```powershell
+python 00_system/scripts/sync_private_vault.py --dry-run
+```
+
+确认无误后执行：
+
+```powershell
+python 00_system/scripts/sync_private_vault.py
+```
+
+## 方法论来源
+
+这套系统参考了 Andrej Karpathy 提出的 `llm-wiki` 思路，并结合了当前仓库自己的项目记忆、回写沉淀和本地脚手架实现。
+
+- Karpathy 原文：https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f

@@ -1,8 +1,8 @@
-# Project AGENTS.md Template
+# 项目 AGENTS 模板
 
-This file lives inside an individual project workspace, not in the public wiki repo.
+这个文件放在单个项目仓库根目录，不放在公开 wiki 根目录。
 
-Use it as the smallest possible bootstrap for Codex.
+它的作用是：把当前项目仓库接到你的私有 wiki。
 
 ```yaml
 wiki_root: <private-wiki-root>
@@ -20,12 +20,10 @@ project_timeline: 20_projects/active/<project-slug>/时间线.md
 project_memory: 20_projects/active/<project-slug>/project.memory.md
 ```
 
-## Minimum Instructions
+## 最小规则
 
-- Treat the wiki as the project memory layer.
-- Treat this file as the bridge from the project repo to the private wiki.
-- Read `wiki.context.json` first when it exists, then use this file as the human-readable bootstrap.
-- Open the project wiki pages before making changes.
-- Write durable conclusions back into the wiki.
-- Keep project deliverables in the project repository.
-- Reuse shared knowledge when the same pattern appears in other projects.
+- 把 wiki 当作项目记忆层
+- 优先读取 `wiki.context.json`
+- 动手前先打开对应项目页面
+- 稳定结论写回 wiki，不要只留在聊天窗口
+- 项目交付物留在项目仓库，长期记忆留在 wiki

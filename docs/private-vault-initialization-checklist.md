@@ -1,105 +1,73 @@
-# Private Vault Initialization Checklist
+# 私有库初始化清单
 
-Use this checklist to create your own private vault as your real working vault.
+这份清单适合第一次把 `ObsidianToWiki-private` 搭起来时用。
 
-## 1. Create the private vault
+## 1. 建立私有库
 
-Create a private repository or private folder named something like:
-
-```text
-ObsidianToWiki-private/  (example)
-```
-
-Keep it separate from the public scaffold repo.
-
-## 2. Copy the scaffold structure
-
-Mirror the public structure into the private vault:
+创建一个私有目录或私有仓库，例如：
 
 ```text
-00_system/
-01_inbox/
-10_personal/
-20_projects/
-30_shared/
-40_outputs/
-90_archive/
-Home.md
-index.md
-log.md
-AGENTS.md
-CLAUDE.md
-README.md
-README-zh.md
+ObsidianToWiki-private/
 ```
 
-## 3. Copy only framework files
+它和公开脚手架仓库分开。
 
-Copy from the public scaffold:
+## 2. 同步脚手架
 
-- scripts
-- templates
-- prompts
-- README files
-- startup checklists
-- conventions and rules
+从公开仓库同步这些内容过去：
 
-Do not copy private content from the public repo.
+- 脚本
+- 模板
+- 提示词
+- 根入口文档
+- 规则文件
 
-## 4. Put the private bootstrap at the root
+## 3. 确认最小入口文件存在
 
-Create private root bootstrap files:
+至少确认这些文件存在：
 
+- `Home.md`
+- `快速开始.md`
+- `使用手册.md`
+- `会话启动页.md`
+- `index.md`
+- `log.md`
+- `README.md`
+- `README-zh.md`
 - `AGENTS.md`
 - `CLAUDE.md`
 
-These should point to your private vault root and the private project pages.
+## 4. 确认最小分区存在
 
-## 5. Create the first working indexes
+至少确认这些目录或索引存在：
 
-At minimum, make sure these files exist:
-
-- `Home.md`
-- `index.md`
-- `log.md`
+- `01_inbox/`
 - `10_personal/索引.md`
 - `20_projects/索引.md`
 - `30_shared/索引.md`
 - `40_outputs/索引.md`
 
-## 6. Create your first project workspace
+## 5. 接入第一个真实项目
 
-For each real project, create:
+运行：
 
-- `20_projects/active/<project>/索引.md`
-- `20_projects/active/<project>/概览.md`
-- `20_projects/active/<project>/架构.md`
-- `20_projects/active/<project>/决策.md`
-- `20_projects/active/<project>/经验.md`
-- `20_projects/active/<project>/来源.md`
-- `20_projects/active/<project>/任务.md`
-- `20_projects/active/<project>/notes/`
-- `20_projects/active/<project>/source-notes/`
-- `20_projects/active/<project>/sources/`
+```powershell
+python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
+```
 
-## 7. Wire agent startup
+## 6. 摄入第一份真实资料
 
-Make the project workspace bootstrap point back to your private vault.
+运行：
 
-The agent should read the workspace bootstrap before touching the project.
+```powershell
+python 00_system/scripts/ingest_source.py --source "C:\path\to\prd.docx" --title "PRD v1" --project "demo-saas"
+```
 
-## 8. Start using it
+## 7. 开始日常使用
 
-From this point on:
+从这一刻开始：
 
-- raw sources go into `01_inbox/raw/`
-- project memory goes into `20_projects/active/<project>/`
-- reusable knowledge goes into `30_shared/`
-- analysis outputs go into `40_outputs/`
-- every meaningful change gets logged
-
-## 9. Keep the public scaffold separate
-
-Only sync framework changes back from the public repository.
-
-Never sync your private notes or project outputs into the public repo.
+- 新资料先入库
+- 项目问题优先写回项目 wiki
+- 可复用经验提升到 `30_shared/`
+- 每次重要变更记到 `log.md`
