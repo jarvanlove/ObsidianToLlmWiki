@@ -1,0 +1,27 @@
+{
+  "categories": {
+    "root": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "Home.md",
+      "README.md",
+      "README-zh.md",
+      "index.md",
+      "使用手册.md",
+      "会话启动页.md"
+    ],
+    "system": [
+      "00_system"
+    ],
+    "docs": [
+      "docs"
+    ],
+    "prompts": [
+      "30_shared/prompts"
+    ]
+  },
+  "ignore_globs": [
+    "**/__pycache__/**",
+    "**/*.pyc"
+  ]
+}

@@ -14,13 +14,17 @@ project_architecture: 20_projects/active/<project-slug>/架构.md
 project_decisions: 20_projects/active/<project-slug>/决策.md
 project_tasks: 20_projects/active/<project-slug>/任务.md
 project_sources: 20_projects/active/<project-slug>/来源.md
+project_relations: 20_projects/active/<project-slug>/关系.md
+project_risks: 20_projects/active/<project-slug>/风险.md
+project_timeline: 20_projects/active/<project-slug>/时间线.md
+project_memory: 20_projects/active/<project-slug>/project.memory.md
 ```
 
 ## Minimum Instructions
 
 - Treat the wiki as the project memory layer.
 - Treat this file as the bridge from the project repo to the private wiki.
-- Read the bootstrap at task start.
+- Read `wiki.context.json` first when it exists, then use this file as the human-readable bootstrap.
 - Open the project wiki pages before making changes.
 - Write durable conclusions back into the wiki.
 - Keep project deliverables in the project repository.

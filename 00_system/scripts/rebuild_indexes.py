@@ -104,11 +104,51 @@ def build_projects_index(pages: list[dict[str, object]]) -> str:
         for page in pages
         if page["rel_path"].startswith("20_projects/archive/") and page["rel_path"].endswith("/索引.md")
     ]
-    lines = ["# 项目索引", "", f"最近重建: {today_iso()}", "", "## 进行中", ""]
+    lines = [
+        "# 项目索引",
+        "",
+        f"最近重建: {today_iso()}",
+        "",
+        "## 入口",
+        "",
+        "- [[20_projects/关系索引|项目关系索引]]",
+        "",
+        "## 进行中",
+        "",
+    ]
     lines.extend(list_lines(active_projects))
     lines.extend(["", "## 已归档", ""])
     lines.extend(list_lines(archived_projects))
     return "\n".join(lines)
+
+
+def build_project_relations_index(pages: list[dict[str, object]]) -> str:
+    active_projects = [
+        page
+        for page in pages
+        if page["rel_path"].startswith("20_projects/active/") and page["rel_path"].endswith("/索引.md")
+    ]
+    lines = ["# 项目关系索引", "", f"最近重建: {today_iso()}", "", "## 关系概览", ""]
+    if not active_projects:
+        lines.append("- 暂无。")
+        return "\n".join(lines)
+
+    for page in sorted(active_projects, key=lambda item: str(item["title"]).lower()):
+        frontmatter = page["frontmatter"]
+        if not isinstance(frontmatter, dict):
+            continue
+        depends_on = frontmatter.get("depends_on") if isinstance(frontmatter.get("depends_on"), list) else []
+        reuses = frontmatter.get("reuses") if isinstance(frontmatter.get("reuses"), list) else []
+        produces = frontmatter.get("produces") if isinstance(frontmatter.get("produces"), list) else []
+        related_to = frontmatter.get("related_to") if isinstance(frontmatter.get("related_to"), list) else []
+        lines.append(f"### {obsidian_link(page['path'], str(page['title']))}")
+        lines.append("")
+        lines.append(f"- 依赖项目: {', '.join(str(item) for item in depends_on) if depends_on else '无'}")
+        lines.append(f"- 复用资产: {', '.join(str(item) for item in reuses) if reuses else '无'}")
+        lines.append(f"- 输出资产: {', '.join(str(item) for item in produces) if produces else '无'}")
+        lines.append(f"- 相关项目: {', '.join(str(item) for item in related_to) if related_to else '无'}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def build_project_local_index(project_index_path: Path) -> str:
@@ -120,6 +160,10 @@ def build_project_local_index(project_index_path: Path) -> str:
     learnings = project_root / "经验.md"
     tasks = project_root / "任务.md"
     sources = project_root / "来源.md"
+    relations = project_root / "关系.md"
+    risks = project_root / "风险.md"
+    timeline = project_root / "时间线.md"
+    memory = project_root / "project.memory.md"
     notes = sorted(project_root.joinpath("notes").glob("*.md"))
     source_notes = sorted(project_root.joinpath("source-notes").glob("*.md"))
 
@@ -136,6 +180,10 @@ def build_project_local_index(project_index_path: Path) -> str:
         f"- {obsidian_link(learnings, '经验')}",
         f"- {obsidian_link(tasks, '任务')}",
         f"- {obsidian_link(sources, '来源')}",
+        f"- {obsidian_link(relations, '关系')}",
+        f"- {obsidian_link(risks, '风险')}",
+        f"- {obsidian_link(timeline, '时间线')}",
+        f"- {obsidian_link(memory, '运行记忆')}",
         "",
         "## 笔记",
         "",
@@ -164,6 +212,7 @@ def main() -> None:
         ),
     )
     write_text(VAULT_ROOT / "20_projects" / "索引.md", build_projects_index(project_pages))
+    write_text(VAULT_ROOT / "20_projects" / "关系索引.md", build_project_relations_index(project_pages))
     write_text(
         VAULT_ROOT / "30_shared" / "索引.md",
         build_section_index(
@@ -174,7 +223,7 @@ def main() -> None:
     )
     write_text(
         VAULT_ROOT / "40_outputs" / "索引.md",
-        build_section_index("输出索引", output_pages, [("分析", "分析"), ("简报", "简报")]),
+        build_section_index("输出索引", output_pages, [("分析", "分析"), ("简报", "简报"), ("反思", "反思")]),
     )
 
     for path in (VAULT_ROOT / "20_projects" / "active").glob("*/索引.md"):

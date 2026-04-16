@@ -8,6 +8,11 @@ LLM-maintained personal and project wiki scaffold for Obsidian.
 
 ObsidianToWiki is a repository structure for turning raw sources into a persistent markdown wiki maintained by an LLM agent.
 
+This scaffold is derived from the `llm_wiki` implementation by Nash Su, which in turn operationalizes Andrej Karpathy's `llm-wiki` methodology for incrementally building and maintaining a personal wiki with LLMs:
+
+- Karpathy methodology: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+- `llm_wiki` reference implementation: https://github.com/nashsu/llm_wiki/blob/main/README_CN.md
+
 It is designed around three layers:
 
 - raw sources
@@ -18,6 +23,16 @@ It supports two complementary use cases:
 
 - personal knowledge that compounds over time
 - project-level memory for active software work
+
+ObsidianToWiki keeps the same core ideas from that lineage:
+
+- immutable raw sources
+- LLM-maintained structured wiki pages
+- explicit `index.md` and `log.md`
+- Obsidian-compatible wikilinks and frontmatter
+- human curation with agent maintenance
+
+The current repository is a lighter Obsidian-first scaffold rather than a desktop app, with an emphasis on portable project memory, agent bootstrapping, and local automation.
 
 ## Repository Layout
 
@@ -126,6 +141,7 @@ Python scripts in `00_system/scripts/` are the cross-platform core.
 
 Common capabilities include:
 
+- project attach/bootstrap
 - source ingest
 - page creation
 - search
@@ -216,6 +232,16 @@ Extraction quality may still be limited for scanned PDFs or binary-heavy formats
 - `README-zh.md`
 - `使用手册.md`
 - `会话启动页.md`
+
+## Fast Project Attach
+
+You can attach an existing project repository to the central wiki with:
+
+```powershell
+.\00_system\scripts\attach_project.ps1 -仓库根目录 "C:\path\to\repo" -项目名 "demo-saas" -Wiki根目录 "C:\path\to\private-vault"
+```
+
+This writes `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md` into the target repository and registers the project in `00_system/registry/projects.json`.
 
 ## Open-Source Hygiene
 

@@ -1,0 +1,99 @@
+{
+  "default_required": ["title", "type", "domain", "status", "updated", "summary"],
+  "type_rules": {
+    "领域": {
+      "domain": ["个人", "共享", "项目"]
+    },
+    "概念": {
+      "domain": ["个人", "共享", "项目"]
+    },
+    "实体": {
+      "domain": ["个人", "共享", "项目"]
+    },
+    "综述": {
+      "domain": ["个人", "共享", "项目"]
+    },
+    "模式": {
+      "domain": ["共享", "项目"]
+    },
+    "工具": {
+      "domain": ["共享", "项目", "个人"]
+    },
+    "架构": {
+      "domain": ["共享", "项目"]
+    },
+    "提示词": {
+      "domain": ["共享", "项目"]
+    },
+    "分析": {
+      "domain": ["输出", "项目", "个人", "共享"]
+    },
+    "简报": {
+      "domain": ["输出", "项目"]
+    },
+    "反思": {
+      "domain": ["输出", "项目"],
+      "required": ["candidate_score", "candidate_signature", "candidate_source"]
+    },
+    "来源": {
+      "domain": ["个人", "项目"],
+      "required": ["source_path", "source_hash", "ingest_status", "derived_pages", "recommended_targets"]
+    },
+    "项目": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "ADR": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目周报": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目复盘": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目概览": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目架构": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目决策": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目经验": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目来源": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目任务": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目关系": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目风险": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目时间线": {
+      "domain": ["项目"],
+      "required": ["project"]
+    },
+    "项目运行记忆": {
+      "domain": ["项目"],
+      "required": ["project"]
+    }
+  }
+}

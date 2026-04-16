@@ -7,6 +7,10 @@ status: {{status}}
 tags: [{{tags}}]
 updated: {{updated}}
 summary: {{summary}}
+depends_on: []
+reuses: []
+produces: []
+related_to: []
 ---
 
 # {{title}}

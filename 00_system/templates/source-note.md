@@ -8,6 +8,11 @@ tags: [{{tags}}]
 updated: {{updated}}
 summary: {{summary}}
 source_path:
+source_hash:
+ingest_status: 已登记
+derived_pages: []
+recommended_targets: []
+review_due:
 ---
 
 # {{title}}

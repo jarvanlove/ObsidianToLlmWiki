@@ -66,3 +66,25 @@ The public scaffold should define the system.
 Your private vault should hold your knowledge.
 
 That split keeps the system open-sourceable without exposing your content.
+
+## Sync Workflow
+
+After the public scaffold changes, preview the sync first:
+
+```powershell
+python 00_system/scripts/sync_private_vault.py --dry-run
+```
+
+If the file list looks correct, apply it:
+
+```powershell
+python 00_system/scripts/sync_private_vault.py
+```
+
+If you only want part of the scaffold, use category filters:
+
+```powershell
+python 00_system/scripts/sync_private_vault.py --dry-run --only system --only prompts
+```
+
+The sync script is intentionally narrow. It copies scaffold-layer files such as `00_system/`, `docs/`, root entry files, and `30_shared/prompts/`, but does not overwrite private project knowledge, private personal notes, or raw sources.

@@ -8,6 +8,10 @@
 
 ObsidianToWiki 的目标不是做一次性问答，而是让 LLM 把原始资料逐步整理成一个持续维护的 Wiki。
 
+这套脚手架的方法论来源于 Nash Su 开源的 `llm_wiki`，而 `llm_wiki` 又是在实现 Andrej Karpathy 提出的 `llm-wiki` 方法：
+
+- Karpathy 方法论原文：https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+
 它服务两类知识：
 
 - 个人长期知识
@@ -18,6 +22,16 @@ ObsidianToWiki 的目标不是做一次性问答，而是让 LLM 把原始资料
 - 原始资料层
 - Wiki 页面层
 - Agent 规则与自动化层
+
+ObsidianToWiki 继承了这条方法论链路里的几个核心原则：
+
+- 原始资料不可随意改写
+- Wiki 页面由 LLM 持续维护
+- `index.md` 负责导航，`log.md` 负责记录演化
+- 用 frontmatter 和双向链接维持结构化知识网络
+- 人负责判断价值，Agent 负责整理、链接、更新和回写
+
+当前这个仓库不是桌面应用，而是一个更轻量、Obsidian 优先、便于在任意项目工作区快速接入的本地知识脚手架。
 
 ## 目录结构
 
@@ -234,6 +248,14 @@ bootstrap 至少要声明这些信息：
 
 - Obsidian 可直接打开的 vault 结构
 - Codex / Claude Code 双入口规则
+- 项目仓库快速接入脚本
+- 来源状态同步脚本
+- 查询回写脚本
+- 项目关系同步脚本
+- 学习候选记录脚本
+- 学习候选升级脚本
+- 学习候选自动发现脚本
+- 私有 vault 同步脚本
 - 资料摄入
 - 页面创建
 - 搜索
@@ -253,6 +275,27 @@ bootstrap 至少要声明这些信息：
 - `Home.md`
 - `使用手册.md`
 - `会话启动页.md`
+
+## 项目快速接入
+
+现在可以把任意项目仓库快速接入这套 wiki：
+
+```powershell
+.\00_system\scripts\attach_project.ps1 -仓库根目录 "C:\path\to\repo" -项目名 "demo-saas" -Wiki根目录 "C:\path\to\private-vault"
+```
+
+这个命令会：
+
+- 在中心 wiki 创建或确认项目骨架
+- 在项目仓库写入 `wiki.context.json`
+- 在项目仓库写入最小 `AGENTS.md` / `CLAUDE.md`
+- 注册项目到 `00_system/registry/projects.json`
+
+如果不显式传 `-Wiki根目录`，脚本会优先使用当前公开仓库同级目录中的 `ObsidianToWiki-private` 作为目标 vault；如果不存在，再回退到当前仓库。
+
+这样无论用 Codex 还是 Claude Code，只要打开项目仓库，就能先从本地 bootstrap 找到中心 wiki。
+
+每个项目现在还会默认维护一个 `project.memory.md`，作为 agent 会话启动时优先读取的运行态摘要页。
 
 ## 开源注意事项
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -42,7 +43,24 @@ def copy_source(source_file: Path, project_name: str | None) -> Path:
     return destination
 
 
-def render_source_note(title: str, domain: str, project_slug: str, tags: list[str], summary: str, source_path: str) -> str:
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def render_source_note(
+    title: str,
+    domain: str,
+    project_slug: str,
+    tags: list[str],
+    summary: str,
+    source_path: str,
+    source_hash: str,
+    ingest_status: str,
+) -> str:
     content = render_template(
         TEMPLATE_DIR / "source-note.md",
         {
@@ -56,17 +74,16 @@ def render_source_note(title: str, domain: str, project_slug: str, tags: list[st
             "summary": summary,
         },
     )
-    lines = content.splitlines()
-    result: list[str] = []
-    injected = False
-    for line in lines:
-        result.append(line)
-        if line.strip() == "source_path:":
-            result[-1] = f"source_path: {source_path}"
-            injected = True
-    if not injected:
-        result.insert(9, f"source_path: {source_path}")
-    return "\n".join(result) + "\n"
+    replacements = {
+        "source_path:": f"source_path: {source_path}",
+        "source_hash:": f"source_hash: {source_hash}",
+        "ingest_status: 已登记": f"ingest_status: {ingest_status}",
+        "review_due:": f"review_due: {today_iso()}",
+    }
+    lines = []
+    for line in content.splitlines():
+        lines.append(replacements.get(line.strip(), line))
+    return "\n".join(lines) + "\n"
 
 
 def extract_text_from_pptx(path: Path) -> str:
@@ -157,6 +174,14 @@ def append_to_project_sources(project_name: str, note_path: Path, stored_source:
         source_registry.write_text(text.rstrip() + "\n" + entry + "\n", encoding="utf-8")
 
 
+def detect_ingest_status(extracted_text: str, extract_mode: str) -> str:
+    if extract_mode == "binary":
+        return "已登记"
+    if extracted_text.strip():
+        return "已解析"
+    return "已登记"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="把原始资料复制到知识库并生成来源笔记。")
     parser.add_argument("--source", required=True, help="原始文件路径")
@@ -178,6 +203,8 @@ def main() -> None:
 
     stored_source = copy_source(source_file, project_name)
     extracted_text, extract_mode = extract_text_content(stored_source)
+    source_hash = file_sha256(stored_source)
+    ingest_status = detect_ingest_status(extracted_text, extract_mode)
 
     if project_name:
         note_dir = ensure_project_layout(project_name) / "source-notes"
@@ -195,6 +222,8 @@ def main() -> None:
         tags=tags,
         summary=summary,
         source_path=stored_source.relative_to(VAULT_ROOT).as_posix(),
+        source_hash=source_hash,
+        ingest_status=ingest_status,
     )
     content = enrich_source_note(content, extracted_text, extract_mode)
     write_text(note_path, content)

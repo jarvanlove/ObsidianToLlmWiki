@@ -30,6 +30,7 @@ TYPE_ALIASES = {
     "prompt": "提示词",
     "analysis": "分析",
     "briefing": "简报",
+    "reflection": "反思",
     "source": "来源",
     "project": "项目",
     "adr": "ADR",
@@ -50,6 +51,7 @@ GLOBAL_TYPE_MAP = {
     "提示词": ("30_shared/prompts", "generic-note.md", "共享"),
     "分析": ("40_outputs/analyses", "analysis.md", "输出"),
     "简报": ("40_outputs/briefings", "analysis.md", "输出"),
+    "反思": ("40_outputs/reflections", "reflection.md", "输出"),
     "来源": ("01_inbox/clips", "source-note.md", "个人"),
 }
 
@@ -105,6 +107,10 @@ def ensure_project(project_name: str, tags: list[str], status: str, summary: str
         "经验.md": "project-learnings.md",
         "来源.md": "project-sources.md",
         "任务.md": "project-tasks.md",
+        "关系.md": "project-relations.md",
+        "风险.md": "project-risks.md",
+        "时间线.md": "project-timeline.md",
+        "project.memory.md": "project-memory.md",
     }
 
     for file_name, template_name in files.items():
