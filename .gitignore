@@ -1,6 +1,6 @@
-.obsidian/workspace.json
-.obsidian/workspaces.json
-.obsidian/graph.json
+.obsidian/
+.claudian/
+wiki.context.json
 .trash/
 __pycache__/
 .DS_Store

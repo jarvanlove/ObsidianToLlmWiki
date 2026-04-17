@@ -7,7 +7,7 @@
 创建一个私有目录或私有仓库，例如：
 
 ```text
-ObsidianToWiki-private/
+<your-private-vault>/
 ```
 
 它和公开脚手架仓库分开。
@@ -16,7 +16,7 @@ ObsidianToWiki-private/
 
 从公开仓库同步这些内容过去：
 
-- 脚本
+- 系统能力
 - 模板
 - 提示词
 - 根入口文档
@@ -49,19 +49,16 @@ ObsidianToWiki-private/
 
 ## 5. 接入第一个真实项目
 
-运行：
+让系统完成一次项目接入。你只需要说：
 
-```powershell
-python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
-```
+- `帮我把当前项目接入 wiki`
 
 ## 6. 摄入第一份真实资料
 
-运行：
+让系统完成一次资料摄入。你只需要说：
 
-```powershell
-python 00_system/scripts/ingest_source.py --source "C:\path\to\prd.docx" --title "PRD v1" --project "demo-saas"
-```
+- `把这份资料收进当前项目`
+- 或 `把这份资料收进个人知识库`
 
 ## 7. 开始日常使用
 

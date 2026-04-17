@@ -1,324 +1,391 @@
 # ObsidianToWiki
 
-Obsidian-first wiki scaffold for building a durable LLM-maintained knowledge system.
+Obsidian-first LLM-maintained knowledge system for durable personal knowledge and project memory.
 
-Chinese guide: [README-zh.md](README-zh.md)
+This is not just a note template repository and not just a set of search scripts. It is designed to continuously turn raw material, project context, stable conclusions, and reusable patterns into a maintainable local wiki.
 
-## What This System Is For
+## TL;DR
 
-This system is built for one practical goal:
+- This is a local wiki system for both personal knowledge and project memory
+- It supports project attachment, source ingestion, retrieval, answer file-back, shared promotion, and ongoing governance
+- Users interact through natural language while scripts, indexing, sync, and maintenance stay inside the system
+- It is meant for long-term use, not for leaving knowledge trapped in chat windows or scattered folders
 
-turn scattered raw material, project context, and useful conclusions into a maintainable local wiki that keeps getting better over time.
+## Who This Is For
 
-It serves two scopes at the same time:
+This system is especially useful for:
 
-- personal knowledge
-- project memory
+- individual users who want durable long-term knowledge
+- developers who work across multiple projects and lose context between sessions
+- people who want project experience to become reusable shared knowledge
+- teams or individuals who want Codex, Claude Code, or other agents to keep using the same project memory
 
-The repository itself is the scaffold, not the final working vault.
+## 5-Minute Start
 
-Recommended split:
+For a first run, do only these four things:
 
-- `ObsidianToWiki`: public scaffold, scripts, templates, rules, docs
-- `ObsidianToWiki-private`: private vault with real personal knowledge, project knowledge, and raw sources
+1. download `ObsidianToWiki`
+2. prepare a private vault named `ObsidianToWiki-private`
+3. initialize the private vault with scaffold files, templates, scripts, and entry pages
+4. do one real usage cycle:
+   - attach one project
+   - ingest one source
 
-## What Problems It Solves
+After that, use natural language requests such as:
 
-The system is meant to solve four recurring problems:
+- "attach the current project to the wiki"
+- "ingest this into the current project"
+- "answer based on the current project's wiki"
+- "save this conclusion into the wiki"
 
-1. raw files get collected but never organized
-2. project context disappears across coding sessions
-3. useful answers stay in chat windows instead of becoming assets
-4. reusable knowledge does not flow from one project to the next
+## Core Capability Overview
+
+```text
+Source Layer
+raw files / temporary material / project sources
+    ->
+Memory Layer
+personal knowledge / project knowledge / shared knowledge / filed-back outputs
+    ->
+Automation Layer
+project attachment / source ingestion / retrieval / answer file-back / governance / private vault sync
+    ->
+Outcome
+context recovery in any window / durable knowledge accumulation / reusable cross-project experience
+```
+
+You can think of it as a continuous loop:
+
+- new material enters the system
+- the agent helps structure and link it
+- stable conclusions are filed back into the wiki
+- reusable experience is promoted into the shared layer
+- future projects keep benefiting from that knowledge
+
+## Product Positioning
+
+ObsidianToWiki serves two practical scopes:
+
+1. long-term personal knowledge
+2. long-term software project memory
+
+It is built to capture and maintain:
+
+- raw files
+- temporary material
+- project context
+- architecture notes
+- decision records
+- task state
+- analyses and retrospectives
+- reusable prompts, tools, and patterns
+
+In short:
+
+the code repository holds deliverables, while the wiki holds memory, explanation, write-back, and review.
+
+## Design Principles
+
+The system is built around six principles.
+
+### 1. Markdown is the source of truth
+
+Knowledge should end up in files that humans can read, edit, diff, and maintain over time.
+
+### 2. Intake and knowledge should be separated
+
+Raw material should enter an intake layer first, then be distilled into durable knowledge. This prevents the wiki from becoming an unstructured dump.
+
+### 3. Personal and project knowledge should coexist
+
+The system supports both long-term personal knowledge and project-specific memory without flattening them into a single note pile.
+
+### 4. Users express needs, not low-level commands
+
+The intended user interface is natural language. Scripts, indexing, sync, and governance are implementation details.
+
+### 5. Any coding window should recover project context
+
+A project only needs one attach step. After that, any future coding window can recover the right project wiki context.
+
+### 6. Knowledge should be promotable and reusable
+
+Useful experience discovered in one project should be able to move into the shared layer and help future projects.
+
+## Functional Modules
+
+From a product perspective, the system consists of eight functional modules.
+
+### 1. Project attachment
+
+Attach an existing project to the wiki and establish a stable bridge between the code repository and its project sub-wiki.
+
+### 2. Source ingestion
+
+Ingest documents, PDFs, meeting notes, design files, screenshots, and other material while preserving originals and generating source notes.
+
+### 3. Project memory maintenance
+
+Maintain project pages for:
+
+- overview
+- architecture
+- decisions
+- tasks
+- sources
+- risks
+- timeline
+- runtime memory
+
+### 4. Personal knowledge distillation
+
+Distill long-lived personal insights, methods, workflows, and preferences into a durable personal layer.
+
+### 5. Shared knowledge promotion
+
+Promote cross-project reusable content into the shared layer, including patterns, prompts, architecture notes, and tool usage knowledge.
+
+### 6. Search and answer file-back
+
+The system not only retrieves knowledge, it can also file useful answers back into the wiki so knowledge does not remain trapped in chat sessions.
+
+### 7. Governance and linting
+
+The system continuously checks for issues such as:
+
+- orphan pages
+- stale pages
+- duplicate topics
+- undistilled sources
+- structural gaps
+
+### 8. Private vault sync
+
+Scaffold updates can be synced into the private vault so the real working environment stays aligned with the public system.
 
 ## Architecture
 
-The design has three layers:
+The system can be understood as a three-layer architecture.
 
-1. source layer
-   Raw files, clips, and temporary materials waiting to be processed.
-2. memory layer
-   Personal notes, project sub-wikis, shared reusable knowledge, and filed-back outputs.
-3. automation layer
-   Scripts, templates, schemas, sync rules, and agent bootstrap files.
+### 1. Source layer
 
-The operating model is:
+This layer receives raw input:
 
-- humans decide value and boundaries
-- agents ingest, summarize, link, file back, and maintain structure
-- markdown files remain the source of truth
+- raw files
+- clips
+- temporary working artifacts
+- project source files
 
-## Full Repository Structure
+Primary locations:
+
+- `01_inbox/`
+- project `sources/`
+- project `source-notes/`
+
+### 2. Memory layer
+
+This layer contains durable structured knowledge:
+
+- `10_personal/`
+- `20_projects/`
+- `30_shared/`
+- `40_outputs/`
+
+This is the actual knowledge body of the system.
+
+### 3. Automation layer
+
+This layer keeps the system operational:
+
+- page creation
+- source ingestion
+- project attachment
+- retrieval
+- answer file-back
+- relation sync
+- source sync
+- governance
+- private vault sync
+
+Primary locations:
+
+- `00_system/scripts/`
+- `00_system/templates/`
+- `00_system/registry/`
+
+## Repository Structure
 
 ```text
 ObsidianToWiki/
-├─ .obsidian/                         Obsidian local settings
+├─ .obsidian/
 ├─ 00_system/
-│  ├─ registry/                      machine-readable schemas and sync manifests
-│  ├─ scripts/                       automation scripts and shell wrappers
-│  └─ templates/                     page templates
+│  ├─ registry/
+│  ├─ scripts/
+│  └─ templates/
 ├─ 01_inbox/
-│  ├─ clips/                         source notes that are not yet fully distilled
-│  ├─ raw/                           immutable raw source files
-│  └─ scratch/                       temporary working material
+│  ├─ clips/
+│  ├─ raw/
+│  └─ scratch/
 ├─ 10_personal/
-│  └─ 索引.md                         personal knowledge entry
 ├─ 20_projects/
-│  ├─ active/                        active project sub-wikis
-│  ├─ archive/                       archived project sub-wikis
-│  ├─ 关系索引.md                     cross-project relation index
-│  └─ 索引.md                         project knowledge entry
+│  ├─ active/
+│  ├─ archive/
+│  ├─ 关系索引.md
+│  └─ 索引.md
 ├─ 30_shared/
-│  ├─ architectures/                 reusable architecture notes
-│  ├─ patterns/                      reusable patterns
-│  ├─ prompts/                       reusable prompts
-│  ├─ tools/                         reusable tool notes
-│  └─ 索引.md                         shared knowledge entry
+│  ├─ architectures/
+│  ├─ patterns/
+│  ├─ prompts/
+│  ├─ tools/
+│  └─ 索引.md
 ├─ 40_outputs/
-│  ├─ analyses/                      filed-back analyses
-│  ├─ briefings/                     summaries and briefings
-│  ├─ reflections/                   learning candidates and reflections
-│  └─ 索引.md                         output entry
-├─ 90_archive/                       low-frequency retained material
+│  ├─ analyses/
+│  ├─ briefings/
+│  ├─ reflections/
+│  └─ 索引.md
+├─ 90_archive/
 ├─ docs/
-│  ├─ plans/                         design docs kept as background context
-│  └─ templates/                     root/bootstrap template files
-├─ AGENTS.md                         Codex rules for this scaffold
-├─ CHANGELOG.md                      release history for the public scaffold
-├─ CLAUDE.md                         Claude Code rules for this scaffold
-├─ CONTRIBUTING.md                   contribution guide for open-source use
-├─ Home.md                           human entry page
-├─ index.md                          top-level index
-├─ LICENSE                           open-source license
-├─ log.md                            append-only maintenance log
-├─ README.md                         English overview
-├─ README-zh.md                      Chinese overview
-├─ SECURITY.md                       security policy
-├─ 会话启动页.md                      copyable agent session templates
-├─ 使用手册.md                        day-to-day usage guide
-└─ 快速开始.md                        minimal onboarding guide
+├─ Home.md
+├─ README.md
+├─ README-zh.md
+├─ 快速开始.md
+├─ 使用手册.md
+├─ 标准自然语言话术清单.md
+└─ 会话启动页.md
 ```
 
-## What Each Main Area Means
+## Installation And Usage
 
-- `00_system/`
-  System internals. Scripts, templates, schema definitions, and sync manifests live here.
-- `01_inbox/`
-  Intake area. New material enters here before it becomes durable knowledge.
-- `10_personal/`
-  Long-lived personal knowledge.
-- `20_projects/`
-  One sub-wiki per project. This is the working memory layer.
-- `30_shared/`
-  Reusable knowledge across projects.
-- `40_outputs/`
-  Analyses, summaries, and other results that should be filed back.
-- `90_archive/`
-  Retained but low-frequency content.
+After downloading from GitHub, use the system in this order.
 
-## Project Sub-Wiki Structure
+### 1. Prepare two repositories
 
-Each active project is expected to look like this:
+You need:
 
-```text
-20_projects/active/<project-slug>/
-├─ notes/
-├─ source-notes/
-├─ sources/
-├─ project.memory.md
-├─ 任务.md
-├─ 关系.md
-├─ 决策.md
-├─ 时间线.md
-├─ 架构.md
-├─ 来源.md
-├─ 概览.md
-├─ 索引.md
-└─ 风险.md
-```
+- `ObsidianToWiki`
+  the public scaffold with rules, templates, scripts, and documentation
+- `ObsidianToWiki-private`
+  the private vault with real project knowledge, personal knowledge, and raw sources
 
-Core pages:
+### 2. Initialize the private vault
 
-- `索引.md`: project entry point
-- `概览.md`: what the project is
-- `架构.md`: structure and modules
-- `决策.md`: why important choices were made
-- `任务.md`: what is being worked on now
-- `来源.md`: registered sources
-- `project.memory.md`: short runtime memory for agents
+Sync scaffold-layer content into the private vault so it has:
 
-## Main Workflows
+- entry pages
+- rule pages
+- prompts
+- scripts
+- templates
+- a minimal directory structure
 
-### 1. Attach a project
+### 3. Do the first real usage
 
-```powershell
-python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
-```
+At first, do only two things:
 
-This creates bootstrap files in the project repo and creates or updates the project pages in the wiki.
+1. attach one real project
+2. ingest one real source
 
-### 2. Ingest a source
+### 4. Use natural language from then on
 
-```powershell
-python 00_system/scripts/ingest_source.py --source "C:\path\to\prd.docx" --title "PRD v1" --project "demo-saas"
-```
+Typical requests:
 
-This copies the source file, creates a source note, updates the log, and rebuilds indexes.
+- "attach the current project to the wiki"
+- "ingest this into the current project"
+- "ingest this into personal knowledge"
+- "answer based on the current project's wiki"
+- "keep filing knowledge back while you work"
+- "save this conclusion into the wiki"
+- "promote this into shared knowledge"
 
-### 3. Search
+## How Projects Use The System
 
-```powershell
-python 00_system/scripts/search_wiki.py "permissions design" --show-relations
-```
-
-### 4. File back a conclusion
-
-```powershell
-python 00_system/scripts/file_back_query.py --title "Access model decision" --question "RBAC or ABAC?" --conclusion "Use RBAC first." --project "demo-saas"
-```
-
-## Project Workflow In Any Window
-
-The main point of this system is that a project should keep using its project wiki from any coding window, not only from the scaffold repository.
+This is one of the most important use cases.
 
 ### Attach once
 
-Each project only needs one formal attach step:
-
-```powershell
-python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
-```
-
-That creates these files in the project repo root:
+Each project only needs one formal attach step. After that, the project repo root will contain:
 
 - `wiki.context.json`
 - `AGENTS.md`
 - `CLAUDE.md`
 
-These files are the bridge from the project repo to the private wiki.
+These files form the bridge from the project repository to the project wiki.
 
-### How any project window should start
+### Work in any window
 
-In any future window opened on that project repo, the agent should:
+In any future coding window, the agent should read:
 
-1. read `wiki.context.json`
-2. read `AGENTS.md` or `CLAUDE.md`
-3. open the project wiki pages:
-   - `索引.md`
-   - `project.memory.md`
-   - `任务.md`
-   - and then `概览.md` / `架构.md` / `决策.md` / `来源.md` when needed
+1. `wiki.context.json`
+2. `AGENTS.md` or `CLAUDE.md`
+3. the project's `索引.md`
+4. the project's `project.memory.md`
+5. the project's `任务.md`
 
-### How knowledge accumulation should work during development
-
-The project wiki should be treated as the durable memory layer for the project.
+### Accumulate knowledge during development
 
 Recommended pattern:
 
-1. before work
-   read `project.memory.md` and `任务.md`
-2. during work
-   ingest new documents, notes, constraints, or meeting material into project sources
-3. after work
-   write stable conclusions back into the project wiki
+1. read project memory before work
+2. ingest new source material during work
+3. file stable conclusions back after work
 
-Write-back rules:
+The main write-back targets are usually:
 
-- update `概览.md` when project scope or positioning changes
-- update `架构.md` when structure or modules change
-- update `决策.md` when a durable decision is made
-- update `任务.md` to reflect current progress
-- place new external material in `来源.md` and `source-notes/`
-- place temporary but reusable analysis in `notes/` or `40_outputs/`
-- promote reusable patterns into `30_shared/`
+- `概览.md`
+- `架构.md`
+- `决策.md`
+- `任务.md`
+- `来源.md`
 
-### Standard instruction for a project window
+## Multimodal Support
 
-Use this instruction in any attached project window:
+Current stable support includes:
 
-```text
-Work with the current project's wiki.
+- text
+- markdown
+- code
+- `docx`
+- `pptx`
+- `pdf`
 
-Start by reading:
-1. wiki.context.json at the project repo root
-2. AGENTS.md or CLAUDE.md at the project repo root
-3. the project wiki's 索引.md, project.memory.md, and 任务.md
+Images, audio, and video should be added in stages:
 
-Requirements:
-- complete the task
-- ingest new source material when it appears
-- write stable conclusions back into the project wiki
-- promote reusable knowledge into the shared layer
-```
+1. ingest and register them as sources
+2. add OCR, transcription, and keyframe extraction
+3. automatically distill them into project or personal pages
 
-### What the project wiki is for
+## Inbox Policy
 
-The project wiki is not a backup folder for docs.
+Keep the inbox role-based:
 
-It is the project's durable memory layer.
+- `raw`: original files
+- `clips`: source notes not yet fully distilled
+- `scratch`: temporary working artifacts
 
-It exists to:
+## Documentation Entry Points
 
-1. restore context quickly in any new window
-2. preserve decisions and architecture outside raw code
-3. give sources, tasks, risks, and analyses one place to land
-4. let project experience flow into shared knowledge
+If you are new to the system, start here:
 
-In short:
+1. [Home.md](Home.md)
+2. [快速开始.md](快速开始.md)
+3. [使用手册.md](使用手册.md)
+4. [标准自然语言话术清单.md](标准自然语言话术清单.md)
 
-- the code repo holds deliverables
-- the project wiki holds memory, explanation, write-back, and review
-
-## Legacy Notes Migration
-
-If you already have older project notes in another notebook or second-brain location, treat them as historical source material instead of copying them manually into the new system.
-
-Recommended process:
-
-1. treat old notes as project sources
-2. ingest the highest-value notes first
-3. distill stable conclusions into the current project wiki
-
-Good migration candidates include:
-
-- project work pages
-- architecture notes and topology diagrams
-- implementation summaries
-- design proposals
-- old task and source pages
-
-## Public Scaffold vs Private Vault
-
-The sync model is intentionally one-way for scaffold files.
-
-Use:
-
-```powershell
-python 00_system/scripts/sync_private_vault.py --dry-run
-python 00_system/scripts/sync_private_vault.py
-```
-
-This syncs scaffold-layer files from the public repo into `ObsidianToWiki-private`.
-
-It does not sync your private content back.
-
-## Document Roles
+Document roles:
 
 - `README.md` / `README-zh.md`
-  system overview, architecture, directory structure, and operating model
+  product overview, design principles, architecture, and usage
 - `Home.md`
-  the first page to open when navigating inside the vault
+  main entry page
 - `快速开始.md`
-  the shortest path to first use
+  shortest onboarding path
 - `使用手册.md`
-  day-to-day operating guide
+  day-to-day usage guide
+- `标准自然语言话术清单.md`
+  fixed list of common user requests
 - `会话启动页.md`
   copyable prompts for agents
-- `index.md`
-  navigation hub, not the main explanation document
 
 ## Methodology
 
-This project is informed by Andrej Karpathy's `llm-wiki` idea and adapted into a local Obsidian-first scaffold.
-
-- Karpathy note: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and adapted into a local Obsidian-first scaffold.

@@ -96,9 +96,9 @@ ObsidianToWiki 当前已经具备可用的本地 wiki 脚手架：
 
 ```json
 {
-  "wiki_root": "C:/path/to/private/wiki",
+  "wiki_root": "<private-wiki-root>",
   "project_slug": "demo-saas",
-  "project_root": "C:/path/to/repo",
+  "project_root": "<project-root>",
   "project_index": "20_projects/active/demo-saas/索引.md",
   "project_overview": "20_projects/active/demo-saas/概览.md",
   "project_tasks": "20_projects/active/demo-saas/任务.md",
@@ -386,5 +386,5 @@ python 00_system/scripts/attach_project.py --repo-root /path/to/repo --project d
 
 ## References
 
-- Karpathy `llm-wiki`: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+- [Karpathy LLM-Wiki 方法论](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 - Nous Research `Hermes Agent`: https://github.com/NousResearch/hermes-agent

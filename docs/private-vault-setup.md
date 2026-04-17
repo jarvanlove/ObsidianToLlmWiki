@@ -5,7 +5,7 @@
 ## 先说清楚公开仓库和私有库的关系
 
 - `ObsidianToWiki`
-  公开脚手架，放脚本、模板、规则、说明
+  公开脚手架，放规则、模板、系统能力和说明
 - `ObsidianToWiki-private`
   私有知识库，放你的真实项目、个人知识、原始资料和沉淀结果
 
@@ -21,7 +21,7 @@
 至少要有这些顶层目录和文件：
 
 ```text
-ObsidianToWiki-private/
+<your-private-vault>/
 ├─ 00_system/
 ├─ 01_inbox/
 ├─ 10_personal/
@@ -33,6 +33,7 @@ ObsidianToWiki-private/
 ├─ 快速开始.md
 ├─ 使用手册.md
 ├─ 会话启动页.md
+├─ 标准自然语言话术清单.md
 ├─ index.md
 ├─ log.md
 ├─ AGENTS.md
@@ -60,13 +61,11 @@ ObsidianToWiki-private/
 
 ## 项目怎么接
 
-如果你有一个现成项目仓库，要把它接入私有库：
+如果你有一个现成项目仓库，要把它接入私有库，你只需要说：
 
-```powershell
-python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --project "demo-saas"
-```
+- `帮我把当前项目接入 wiki`
 
-默认情况下，这个脚本会优先找当前公开仓库同级目录里的 `ObsidianToWiki-private`。
+默认情况下，系统会优先找当前公开仓库同级目录里的 `ObsidianToWiki-private`。
 
 接入后会发生两件事：
 
@@ -88,35 +87,22 @@ python 00_system/scripts/attach_project.py --repo-root "C:\path\to\repo" --proje
 
 ## 资料怎么接进私有库
 
-把资料摄入某个项目：
+把资料摄入某个项目时，你只需要说：
 
-```powershell
-python 00_system/scripts/ingest_source.py --source "C:\path\to\prd.docx" --title "PRD v1" --project "demo-saas" --tags "prd,需求"
-```
+- `把这份资料收进当前项目`
 
-把资料先收进全局知识库，再决定后续归类，也可以先放到：
+把资料先收进全局知识库，再决定后续归类时，你只需要说：
 
-- `01_inbox/raw/`
+- `把这份资料收进个人知识库`
+
+原始文件会进入输入层，后续再决定是否沉淀到个人层、项目层、共享层或输出层。
 
 ## 私有库和公开仓库怎么同步
 
-先预览：
+这个同步属于维护动作，不属于日常用户操作。
 
-```powershell
-python 00_system/scripts/sync_private_vault.py --dry-run
-```
+你只需要知道：
 
-确认没问题再执行：
-
-```powershell
-python 00_system/scripts/sync_private_vault.py
-```
-
-这个同步只复制脚手架层内容，比如：
-
-- `00_system/`
-- `docs/`
-- 根入口文件
-- `30_shared/prompts/`
-
-不会覆盖你的私有项目内容、个人知识和原始资料。
+- 公开仓库负责脚手架层内容，比如 `00_system/`、`docs/`、根入口文件、`30_shared/prompts/`
+- 私有库负责真实项目内容、个人知识和原始资料
+- 同步不会覆盖你的私有项目内容、个人知识和原始资料
