@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 from datetime import date, datetime
@@ -12,6 +13,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_VAULT_ROOT = SCRIPT_DIR.parent.parent
 VAULT_ROOT = Path(os.environ.get("OBSIDIAN_WIKI_ROOT", str(DEFAULT_VAULT_ROOT))).resolve()
 LOG_PATH = VAULT_ROOT / "log.md"
+USER_WIKI_CONFIG_CANDIDATES = (
+    Path.home() / ".obsidiantowiki.json",
+    Path.home() / ".config" / "obsidiantowiki" / "config.json",
+)
 
 EXCLUDED_PARTS = {
     ".obsidian",
@@ -90,6 +95,117 @@ def read_text(path: Path) -> str:
 def write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content.rstrip() + "\n", encoding="utf-8")
+
+
+def user_wiki_config_path() -> Path:
+    for candidate in USER_WIKI_CONFIG_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return USER_WIKI_CONFIG_CANDIDATES[0]
+
+
+def load_user_wiki_config() -> dict[str, object]:
+    config_path = user_wiki_config_path()
+    if not config_path.exists():
+        return {}
+    try:
+        payload = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def save_user_wiki_config(payload: dict[str, object]) -> Path:
+    config_path = user_wiki_config_path()
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return config_path
+
+
+def persist_user_wiki_root(wiki_root: Path) -> Path:
+    resolved_root = wiki_root.expanduser().resolve()
+    config = load_user_wiki_config()
+    known_roots = config.get("known_wiki_roots")
+    if not isinstance(known_roots, list):
+        known_roots = []
+
+    normalized_roots: list[str] = []
+    for item in known_roots:
+        raw = str(item or "").strip()
+        if raw and raw not in normalized_roots:
+            normalized_roots.append(raw)
+
+    wiki_root_str = str(resolved_root)
+    if wiki_root_str not in normalized_roots:
+        normalized_roots.append(wiki_root_str)
+
+    config["default_wiki_root"] = wiki_root_str
+    config["last_wiki_root"] = wiki_root_str
+    config["known_wiki_roots"] = normalized_roots
+    return save_user_wiki_config(config)
+
+
+def _load_project_context_wiki_root(repo_root: Path | None) -> Path | None:
+    if repo_root is None:
+        return None
+    context_path = repo_root / "wiki.context.json"
+    if not context_path.exists():
+        return None
+    try:
+        payload = json.loads(context_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    raw_root = str(payload.get("wiki_root") or "").strip()
+    if not raw_root:
+        return None
+    candidate = Path(raw_root).expanduser().resolve()
+    return candidate if candidate.exists() else None
+
+
+def detect_wiki_root(repo_root: Path | None = None, explicit_root: str | Path | None = None) -> Path:
+    if explicit_root:
+        candidate = Path(str(explicit_root)).expanduser().resolve()
+        if candidate.exists():
+            return candidate
+
+    env_root = os.environ.get("OBSIDIAN_WIKI_ROOT", "").strip()
+    if env_root:
+        candidate = Path(env_root).expanduser().resolve()
+        if candidate.exists():
+            return candidate
+
+    project_context_root = _load_project_context_wiki_root(repo_root)
+    if project_context_root is not None:
+        return project_context_root
+
+    config = load_user_wiki_config()
+    default_wiki_root = str(config.get("default_wiki_root") or "").strip()
+    if default_wiki_root:
+        candidate = Path(default_wiki_root).expanduser().resolve()
+        if candidate.exists():
+            return candidate
+
+    last_wiki_root = str(config.get("last_wiki_root") or "").strip()
+    if last_wiki_root:
+        candidate = Path(last_wiki_root).expanduser().resolve()
+        if candidate.exists():
+            return candidate
+
+    if repo_root is not None:
+        sibling_private = repo_root.parent / "ObsidianToWiki-private"
+        if sibling_private.exists():
+            return sibling_private.resolve()
+
+    sibling_private = VAULT_ROOT.parent / f"{VAULT_ROOT.name}-private"
+    if sibling_private.exists():
+        return sibling_private.resolve()
+
+    if VAULT_ROOT.exists():
+        return VAULT_ROOT
+
+    raise FileNotFoundError("未找到可用的 wiki 根目录，请首次明确提供一次私有 wiki 位置。")
 
 
 def dump_frontmatter(frontmatter: dict[str, object]) -> str:

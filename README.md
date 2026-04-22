@@ -31,12 +31,52 @@ For a first run, do only these four things:
    - attach one project
    - ingest one source
 
+On first attach, the system now tries to find your private wiki automatically through project bridge files, user-level config, and standard vault naming conventions. If you need to confirm it once, later attaches reuse that result.
+
 After that, use natural language requests such as:
 
 - "attach the current project to the wiki"
 - "ingest this into the current project"
+- "distill this conclusion into personal knowledge"
 - "answer based on the current project's wiki"
 - "save this conclusion into the wiki"
+
+## How To Use It Every Day
+
+In practice, daily use fits into four moments.
+
+### 1. Before You Start Work
+
+- If this is a new project, say: "attach the current project to the wiki"
+- If the project is already attached, have the agent read `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md` from the project root
+- Then read the project wiki's `索引.md`, `project.memory.md`, and `任务.md`
+
+### 2. While You Work
+
+- When new material appears, say: "ingest this into the current project"
+- When a conclusion is worth keeping, say: "save this conclusion into the wiki"
+- If it is a long-term personal method, preference, or lesson, say: "distill this conclusion into personal knowledge"
+- If it is reusable across projects, say: "promote this into shared knowledge"
+
+### 3. After You Finish
+
+- File stable conclusions back into the project wiki
+- At minimum, update the pages that matter: `概览.md`, `架构.md`, `决策.md`, `任务.md`, and `来源.md`
+- If it is just an analysis, retrospective, or one-off output, file it into the outputs layer
+
+### 4. When Organizing Personal Knowledge
+
+- You can also work directly inside the private wiki
+- Common requests are: "ingest this into personal knowledge"
+- Or: "find what I already know about this topic"
+- Or: "distill this conclusion into personal knowledge"
+
+In short:
+
+- project-specific material goes to the project layer
+- long-lived personal knowledge goes to the personal layer
+- reusable cross-project experience goes to the shared layer
+- one-off analyses go to the outputs layer
 
 ## Core Capability Overview
 
@@ -123,6 +163,20 @@ Attach an existing project to the wiki and establish a stable bridge between the
 ### 2. Source ingestion
 
 Ingest documents, PDFs, meeting notes, design files, screenshots, and other material while preserving originals and generating source notes.
+
+Common file types that can be brought into the system include:
+
+- text and code: `md`, `markdown`, `txt`, `py`, `js`, `ts`, `json`, `yaml`, `yml`, `html`, `css`, `java`, `go`, `rs`, `sql`
+- document formats: `docx`, `pptx`, `pdf`
+- image formats: `png`, `jpg`, `jpeg`, `webp`, `bmp`, `gif`, `tif`, `tiff`
+- audio formats: `mp3`, `wav`, `m4a`, `aac`, `flac`, `ogg`, `opus`
+- video formats: `mp4`, `mov`, `avi`, `mkv`, `webm`, `wmv`, `m4v`
+
+Notes:
+
+- text, `docx`, `pptx`, and `pdf` currently support direct text extraction
+- images, audio, and video can already be formally ingested and registered as media sources
+- their semantic understanding should, by default, be delegated to the user's own multimodal LLM / API
 
 ### 3. Project memory maintenance
 
@@ -278,6 +332,8 @@ Sync scaffold-layer content into the private vault so it has:
 - templates
 - a minimal directory structure
 
+The current version can persist the first successfully discovered private wiki root into a user-level config so later project attaches can reuse it.
+
 ### 3. Do the first real usage
 
 At first, do only two things:
@@ -311,6 +367,14 @@ Each project only needs one formal attach step. After that, the project repo roo
 
 These files form the bridge from the project repository to the project wiki.
 
+When attaching a completely new project for the first time, the system tries this order:
+
+1. existing `wiki.context.json` in the project
+2. user-level wiki defaults in the local environment
+3. a sibling `ObsidianToWiki-private` next to the scaffold
+
+Only if all of those fail does the user need to specify the private wiki location explicitly.
+
 ### Work in any window
 
 In any future coding window, the agent should read:
@@ -328,6 +392,7 @@ Recommended pattern:
 1. read project memory before work
 2. ingest new source material during work
 3. file stable conclusions back after work
+4. if the outcome is a durable method, habit, preference, or workflow, say "distill this conclusion into personal knowledge" directly in the project window
 
 The main write-back targets are usually:
 
@@ -336,6 +401,8 @@ The main write-back targets are usually:
 - `决策.md`
 - `任务.md`
 - `来源.md`
+
+If you explicitly route a conclusion to the personal layer, the system should write it into `10_personal/` while keeping a backlink to the originating project instead of forcing everything back into the project layer.
 
 ## Multimodal Support
 
@@ -353,6 +420,34 @@ Images, audio, and video should be added in stages:
 1. ingest and register them as sources
 2. add OCR, transcription, and keyframe extraction
 3. automatically distill them into project or personal pages
+
+P0 first pass is now in place:
+
+- images, audio, and video can be formally ingested
+- source notes record `media_type` and `parse_status`
+- governance can surface media sources that are still waiting for processing
+
+Current directory conventions:
+
+- personal images: `01_inbox/raw/personal/images/`
+- personal audio: `01_inbox/raw/personal/audio/`
+- personal video: `01_inbox/raw/personal/video/`
+- OCR scratch: `01_inbox/scratch/ocr/`
+- transcript scratch: `01_inbox/scratch/transcripts/`
+- keyframe scratch: `01_inbox/scratch/keyframes/`
+- summary scratch: `01_inbox/scratch/summaries/`
+
+The recommended multimodal direction is now:
+
+- use the user's own multimodal LLM / API for image, audio, and video understanding
+- keep the wiki system responsible for intake, source registration, file-back, indexing, and governance
+- treat local OCR / ASR tools only as optional fallback paths, not the default architecture
+
+Related design plans for the current evolution:
+
+- [2026-04-17-multimodal-support-plan.md](docs/plans/2026-04-17-multimodal-support-plan.md)
+- [2026-04-22-user-wiki-discovery-design.md](docs/plans/2026-04-22-user-wiki-discovery-design.md)
+- [2026-04-22-personal-knowledge-routing-design.md](docs/plans/2026-04-22-personal-knowledge-routing-design.md)
 
 ## Inbox Policy
 
@@ -385,6 +480,77 @@ Document roles:
   fixed list of common user requests
 - `会话启动页.md`
   copyable prompts for agents
+
+## Core Scripts
+
+If you want to understand which scripts matter most, start with these.
+
+### Attachment
+
+- `attach_project.py`
+  attaches a project to the wiki, writes bridge files, and creates the project memory area
+
+### Ingestion
+
+- `ingest_source.py`
+  ingests material, stores the original file, and creates a source note
+
+### Retrieval and file-back
+
+- `search_wiki.py`
+  searches the wiki
+- `file_back_query.py`
+  files an answer or analysis back into the wiki
+- `handle_nl_request.py`
+  natural-language request router
+
+### Sync
+
+- `sync_source_notes.py`
+  backfills source status and derived-page links
+- `sync_project_relations.py`
+  syncs project relations
+- `sync_private_vault.py`
+  syncs the public scaffold into the private vault
+
+### Governance
+
+- `lint_wiki.py`
+  runs governance and health checks
+- `schema_lib.py`
+  validates page schema
+- `wiki_lib.py`
+  shared low-level utilities
+
+### Learning and promotion
+
+- `record_learning_candidate.py`
+  records learning candidates
+- `discover_learning_candidates.py`
+  discovers candidates automatically
+- `promote_learning_candidate.py`
+  promotes a candidate into a formal asset
+- `recommend_source_promotions.py`
+  recommends promotion targets for source notes
+
+### Indexes and status
+
+- `rebuild_indexes.py`
+  rebuilds indexes
+- `log_event.py`
+  writes logs
+- `version_status.py`
+  reports version state
+- `version_closure_report.py`
+  generates a closure report
+
+If you only remember five scripts, remember these:
+
+- `attach_project.py`
+- `ingest_source.py`
+- `handle_nl_request.py`
+- `search_wiki.py`
+- `file_back_query.py`
 
 ## Methodology
 

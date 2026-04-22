@@ -80,6 +80,20 @@ def classify_request(text: str) -> str:
     raise SystemExit(f"暂不支持的自然语言请求: {text}")
 
 
+def infer_file_back_destination(text: str, has_project_context: bool) -> str:
+    compact = text.strip().lower().replace(" ", "")
+
+    if any(token in compact for token in ("个人知识", "个人知识库", "个人wiki", "我的个人wiki")):
+        return "personal"
+    if any(token in compact for token in ("共享知识", "共享层", "共享wiki")):
+        return "shared"
+    if any(token in compact for token in ("输出页", "分析页", "outputs")):
+        return "outputs"
+    if any(token in compact for token in ("项目wiki", "项目知识", "项目层")):
+        return "project"
+    return "project" if has_project_context else "outputs"
+
+
 def handle_attach_project(repo_root: Path, request: str, tags: str, wiki_root_arg: str) -> None:
     project_name = repo_root.name
     args = ["--repo-root", str(repo_root), "--project", project_name]
@@ -114,7 +128,7 @@ def handle_ingest_project(repo_root: Path, source: str, title: str, tags: str) -
     run_python("ingest_source.py", args, env=env)
 
 
-def handle_file_back(repo_root: Path, title: str, question: str, conclusion: str, tags: str) -> None:
+def handle_file_back(repo_root: Path, request: str, title: str, question: str, conclusion: str, tags: str) -> None:
     if not title.strip() or not question.strip() or not conclusion.strip():
         raise SystemExit("写回结论需要提供 --title、--question、--conclusion")
 
@@ -123,9 +137,13 @@ def handle_file_back(repo_root: Path, title: str, question: str, conclusion: str
         args.extend(["--tags", tags.strip()])
 
     context = load_project_context(repo_root)
+    destination = infer_file_back_destination(request, has_project_context=bool(context))
+    args.extend(["--destination", destination])
     if context:
         _context, wiki_root, _project_slug, project_name = load_required_project_context(repo_root)
-        if project_name:
+        if project_name and destination == "project":
+            args.extend(["--project", project_name])
+        elif project_name:
             args.extend(["--project", project_name])
         env = dict(os.environ)
         env["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
@@ -207,7 +225,7 @@ def main() -> None:
         handle_ingest_project(repo_root, args.source, args.title, tags)
         return
     if request_kind == "file_back":
-        handle_file_back(repo_root, args.title, args.question, args.conclusion, tags)
+        handle_file_back(repo_root, args.request, args.title, args.question, args.conclusion, tags)
         return
 
     raise SystemExit(f"未处理的请求类型: {request_kind}")

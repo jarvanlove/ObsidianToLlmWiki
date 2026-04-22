@@ -24,17 +24,52 @@ from wiki_lib import (
 
 TEMPLATE_DIR = VAULT_ROOT / "00_system" / "templates"
 TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".py", ".js", ".ts", ".json", ".yaml", ".yml", ".html", ".css", ".java", ".go", ".rs", ".sql"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".tif", ".tiff"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus"}
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".m4v"}
 
 
 def ensure_project_layout(project_name: str) -> Path:
     return ensure_project(project_name, tags=[], status="活跃", summary=f"{project_name} 的项目知识库。")
 
 
-def copy_source(source_file: Path, project_name: str | None) -> Path:
+def ensure_multimodal_scratch_dirs() -> None:
+    for rel in (
+        Path("01_inbox/scratch/ocr"),
+        Path("01_inbox/scratch/transcripts"),
+        Path("01_inbox/scratch/keyframes"),
+        Path("01_inbox/scratch/summaries"),
+    ):
+        (VAULT_ROOT / rel).mkdir(parents=True, exist_ok=True)
+
+
+def detect_media_type(path: Path) -> str:
+    ext = path.suffix.lower()
+    if ext in IMAGE_EXTENSIONS:
+        return "image"
+    if ext in AUDIO_EXTENSIONS:
+        return "audio"
+    if ext in VIDEO_EXTENSIONS:
+        return "video"
+    return "document"
+
+
+def personal_raw_dir_for_media_type(media_type: str) -> Path:
+    base = VAULT_ROOT / "01_inbox" / "raw"
+    if media_type == "image":
+        return base / "personal" / "images"
+    if media_type == "audio":
+        return base / "personal" / "audio"
+    if media_type == "video":
+        return base / "personal" / "video"
+    return base
+
+
+def copy_source(source_file: Path, project_name: str | None, media_type: str) -> Path:
     if project_name:
         destination_dir = ensure_project_layout(project_name) / "sources"
     else:
-        destination_dir = VAULT_ROOT / "01_inbox" / "raw"
+        destination_dir = personal_raw_dir_for_media_type(media_type)
         destination_dir.mkdir(parents=True, exist_ok=True)
 
     destination = destination_dir / source_file.name
@@ -59,6 +94,8 @@ def render_source_note(
     summary: str,
     source_path: str,
     source_hash: str,
+    media_type: str,
+    parse_status: str,
     ingest_status: str,
 ) -> str:
     content = render_template(
@@ -77,8 +114,11 @@ def render_source_note(
     replacements = {
         "source_path:": f"source_path: {source_path}",
         "source_hash:": f"source_hash: {source_hash}",
+        "media_type: document": f"media_type: {media_type}",
+        "parse_status: 已提取": f"parse_status: {parse_status}",
         "ingest_status: 已登记": f"ingest_status: {ingest_status}",
         "review_due:": f"review_due: {today_iso()}",
+        "last_parse_attempt:": f"last_parse_attempt: {today_iso()}",
     }
     lines = []
     for line in content.splitlines():
@@ -150,8 +190,24 @@ def extract_text_content(path: Path) -> tuple[str, str]:
     return "", "binary"
 
 
-def enrich_source_note(content: str, extracted_text: str, extract_mode: str) -> str:
+def detect_parse_status(media_type: str, extracted_text: str, extract_mode: str) -> str:
+    if media_type == "document":
+        return "已提取" if extract_mode != "binary" else "待处理"
+    return "待处理"
+
+
+def bool_literal(value: bool) -> str:
+    return "true" if value else "false"
+
+
+def enrich_source_note(content: str, extracted_text: str, extract_mode: str, media_type: str) -> str:
     lines = content.rstrip().splitlines()
+    if media_type == "image":
+        lines.extend(["", "## 媒体处理", "", "- 媒体类型: 图片", "- 当前阶段: 已入库，待 OCR / caption。"])
+    elif media_type == "audio":
+        lines.extend(["", "## 媒体处理", "", "- 媒体类型: 语音", "- 当前阶段: 已入库，待转写 / 摘要。"])
+    elif media_type == "video":
+        lines.extend(["", "## 媒体处理", "", "- 媒体类型: 视频", "- 当前阶段: 已入库，待音轨转写 / 关键帧 / 时间轴摘要。"])
     lines.extend(["", "## 文件识别", "", f"- 识别方式: {extract_mode}"])
     if extracted_text.strip():
         excerpt = extracted_text.strip()[:6000]
@@ -200,10 +256,12 @@ def main() -> None:
     project_slug = slugify(project_name) if project_name else ""
     tags = normalize_tags(args.tags)
     summary = args.summary.strip() or f"{title} 的来源笔记。"
-
-    stored_source = copy_source(source_file, project_name)
+    media_type = detect_media_type(source_file)
+    ensure_multimodal_scratch_dirs()
+    stored_source = copy_source(source_file, project_name, media_type)
     extracted_text, extract_mode = extract_text_content(stored_source)
     source_hash = file_sha256(stored_source)
+    parse_status = detect_parse_status(media_type, extracted_text, extract_mode)
     ingest_status = detect_ingest_status(extracted_text, extract_mode)
 
     if project_name:
@@ -223,9 +281,20 @@ def main() -> None:
         summary=summary,
         source_path=stored_source.relative_to(VAULT_ROOT).as_posix(),
         source_hash=source_hash,
+        media_type=media_type,
+        parse_status=parse_status,
         ingest_status=ingest_status,
     )
-    content = enrich_source_note(content, extracted_text, extract_mode)
+    replacements = {
+        "has_ocr_text:": f"has_ocr_text: {bool_literal(bool(extracted_text.strip()) and media_type == 'image')}",
+        "has_transcript:": f"has_transcript: {bool_literal(bool(extracted_text.strip()) and media_type in {'audio', 'video'})}",
+        "has_keyframes:": f"has_keyframes: {bool_literal(False)}",
+    }
+    lines = []
+    for line in content.splitlines():
+        lines.append(replacements.get(line.strip(), line))
+    content = "\n".join(lines) + "\n"
+    content = enrich_source_note(content, extracted_text, extract_mode, media_type)
     write_text(note_path, content)
 
     if project_name:

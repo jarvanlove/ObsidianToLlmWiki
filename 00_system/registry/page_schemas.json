@@ -37,7 +37,7 @@
     },
     "来源": {
       "domain": ["个人", "项目"],
-      "required": ["source_path", "source_hash", "ingest_status", "derived_pages", "recommended_targets"]
+      "required": ["source_path", "source_hash", "media_type", "parse_status", "ingest_status", "derived_pages", "recommended_targets"]
     },
     "项目": {
       "domain": ["项目"],

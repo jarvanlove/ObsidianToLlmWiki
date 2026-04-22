@@ -31,12 +31,52 @@
    - 接入一个项目
    - 摄入一份资料
 
+首次接入时，系统会优先按“项目桥文件 -> 用户级配置 -> 标准私有库命名位置”的顺序自动寻找你的私有 wiki；如果第一次需要你确认一次位置，后续会长期复用。
+
 然后以后就主要用自然语言：
 
 - `帮我把当前项目接入 wiki`
 - `把这份资料收进当前项目`
+- `把这次结论沉淀成个人知识`
 - `基于当前项目 wiki 回答这个问题`
 - `把这次结论记下来`
+
+## 以后每天怎么用
+
+把每天的使用理解成 4 个时段就够了。
+
+### 1. 开工前
+
+- 如果是新项目，先说：`帮我把当前项目接入 wiki`
+- 如果是已接入项目，让 agent 先读项目根目录的 `wiki.context.json`、`AGENTS.md`、`CLAUDE.md`
+- 再读项目 wiki 的 `索引.md`、`project.memory.md`、`任务.md`
+
+### 2. 开发中
+
+- 来了新资料，就说：`把这份资料收进当前项目`
+- 遇到值得长期保留的结论，就说：`把这次结论记下来`
+- 如果这是对你长期有用的方法、经验、偏好，就说：`把这次结论沉淀成个人知识`
+- 如果这是跨项目可复用的做法，就说：`把这个经验提升成共享知识`
+
+### 3. 结束后
+
+- 把本次稳定结论写回项目 wiki
+- 至少关注这些页：`概览.md`、`架构.md`、`决策.md`、`任务.md`、`来源.md`
+- 如果只是一次分析、复盘或阶段性输出，就沉淀到输出层
+
+### 4. 整理个人知识时
+
+- 单独打开私有 wiki 也可以直接工作
+- 这时最常用的说法是：`把这份资料收进个人知识库`
+- 或者：`帮我找一下之前关于这个主题的知识`
+- 或者：`把这次结论沉淀成个人知识`
+
+一句话总结：
+
+- 项目强相关内容进项目层
+- 对你长期有用的内容进个人层
+- 可跨项目复用的内容进共享层
+- 一次性分析结果进输出层
 
 ## 核心能力总览
 
@@ -130,6 +170,20 @@ ObsidianToWiki 解决的是两个常见问题：
 ### 2. 资料摄入
 
 把文档、PDF、会议纪要、方案、截图等资料接进系统，保存原始文件，并生成来源笔记。
+
+当前可直接纳入系统的常见文件类型包括：
+
+- 文本与代码：`md`、`markdown`、`txt`、`py`、`js`、`ts`、`json`、`yaml`、`yml`、`html`、`css`、`java`、`go`、`rs`、`sql`
+- 文档类：`docx`、`pptx`、`pdf`
+- 图片类：`png`、`jpg`、`jpeg`、`webp`、`bmp`、`gif`、`tif`、`tiff`
+- 音频类：`mp3`、`wav`、`m4a`、`aac`、`flac`、`ogg`、`opus`
+- 视频类：`mp4`、`mov`、`avi`、`mkv`、`webm`、`wmv`、`m4v`
+
+说明：
+
+- 文本、`docx`、`pptx`、`pdf` 目前支持直接提取正文
+- 图片、语音、视频目前已经可以正式入库并登记为媒体来源
+- 它们的内容理解，默认应优先走用户自己的多模态 LLM / API
 
 ### 3. 项目记忆维护
 
@@ -290,6 +344,8 @@ ObsidianToWiki/
 - 模板
 - 最小目录结构
 
+当前版本已经支持把首次成功发现的私有 wiki 根目录写入用户级配置，后续新项目接入会优先复用这条记录。
+
 ### 第三步：完成第一次真实使用
 
 第一次只做两件事：
@@ -323,6 +379,14 @@ ObsidianToWiki/
 
 这三个文件就是“项目仓库 -> 项目 wiki”的桥。
 
+在第一次接入一个全新项目时，系统会优先尝试：
+
+1. 项目已有的 `wiki.context.json`
+2. 用户环境中的 wiki 默认配置
+3. 当前脚手架同级的 `ObsidianToWiki-private`
+
+只有这些都失败时，才需要用户显式告诉系统私有 wiki 在哪里。
+
 ### 任意窗口都能继续使用
 
 以后无论从哪个窗口打开这个项目，只要窗口能访问项目根目录，agent 就可以先读取这些文件，再进入项目 wiki。
@@ -342,6 +406,7 @@ ObsidianToWiki/
 1. 做任务前先读项目记忆
 2. 做任务时如有新资料，先进入项目来源层
 3. 做任务后把稳定结论写回项目 wiki
+4. 如果是长期有效的方法、经验、偏好或工作流，可以直接在项目窗口里说“把这次结论沉淀成个人知识”
 
 回写重点通常是：
 
@@ -350,6 +415,8 @@ ObsidianToWiki/
 - `决策.md`
 - `任务.md`
 - `来源.md`
+
+如果你明确说要沉淀到个人层，系统会优先写入 `10_personal/`，同时保留来源项目线索，而不是默认只回到项目层。
 
 ## 多模态支持
 
@@ -367,6 +434,35 @@ ObsidianToWiki/
 1. 先完成入库和来源登记
 2. 再补 OCR、转写、关键帧
 3. 最后再自动沉淀到项目页或个人页
+
+当前已经完成 P0 第一版：
+
+- 图片、语音、视频可以正式入库
+- 来源笔记会记录 `media_type` 和 `parse_status`
+- 体检会提示哪些媒体来源仍处于待处理状态
+
+当前目录约定：
+
+- 个人图片：`01_inbox/raw/personal/images/`
+- 个人语音：`01_inbox/raw/personal/audio/`
+- 个人视频：`01_inbox/raw/personal/video/`
+- OCR 中间产物：`01_inbox/scratch/ocr/`
+- 转写中间产物：`01_inbox/scratch/transcripts/`
+- 关键帧中间产物：`01_inbox/scratch/keyframes/`
+- 摘要中间产物：`01_inbox/scratch/summaries/`
+
+当前推荐的多模态方向是：
+
+- 默认由用户自己的多模态 LLM / API 来识别图片、语音、视频
+- wiki 系统负责原件入库、来源登记、解析结果回写、索引和治理
+- 本地 OCR / ASR 工具只作为可选兜底，不作为默认主路径
+
+详细落地方案见 [2026-04-17-multimodal-support-plan.md](docs/plans/2026-04-17-multimodal-support-plan.md)。
+
+当前项目演进中的另外两份关键方案：
+
+- [2026-04-22-user-wiki-discovery-design.md](docs/plans/2026-04-22-user-wiki-discovery-design.md)
+- [2026-04-22-personal-knowledge-routing-design.md](docs/plans/2026-04-22-personal-knowledge-routing-design.md)
 
 ## Inbox 分类标准
 
@@ -399,6 +495,77 @@ ObsidianToWiki/
   最常用自然语言说法
 - `会话启动页.md`
   给 agent 的复制模板
+
+## 核心脚本说明
+
+如果你想理解系统到底靠哪些脚本在运转，只需要先记住下面这些。
+
+### 接入类
+
+- `attach_project.py`
+  把一个项目正式接入 wiki，生成桥文件并建立项目知识区
+
+### 摄入类
+
+- `ingest_source.py`
+  把资料收进系统，保存原始文件，创建来源笔记
+
+### 检索与回写类
+
+- `search_wiki.py`
+  搜索 wiki
+- `file_back_query.py`
+  把问答或分析沉淀为正式页面
+- `handle_nl_request.py`
+  自然语言入口分发器
+
+### 同步类
+
+- `sync_source_notes.py`
+  回填来源状态和衍生页面
+- `sync_project_relations.py`
+  同步项目关系
+- `sync_private_vault.py`
+  把公开脚手架同步到私有库
+
+### 治理类
+
+- `lint_wiki.py`
+  体检和治理检查
+- `schema_lib.py`
+  页面 schema 校验
+- `wiki_lib.py`
+  公共底层能力
+
+### 学习与提升类
+
+- `record_learning_candidate.py`
+  记录学习候选
+- `discover_learning_candidates.py`
+  自动发现候选
+- `promote_learning_candidate.py`
+  把候选升级成正式资产
+- `recommend_source_promotions.py`
+  给来源页推荐沉淀目标
+
+### 索引与状态类
+
+- `rebuild_indexes.py`
+  重建索引
+- `log_event.py`
+  写日志
+- `version_status.py`
+  看当前版本状态
+- `version_closure_report.py`
+  生成收官报告
+
+如果你只想记最重要的 5 个，就记：
+
+- `attach_project.py`
+- `ingest_source.py`
+- `handle_nl_request.py`
+- `search_wiki.py`
+- `file_back_query.py`
 
 ## 方法论来源
 

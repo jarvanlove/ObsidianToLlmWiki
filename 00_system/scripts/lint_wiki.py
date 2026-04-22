@@ -88,6 +88,7 @@ def main() -> None:
     orphans: list[dict[str, object]] = []
     stale: list[dict[str, object]] = []
     unfiled_sources: list[dict[str, object]] = []
+    pending_media_sources: list[dict[str, object]] = []
 
     for page in pages:
         rel_path = str(page["rel_path"])
@@ -104,6 +105,10 @@ def main() -> None:
 
             note_type = str(frontmatter.get("type") or "").strip()
             if note_type == "来源":
+                media_type = str(frontmatter.get("media_type") or "").strip()
+                parse_status = str(frontmatter.get("parse_status") or "").strip()
+                if media_type in {"image", "audio", "video"} and parse_status in {"待处理", "处理中", "失败"}:
+                    pending_media_sources.append(page)
                 derived_pages = frontmatter.get("derived_pages")
                 if isinstance(derived_pages, list) and derived_pages:
                     continue
@@ -143,6 +148,7 @@ def main() -> None:
         f"- 死链接: {dead_link_count}",
         f"- 重复标题组: {duplicate_title_count}",
         f"- 未沉淀来源: {len(unfiled_sources)}",
+        f"- 待处理媒体来源: {len(pending_media_sources)}",
         "",
         "## 孤儿页面",
         "",
@@ -189,6 +195,16 @@ def main() -> None:
     if unfiled_sources:
         for page in sorted(unfiled_sources, key=lambda item: str(item["rel_path"])):
             lines.append(f"- {page_link(str(page['rel_path']), str(page['title']))}")
+    else:
+        lines.append("- 无。")
+
+    lines.extend(["", "## 待处理媒体来源", ""])
+    if pending_media_sources:
+        for page in sorted(pending_media_sources, key=lambda item: str(item["rel_path"])):
+            frontmatter = page["frontmatter"]
+            media_type = str(frontmatter.get("media_type") or "").strip()
+            parse_status = str(frontmatter.get("parse_status") or "").strip()
+            lines.append(f"- {page_link(str(page['rel_path']), str(page['title']))}: `{media_type}` / `{parse_status}`")
     else:
         lines.append("- 无。")
 

@@ -160,3 +160,34 @@
 - actor: agent
 - details: sync_project_relations.py 增加句子级关键词推断；新增 version_closure_report.py 生成按 core/docs/generated/other 分组的收官报告。
 
+## [2026-04-17T00:00:00] 设计 | 新增多模态支持落地方案
+
+- actor: agent
+- details: 新增 docs/plans/2026-04-17-multimodal-support-plan.md，按 P0 / P1 / P2 拆分图片、语音、视频支持的目录改造、字段设计、脚本清单和实施顺序，并在 README-zh.md 的多模态部分挂接方案入口。
+
+## [2026-04-22T15:30:00] 更新 | 实现用户级 wiki 自动发现并补齐设计文档
+
+- actor: agent
+- details: wiki_lib.py 新增用户级配置发现与持久化，attach_project.py 改为优先使用项目桥文件、用户级配置和标准私有库位置自动发现 wiki 根目录；补充 docs/plans/2026-04-22-user-wiki-discovery-design.md、docs/plans/2026-04-22-personal-knowledge-routing-design.md，并更新 README / README-zh。
+
+## [2026-04-22T15:40:00] 更新 | 实现项目窗口中的个人知识分流第一版
+
+- actor: agent
+- details: handle_nl_request.py 现在支持在项目上下文中根据自然语言把结论路由到个人层、共享层、项目层或输出层；file_back_query.py 新增 destination 概念，并在写入个人层时保留来源项目线索；同步更新 README、使用手册和标准自然语言话术清单。
+
+## [2026-04-22T16:10:00] 更新 | 实现多模态支持 P0 第一版
+
+- actor: agent
+- details: ingest_source.py 现在会识别 image/audio/video/document 并将个人媒体文件写入约定目录；来源笔记新增 media_type 和 parse_status 等字段；sync_source_notes.py 会为旧来源笔记自动回填这些字段；lint_wiki.py 新增待处理媒体来源检查。
+
+## [2026-04-22T16:30:00] 更新 | 新增图片 OCR 脚本并接入 P1 起点
+
+- actor: agent
+- details: 新增 parse_image_source.py 及对应包装脚本；图片 OCR 结果会写入 01_inbox/scratch/ocr，并回写来源笔记的 parse_status、has_ocr_text、parse_error；当前依赖本机安装 Tesseract OCR。
+
+## [2026-04-22T16:45:00] 更新 | 文档切换到多模态 LLM/API 解析优先
+
+- actor: agent
+- details: 更新 README、使用手册、快速开始、首页和标准自然语言话术清单，明确图片/语音/视频默认由用户自己的多模态 LLM/API 负责识别，wiki 系统负责入库、回写、索引和治理；补充当前支持文件类型与核心脚本职责说明。
+
+

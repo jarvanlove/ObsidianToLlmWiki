@@ -65,7 +65,7 @@ def validate_page_schema(page: dict[str, object], registry: dict[str, object]) -
             continue
         if isinstance(value, str) and not value.strip():
             errors.append(f"字段 `{field}` 为空。")
-        if isinstance(value, list) and not value:
+        if isinstance(value, list) and not value and field not in {"derived_pages", "recommended_targets"}:
             errors.append(f"字段 `{field}` 为空列表。")
 
     allowed_domains = [str(item) for item in rule.get("domain", []) if str(item).strip()]
@@ -86,16 +86,38 @@ def validate_page_schema(page: dict[str, object], registry: dict[str, object]) -
         ingest_status = str(frontmatter.get("ingest_status") or "").strip()
         if ingest_status and ingest_status not in {"已登记", "已解析", "已总结", "已沉淀", "已提升", "已归档"}:
             errors.append(f"`ingest_status` 非法: `{ingest_status}`。")
+        media_type = str(frontmatter.get("media_type") or "").strip()
+        if media_type and media_type not in {"document", "image", "audio", "video"}:
+            errors.append(f"`media_type` 非法: `{media_type}`。")
+        parse_status = str(frontmatter.get("parse_status") or "").strip()
+        if parse_status and parse_status not in {"待处理", "处理中", "已转写", "已提取", "已摘要", "已沉淀", "失败"}:
+            errors.append(f"`parse_status` 非法: `{parse_status}`。")
         derived_pages = frontmatter.get("derived_pages")
         if derived_pages is not None and not isinstance(derived_pages, list):
             errors.append("`derived_pages` 必须是 YAML 列表。")
         recommended_targets = frontmatter.get("recommended_targets")
         if recommended_targets is not None and not isinstance(recommended_targets, list):
             errors.append("`recommended_targets` 必须是 YAML 列表。")
+        for field in ("duration_seconds", "speaker_count", "frame_count"):
+            value = frontmatter.get(field)
+            if value is not None and str(value).strip():
+                try:
+                    int(value)
+                except (TypeError, ValueError):
+                    errors.append(f"`{field}` 必须是整数。")
+        for field in ("has_ocr_text", "has_transcript", "has_keyframes"):
+            value = frontmatter.get(field)
+            if value is not None and str(value).strip():
+                if not isinstance(value, bool):
+                    errors.append(f"`{field}` 必须是布尔值。")
         review_due = frontmatter.get("review_due")
         review_due_text = str(review_due).strip() if review_due is not None else ""
         if review_due_text and parse_date(review_due_text) is None:
             errors.append(f"`review_due` 不是 ISO 日期: `{review_due_text}`。")
+        last_parse_attempt = frontmatter.get("last_parse_attempt")
+        last_parse_attempt_text = str(last_parse_attempt).strip() if last_parse_attempt is not None else ""
+        if last_parse_attempt_text and parse_date(last_parse_attempt_text) is None:
+            errors.append(f"`last_parse_attempt` 不是 ISO 日期: `{last_parse_attempt_text}`。")
 
     project = str(frontmatter.get("project") or "").strip()
     if domain == "项目" and not project:

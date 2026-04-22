@@ -18,6 +18,9 @@ from wiki_lib import (
 )
 
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".tif", ".tiff"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus"}
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".m4v"}
 
 
 def resolve_link(target: str, page_map: dict[str, Path], stem_map: dict[str, list[Path]]) -> Path | None:
@@ -58,6 +61,23 @@ def build_backlinks() -> tuple[list[dict[str, object]], dict[Path, set[Path]]]:
             if resolved is not None:
                 incoming[resolved].add(page["path"])
     return pages, incoming
+
+
+def detect_media_type_from_source_path(source_path: str) -> str:
+    ext = Path(source_path).suffix.lower()
+    if ext in IMAGE_EXTENSIONS:
+        return "image"
+    if ext in AUDIO_EXTENSIONS:
+        return "audio"
+    if ext in VIDEO_EXTENSIONS:
+        return "video"
+    return "document"
+
+
+def default_parse_status(media_type: str) -> str:
+    if media_type == "document":
+        return "已提取"
+    return "待处理"
 
 
 def main() -> None:
@@ -107,6 +127,23 @@ def main() -> None:
         if not review_due and parse_date(str(frontmatter.get("updated") or "")) is not None:
             payload["review_due"] = str(frontmatter.get("updated"))
             updates_needed = True
+
+        media_type = str(frontmatter.get("media_type") or "").strip()
+        if not media_type:
+            source_path = str(frontmatter.get("source_path") or "").strip()
+            payload["media_type"] = detect_media_type_from_source_path(source_path)
+            media_type = str(payload["media_type"])
+            updates_needed = True
+
+        parse_status = str(frontmatter.get("parse_status") or "").strip()
+        if not parse_status:
+            payload["parse_status"] = default_parse_status(media_type)
+            updates_needed = True
+
+        for field in ("has_ocr_text", "has_transcript", "has_keyframes"):
+            if field not in frontmatter:
+                payload[field] = False
+                updates_needed = True
 
         if updates_needed:
             update_page_frontmatter(Path(str(page["path"])), payload)

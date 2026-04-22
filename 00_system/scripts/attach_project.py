@@ -8,14 +8,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from wiki_lib import SCRIPT_DIR, VAULT_ROOT, normalize_tags, slugify, write_text
-
-
-def detect_default_wiki_root() -> Path:
-    sibling_private = VAULT_ROOT.parent / f"{VAULT_ROOT.name}-private"
-    if sibling_private.exists():
-        return sibling_private
-    return VAULT_ROOT
+from wiki_lib import (
+    SCRIPT_DIR,
+    detect_wiki_root,
+    normalize_tags,
+    persist_user_wiki_root,
+    slugify,
+    write_text,
+)
 
 
 def project_file_map(project_slug: str) -> dict[str, str]:
@@ -132,16 +132,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="把一个项目仓库接入 ObsidianToWiki 中心 wiki。")
     parser.add_argument("--repo-root", required=True, help="项目仓库根目录")
     parser.add_argument("--project", required=True, help="项目名")
-    parser.add_argument("--wiki-root", default=str(detect_default_wiki_root()), help="中心 wiki 根目录")
+    parser.add_argument("--wiki-root", default="", help="中心 wiki 根目录")
     parser.add_argument("--tags", default="", help="项目标签，英文逗号分隔")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).expanduser().resolve()
-    wiki_root = Path(args.wiki_root).expanduser().resolve()
     if not repo_root.exists():
         raise SystemExit(f"项目仓库不存在: {repo_root}")
-    if not wiki_root.exists():
-        raise SystemExit(f"wiki 根目录不存在: {wiki_root}")
+    try:
+        wiki_root = detect_wiki_root(repo_root=repo_root, explicit_root=args.wiki_root.strip())
+    except FileNotFoundError as exc:
+        raise SystemExit(str(exc))
 
     project_name = args.project.strip()
     project_slug = slugify(project_name)
@@ -178,12 +179,13 @@ def main() -> None:
         repo_root=repo_root,
         wiki_root=wiki_root,
     )
+    config_path = persist_user_wiki_root(wiki_root)
 
     append_log_entry(
         wiki_root,
         "项目",
         f"接入 {project_name}",
-        f"repo_root: {repo_root} | wiki_root: {wiki_root} | project_slug: {project_slug}",
+        f"repo_root: {repo_root} | wiki_root: {wiki_root} | project_slug: {project_slug} | user_config: {config_path}",
     )
     subprocess.run([sys.executable, str(SCRIPT_DIR / "rebuild_indexes.py")], check=True, env=env)
     print(repo_root / "wiki.context.json")
