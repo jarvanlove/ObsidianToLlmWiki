@@ -5,12 +5,42 @@ import re
 from datetime import date
 from pathlib import Path
 
-from wiki_lib import iter_markdown_files, load_page, obsidian_link, parse_date
+from wiki_lib import append_log, iter_markdown_files, load_page, obsidian_link, parse_date
 
 
 def tokenize(text: str) -> list[str]:
     lowered = text.lower()
     return re.findall(r"[\u4e00-\u9fff]+|[a-z0-9]+", lowered)
+
+
+def page_type_weight(page: dict[str, object]) -> int:
+    frontmatter = page["frontmatter"]
+    if not isinstance(frontmatter, dict):
+        return 0
+    page_type = str(frontmatter.get("type") or "").strip()
+    rel_path = str(page["rel_path"])
+
+    if page_type in {"项目概览", "项目架构", "项目决策", "项目任务", "项目运行记忆"}:
+        return 5
+    if page_type in {"概念", "实体", "综述", "模式", "工具", "架构", "提示词"}:
+        return 3
+    if page_type == "来源":
+        return -4
+    if page_type in {"分析", "简报"} and rel_path.startswith("40_outputs/"):
+        return -3
+    if page_type == "反思":
+        return -5
+    return 0
+
+
+def extract_body_links(body: str) -> list[str]:
+    links = re.findall(r"\[\[([^\]\|#]+)(?:#[^\]\|]+)?(?:\|[^\]]+)?\]\]", body)
+    normalized: list[str] = []
+    for link in links:
+        candidate = str(link).strip()
+        if candidate and candidate not in normalized:
+            normalized.append(candidate)
+    return normalized
 
 
 def score_page(page: dict[str, object], query_terms: list[str]) -> int:
@@ -24,16 +54,26 @@ def score_page(page: dict[str, object], query_terms: list[str]) -> int:
         return -999
 
     score = 0
+    matched = False
     for term in query_terms:
         if term in title:
             score += 20
+            matched = True
         if term in rel_path:
             score += 12
+            matched = True
         if term in tags:
             score += 8
+            matched = True
         if term in summary:
             score += 6
-        score += body.count(term)
+            matched = True
+        body_hits = body.count(term)
+        if body_hits:
+            matched = True
+        score += body_hits
+    if not matched:
+        return 0
     if "索引.md" in rel_path:
         score -= 4
     if rel_path.startswith("00_system/"):
@@ -44,6 +84,7 @@ def score_page(page: dict[str, object], query_terms: list[str]) -> int:
         score -= 6
     if rel_path in {"agents.md", "claude.md", "readme.md", "home.md", "log.md", "index.md"}:
         score -= 12
+    score += page_type_weight(page)
 
     frontmatter = page["frontmatter"]
     if isinstance(frontmatter, dict):
@@ -52,6 +93,8 @@ def score_page(page: dict[str, object], query_terms: list[str]) -> int:
             score += 4
         if status in {"候选", "已归档"}:
             score -= 4
+        if status in {"过期", "废弃"}:
+            score -= 6
 
         updated = parse_date(str(frontmatter.get("updated") or ""))
         if updated is not None:
@@ -108,7 +151,32 @@ def relation_summary(page: dict[str, object], index_by_slug: dict[str, dict[str,
     if not isinstance(frontmatter, dict):
         return []
     page_type = str(frontmatter.get("type") or "").strip()
+    domain = str(frontmatter.get("domain") or "").strip()
     project_slug = str(frontmatter.get("project") or "").strip()
+    body_links = extract_body_links(str(page["body"]))
+    if domain == "个人":
+        lines: list[str] = []
+        related_to = frontmatter.get("related_to") if isinstance(frontmatter.get("related_to"), list) else []
+        builds_on = frontmatter.get("builds_on") if isinstance(frontmatter.get("builds_on"), list) else []
+        if related_to:
+            lines.append(f"    related_to: {', '.join(str(item) for item in related_to)}")
+        if builds_on:
+            lines.append(f"    builds_on: {', '.join(str(item) for item in builds_on)}")
+        if project_slug:
+            lines.append(f"    source_project: {project_slug}")
+        if body_links:
+            lines.append(f"    linked_pages: {', '.join(body_links[:4])}")
+        return lines
+    if domain == "共享":
+        lines = []
+        if project_slug:
+            lines.append(f"    source_project: {project_slug}")
+        if body_links:
+            lines.append(f"    linked_pages: {', '.join(body_links[:4])}")
+        tags = frontmatter.get("tags") if isinstance(frontmatter.get("tags"), list) else []
+        if tags:
+            lines.append(f"    tags: {', '.join(str(tag) for tag in tags[:5])}")
+        return lines
     if page_type == "项目":
         project_index = page
     elif project_slug and project_slug in index_by_slug:
@@ -148,6 +216,7 @@ def main() -> None:
     parser.add_argument("--type", default="", help="按页面类型过滤，例如 概念、项目周报、ADR")
     parser.add_argument("--tag", default="", help="按单个标签过滤")
     parser.add_argument("--show-relations", action="store_true", help="对项目相关结果补充关系与运行记忆")
+    parser.add_argument("--no-log-failures", action="store_true", help="不记录零结果查询")
     args = parser.parse_args()
 
     terms = tokenize(args.query)
@@ -175,7 +244,22 @@ def main() -> None:
         if score > 0:
             results.append((score, page))
 
-    for score, page in sorted(results, key=lambda item: item[0], reverse=True)[: args.limit]:
+    sorted_results = sorted(results, key=lambda item: item[0], reverse=True)
+    if not sorted_results:
+        print("没有找到结果。")
+        if not args.no_log_failures:
+            filters = []
+            if project_filter:
+                filters.append(f"project={project_filter}")
+            if type_filter:
+                filters.append(f"type={type_filter}")
+            if tag_filter:
+                filters.append(f"tag={tag_filter}")
+            filter_text = ", ".join(filters) if filters else "none"
+            append_log("检索", "查询无结果", f"query={args.query}; filters={filter_text}")
+        return
+
+    for score, page in sorted_results[: args.limit]:
         print(f"{score:>3}  {obsidian_link(page['path'], str(page['title']))}  {page['summary']}")
         if args.show_relations:
             for line in relation_summary(page, index_by_slug):

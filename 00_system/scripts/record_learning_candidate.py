@@ -22,6 +22,13 @@ def build_reflection(
     candidate_score: int = 1,
     candidate_signature: str = "",
     candidate_source: str = "manual",
+    candidate_risk_level: str = "medium",
+    candidate_upgrade_mode: str = "manual",
+    candidate_repeat_count: int = 0,
+    candidate_freshness: str = "",
+    candidate_domain: str = "",
+    approved_at: str = "",
+    review_note: str = "",
     promoted_to: str = "",
 ) -> str:
     frontmatter = {
@@ -36,6 +43,13 @@ def build_reflection(
         "candidate_score": candidate_score,
         "candidate_signature": candidate_signature,
         "candidate_source": candidate_source,
+        "candidate_risk_level": candidate_risk_level,
+        "candidate_upgrade_mode": candidate_upgrade_mode,
+        "candidate_repeat_count": candidate_repeat_count,
+        "candidate_freshness": candidate_freshness or today_iso(),
+        "candidate_domain": candidate_domain,
+        "approved_at": approved_at,
+        "review_note": review_note,
         "promoted_to": promoted_to,
     }
     body = "\n".join(
@@ -75,6 +89,11 @@ def main() -> None:
     parser.add_argument("--candidate-score", type=int, default=1, help="候选成熟度分数")
     parser.add_argument("--candidate-signature", default="", help="候选去重签名")
     parser.add_argument("--candidate-source", default="manual", help="候选来源")
+    parser.add_argument("--candidate-risk-level", default="medium", choices=["low", "medium", "high"], help="候选风险等级")
+    parser.add_argument("--candidate-upgrade-mode", default="manual", choices=["auto", "semi_auto", "manual"], help="候选升级方式")
+    parser.add_argument("--candidate-repeat-count", type=int, default=0, help="候选重复出现次数")
+    parser.add_argument("--candidate-freshness", default="", help="候选新鲜度日期，默认今天")
+    parser.add_argument("--candidate-domain", default="", help="候选所属领域，如 retrieval / governance / prompts")
     args = parser.parse_args()
 
     title = args.title.strip()
@@ -104,6 +123,11 @@ def main() -> None:
         candidate_score=args.candidate_score,
         candidate_signature=args.candidate_signature,
         candidate_source=args.candidate_source,
+        candidate_risk_level=args.candidate_risk_level,
+        candidate_upgrade_mode=args.candidate_upgrade_mode,
+        candidate_repeat_count=args.candidate_repeat_count,
+        candidate_freshness=args.candidate_freshness,
+        candidate_domain=args.candidate_domain,
     )
     write_text(destination, content)
     append_log("更新", title, f"已记录学习候选到 {destination.relative_to(VAULT_ROOT).as_posix()}")

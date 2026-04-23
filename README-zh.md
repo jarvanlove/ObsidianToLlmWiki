@@ -202,6 +202,13 @@ ObsidianToWiki 解决的是两个常见问题：
 
 把对个人长期有效的认知、方法论、工作流和经验沉淀到个人知识层。
 
+个人知识页现在开始支持最小关系字段：
+
+- `related_to`
+- `builds_on`
+
+第一阶段先用它们表达“主题相关”和“建立在旧知识之上”的关系，不引入更重的关系系统。
+
 ### 5. 共享知识提升
 
 把可跨项目复用的内容提升到共享层，例如：
@@ -432,7 +439,7 @@ ObsidianToWiki/
 图片、语音、视频建议分阶段支持：
 
 1. 先完成入库和来源登记
-2. 再补 OCR、转写、关键帧
+2. 再接用户自己的多模态 LLM / API 解析链路
 3. 最后再自动沉淀到项目页或个人页
 
 当前已经完成 P0 第一版：
@@ -455,7 +462,26 @@ ObsidianToWiki/
 
 - 默认由用户自己的多模态 LLM / API 来识别图片、语音、视频
 - wiki 系统负责原件入库、来源登记、解析结果回写、索引和治理
-- 本地 OCR / ASR 工具只作为可选兜底，不作为默认主路径
+- 不要求用户安装本地 OCR / ASR / 视频处理工具
+- 不要求用户额外配置多模态 provider、adapter 或 API key 配置文件
+
+多模态现在只保留一条主路径：
+
+### 会话内解析，默认也是唯一推荐路径
+
+适用场景：
+
+- 你正在 Codex / Claude Code 里工作
+- 或者使用 Cursor、Trae、QClaw、WorkBuddy、Hermes Agent、OpenClaw 等已经集成第三方模型能力的工具
+- 直接把图片、语音、视频文件路径交给当前 AI
+- 让 AI 当场解析并沉淀到 wiki
+
+特点：
+
+- 不需要额外配置 key
+- 不需要 `~/.obsidiantowiki-multimodal.json`
+- 最符合日常使用习惯
+- 直接复用你当前工具已经接好的模型能力
 
 详细落地方案见 [2026-04-17-multimodal-support-plan.md](docs/plans/2026-04-17-multimodal-support-plan.md)。
 
@@ -513,7 +539,7 @@ ObsidianToWiki/
 ### 检索与回写类
 
 - `search_wiki.py`
-  搜索 wiki
+  搜索 wiki；当前会做页面类型权重、低价值结果降权、关系摘要补充，并记录零结果查询
 - `file_back_query.py`
   把问答或分析沉淀为正式页面
 - `handle_nl_request.py`
@@ -525,6 +551,8 @@ ObsidianToWiki/
   回填来源状态和衍生页面
 - `sync_project_relations.py`
   同步项目关系
+- `sync_personal_relations.py`
+  同步个人知识页的关系字段
 - `sync_private_vault.py`
   把公开脚手架同步到私有库
 
@@ -543,10 +571,32 @@ ObsidianToWiki/
   记录学习候选
 - `discover_learning_candidates.py`
   自动发现候选
+- `curate_learning_candidates.py`
+  归档低分且过期的学习候选
+- `review_learning_candidates.py`
+  对学习候选做批量批准、归档或重新打开
 - `promote_learning_candidate.py`
   把候选升级成正式资产
 - `recommend_source_promotions.py`
   给来源页推荐沉淀目标
+
+当前学习候选已经开始支持：
+
+- 风险等级 `candidate_risk_level`
+- 升级方式 `candidate_upgrade_mode`
+- 重复次数 `candidate_repeat_count`
+- 新鲜度 `candidate_freshness`
+- 领域 `candidate_domain`
+
+也就是说，系统不再只是“发现候选”，而是开始把候选分成：
+
+- 可半自动处理的低风险候选
+- 仍需人工审批的高风险候选
+
+当前还补上了：
+
+- `40_outputs/学习候选审批视图.md`
+- 显式批准后再提升高风险 / 手工审批候选
 
 ### 索引与状态类
 
@@ -566,6 +616,61 @@ ObsidianToWiki/
 - `handle_nl_request.py`
 - `search_wiki.py`
 - `file_back_query.py`
+
+## 个人知识关系网络 P0
+
+当前个人知识层已经支持第一版最小关系字段：
+
+- `related_to`
+- `builds_on`
+
+使用原则很简单：
+
+- `related_to`
+  用来表示主题相关、适合一起阅读的页面
+- `builds_on`
+  用来表示这页内容建立在哪些旧知识、旧方法、旧概念之上
+
+当前阶段先做到：
+
+- 模板支持填写
+- schema 校验字段类型
+- 个人关系索引生成
+- 检索结果展示个人关系摘要
+
+当前阶段暂时不做：
+
+- 自动关系抽取
+- 复杂语义关系推断
+
+P2 第一版现在的方向是保守自动化：
+
+- 从个人页里的显式链接自动建议关系
+- 用共现标签和共同来源项目做低风险补充
+- 继续避免重语义推断和复杂图谱化
+
+当前已经落地到：
+
+- `10_personal/关系索引.md`
+- 检索结果中的个人关系摘要
+- 个人关系同步脚本 `sync_personal_relations.py`
+
+## 检索升级 P0
+
+当前阶段继续坚持轻量检索，不引入重型基础设施。
+
+已经补上的能力包括：
+
+- 页面类型权重
+- 对过期输出页、反思候选页、来源页的进一步降权
+- 个人层与共享层的关系摘要补充
+- 对零结果查询的失败记录
+
+当前阶段暂时不做：
+
+- 分块检索
+- 主题召回
+- 向量检索
 
 ## 方法论来源
 

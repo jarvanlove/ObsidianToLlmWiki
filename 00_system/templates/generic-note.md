@@ -7,6 +7,8 @@ status: {{status}}
 tags: [{{tags}}]
 updated: {{updated}}
 summary: {{summary}}
+related_to: []
+builds_on: []
 ---
 
 # {{title}}
@@ -22,3 +24,8 @@ summary: {{summary}}
 ## 关联
 
 - 
+
+## 关系字段
+
+- related_to:
+- builds_on:

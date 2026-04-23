@@ -195,6 +195,13 @@ Maintain project pages for:
 
 Distill long-lived personal insights, methods, workflows, and preferences into a durable personal layer.
 
+Personal pages now begin to support a minimal relationship model:
+
+- `related_to`
+- `builds_on`
+
+In the first stage, these fields are used only to express "topically related" and "built on prior knowledge" links without introducing a heavier graph layer.
+
 ### 5. Shared knowledge promotion
 
 Promote cross-project reusable content into the shared layer, including patterns, prompts, architecture notes, and tool usage knowledge.
@@ -418,7 +425,7 @@ Current stable support includes:
 Images, audio, and video should be added in stages:
 
 1. ingest and register them as sources
-2. add OCR, transcription, and keyframe extraction
+2. connect the user's own multimodal LLM / API parsing
 3. automatically distill them into project or personal pages
 
 P0 first pass is now in place:
@@ -441,7 +448,26 @@ The recommended multimodal direction is now:
 
 - use the user's own multimodal LLM / API for image, audio, and video understanding
 - keep the wiki system responsible for intake, source registration, file-back, indexing, and governance
-- treat local OCR / ASR tools only as optional fallback paths, not the default architecture
+- do not require users to install local OCR / ASR / video-processing tools
+- do not require extra provider / adapter configuration files for multimodal use
+
+Multimodal use now keeps only one recommended route:
+
+### In-session parsing, the default and only recommended path
+
+Use this when:
+
+- you are already inside Codex or Claude Code
+- or tools such as Cursor, Trae, QClaw, WorkBuddy, Hermes Agent, or OpenClaw that already integrate third-party model access
+- you give the current AI a file path
+- you want the AI to understand the file and file the result back into the wiki
+
+Characteristics:
+
+- no extra API key setup
+- no `~/.obsidiantowiki-multimodal.json`
+- best fit for day-to-day usage
+- directly reuses the multimodal ability that your current tool has already integrated
 
 Related design plans for the current evolution:
 
@@ -498,7 +524,7 @@ If you want to understand which scripts matter most, start with these.
 ### Retrieval and file-back
 
 - `search_wiki.py`
-  searches the wiki
+  searches the wiki; it now applies page-type weighting, downranks lower-value pages, adds relation summaries, and records zero-result queries
 - `file_back_query.py`
   files an answer or analysis back into the wiki
 - `handle_nl_request.py`
@@ -510,6 +536,8 @@ If you want to understand which scripts matter most, start with these.
   backfills source status and derived-page links
 - `sync_project_relations.py`
   syncs project relations
+- `sync_personal_relations.py`
+  syncs personal-page relation fields
 - `sync_private_vault.py`
   syncs the public scaffold into the private vault
 
@@ -528,10 +556,32 @@ If you want to understand which scripts matter most, start with these.
   records learning candidates
 - `discover_learning_candidates.py`
   discovers candidates automatically
+- `curate_learning_candidates.py`
+  archives low-score stale learning candidates
+- `review_learning_candidates.py`
+  batch-approves, archives, or reopens learning candidates
 - `promote_learning_candidate.py`
   promotes a candidate into a formal asset
 - `recommend_source_promotions.py`
   recommends promotion targets for source notes
+
+Learning candidates now begin to carry:
+
+- `candidate_risk_level`
+- `candidate_upgrade_mode`
+- `candidate_repeat_count`
+- `candidate_freshness`
+- `candidate_domain`
+
+This means the system is moving from simple candidate discovery toward controlled handling of:
+
+- low-risk candidates that can be treated semi-automatically
+- high-risk candidates that still require human review
+
+This stage also adds:
+
+- `40_outputs/学习候选审批视图.md`
+- explicit approval before promoting high-risk or manual-review candidates
 
 ### Indexes and status
 
@@ -551,6 +601,61 @@ If you only remember five scripts, remember these:
 - `handle_nl_request.py`
 - `search_wiki.py`
 - `file_back_query.py`
+
+## Personal Knowledge Graph P0
+
+The personal knowledge layer now supports a minimal first-step relationship model:
+
+- `related_to`
+- `builds_on`
+
+Use them like this:
+
+- `related_to`
+  marks pages that are topically related and should be read together
+- `builds_on`
+  marks pages that build on prior concepts, methods, or knowledge pages
+
+At this stage, the system only does:
+
+- template support
+- schema validation
+- personal relation index generation
+- personal relation summaries in retrieval results
+
+At this stage, it does not yet do:
+
+- automatic relation extraction
+- deeper semantic relation inference
+
+The first P2 pass now follows a conservative automation path:
+
+- infer relations from explicit personal-page links
+- use shared tags and shared source projects as low-risk supplements
+- avoid heavier semantic graph inference for now
+
+It is now concretely wired into:
+
+- `10_personal/关系索引.md`
+- personal relation summaries in retrieval results
+- the `sync_personal_relations.py` sync script
+
+## Retrieval Scaling P0
+
+The current stage still stays on lightweight retrieval instead of heavier infrastructure.
+
+What is already added:
+
+- page-type weighting
+- stronger downranking for stale output pages, reflection candidates, and source pages
+- relation summaries for personal and shared pages
+- failure logging for zero-result queries
+
+What this stage still does not do:
+
+- chunk retrieval
+- topic recall
+- vector retrieval
 
 ## Methodology
 

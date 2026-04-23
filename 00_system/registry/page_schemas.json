@@ -1,5 +1,6 @@
 {
   "default_required": ["title", "type", "domain", "status", "updated", "summary"],
+  "personal_relation_fields": ["related_to", "builds_on"],
   "type_rules": {
     "领域": {
       "domain": ["个人", "共享", "项目"]
@@ -33,7 +34,7 @@
     },
     "反思": {
       "domain": ["输出", "项目"],
-      "required": ["candidate_score", "candidate_signature", "candidate_source"]
+      "required": ["candidate_score", "candidate_signature", "candidate_source", "candidate_risk_level", "candidate_upgrade_mode"]
     },
     "来源": {
       "domain": ["个人", "项目"],

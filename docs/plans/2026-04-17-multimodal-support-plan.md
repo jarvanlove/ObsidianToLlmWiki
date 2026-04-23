@@ -56,14 +56,14 @@ summary: 面向图片、语音、视频的多模态支持落地方案，按 P0 /
 
 OCR 文本、语音转写、关键帧摘要、时间轴片段，都只是中间资产。最终长期知识仍应写入项目页、个人页、共享页或输出页。
 
-### 3.5 默认走用户自己的 LLM / API 解析能力
+### 3.5 默认且唯一推荐路线是用户自己的 LLM / API 解析能力
 
 这套系统的职责不是把 OCR / ASR / 视频理解硬编码成某一个本地工具链，而是：
 
 1. wiki 负责入库、来源登记、状态管理、回写、索引、治理
 2. 用户自己的多模态 LLM / API 负责识别、理解、提取
 
-本地工具链可以存在，但只能作为可选兜底，不应成为默认主路径。
+也不应再为这套 wiki 额外设计脚本化多模态解析链路。用户应直接复用当前工作工具已经集成好的模型能力。
 
 ## 4. Target Processing Flow
 
@@ -320,18 +320,15 @@ raw 入库
 - 启用 `scratch/keyframes/`
 - 启用 `scratch/summaries/`
 
-### Script work
+### Workflow work
 
-建议新增：
+这一阶段不再新增“脚本自己解析媒体”的链路。
 
-1. `parse_image_source.py`
-   负责调用用户 LLM / API，对图片做 OCR、caption、标签提取或内容理解
-2. `parse_audio_source.py`
-   负责调用用户 LLM / API，对语音做转写、分段摘要、行动项提取
-3. `parse_video_source.py`
-   负责调用用户 LLM / API，对视频做转写、关键帧理解、时间轴摘要
-4. `sync_media_notes.py`
-   把解析结果同步回来源笔记 frontmatter 和正文
+重点应改为：
+
+1. 让用户在当前 Codex / Claude Code / Cursor / Trae / QClaw / WorkBuddy / Hermes Agent / OpenClaw 等工具中直接给出媒体文件路径
+2. 由当前会话里的模型完成图片、语音、视频解析
+3. 再由 wiki 系统负责把结果写回来源笔记和沉淀页
 
 ### Supporting templates
 
@@ -388,12 +385,11 @@ raw 入库
 - 改 `schema_lib.py`
 - 改 `lint_wiki.py`
 
-### P1 script checklist
+### P1 workflow checklist
 
-- 新增 `parse_image_source.py`
-- 新增 `parse_audio_source.py`
-- 新增 `parse_video_source.py`
-- 新增 `sync_media_notes.py`
+- 明确会话内多模态解析提示词与工作流
+- 明确来源笔记如何记录解析结果
+- 明确解析结果如何沉淀到项目页 / 个人页 / 共享页
 
 ### P2 script checklist
 
@@ -407,9 +403,9 @@ raw 入库
 
 1. 先做 P0
 2. 先让媒体入库和状态字段打通
-3. 再做图片解析
-4. 再做语音解析
-5. 最后做视频解析
+3. 再把图片的会话内解析链路走通
+4. 再把语音的会话内解析链路走通
+5. 最后把视频的会话内解析链路走通
 6. 等解析稳定后，再做自动沉淀
 
 原因很简单：
@@ -433,7 +429,7 @@ raw 入库
 
 ### Decision B
 
-默认不要把某个本地 OCR / ASR 工具写死成唯一实现；应优先设计为“统一协议 + 可替换解析后端”。
+默认不要把某个本地 OCR / ASR 工具写死成唯一实现；多模态解析应直接复用用户当前工作工具已经集成好的模型能力。
 
 ### Decision C
 
@@ -445,10 +441,10 @@ raw 入库
 
 ## 13. Tomorrow Implementation Plan
 
-如果明天开始做，建议按这三步开工：
+如果下一轮开始做，建议按这三步开工：
 
 1. 调整目录和 schema
 2. 改造 `ingest_source.py` 让媒体文件可正式入库
-3. 先做图片解析链路
+3. 先做面向会话内模型的图片解析链路
 
 做到这一步，就已经完成 P0 并进入 P1 起点。

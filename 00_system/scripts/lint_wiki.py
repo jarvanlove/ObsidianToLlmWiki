@@ -53,6 +53,7 @@ def main() -> None:
     subprocess.run([sys.executable, str(SCRIPT_DIR / "sync_source_notes.py")], check=True)
     subprocess.run([sys.executable, str(SCRIPT_DIR / "recommend_source_promotions.py")], check=True)
     subprocess.run([sys.executable, str(SCRIPT_DIR / "sync_project_relations.py")], check=True)
+    subprocess.run([sys.executable, str(SCRIPT_DIR / "sync_personal_relations.py")], check=True)
     subprocess.run([sys.executable, str(SCRIPT_DIR / "rebuild_indexes.py")], check=True)
 
     pages = [load_page(path) for path in iter_markdown_files()]

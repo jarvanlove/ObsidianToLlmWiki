@@ -74,6 +74,10 @@ def write_candidate(
     candidate_score: int,
     candidate_signature: str,
     candidate_source: str,
+    candidate_risk_level: str,
+    candidate_upgrade_mode: str,
+    candidate_repeat_count: int,
+    candidate_domain: str,
     existing_signatures: set[str],
 ) -> bool:
     destination = candidate_path(title)
@@ -92,6 +96,10 @@ def write_candidate(
         candidate_score=candidate_score,
         candidate_signature=candidate_signature,
         candidate_source=candidate_source,
+        candidate_risk_level=candidate_risk_level,
+        candidate_upgrade_mode=candidate_upgrade_mode,
+        candidate_repeat_count=candidate_repeat_count,
+        candidate_domain=candidate_domain,
     )
     write_text(destination, content)
     if candidate_signature:
@@ -148,6 +156,10 @@ def discover_from_health_report(existing_signatures: set[str], *, min_score: int
             candidate_score=score,
             candidate_signature=signature,
             candidate_source="health_report",
+            candidate_risk_level="medium" if "Schema" in title or "死链接" in title else "low",
+            candidate_upgrade_mode="manual" if "Schema" in title or "死链接" in title else "semi_auto",
+            candidate_repeat_count=count,
+            candidate_domain="governance",
             existing_signatures=existing_signatures,
         ):
             created += 1
@@ -184,6 +196,10 @@ def discover_from_logs(existing_signatures: set[str], *, min_score: int) -> int:
             candidate_score=score,
             candidate_signature=signature,
             candidate_source="logs",
+            candidate_risk_level="low",
+            candidate_upgrade_mode="semi_auto",
+            candidate_repeat_count=count,
+            candidate_domain="automation",
             existing_signatures=existing_signatures,
         ):
             created += 1
@@ -240,6 +256,10 @@ def discover_from_content_tags(existing_signatures: set[str], *, min_score: int)
             candidate_score=score,
             candidate_signature=signature,
             candidate_source="content_tags",
+            candidate_risk_level="low",
+            candidate_upgrade_mode="semi_auto",
+            candidate_repeat_count=count,
+            candidate_domain="shared",
             existing_signatures=existing_signatures,
         ):
             created += 1
@@ -323,6 +343,10 @@ def discover_from_similar_content(existing_signatures: set[str], *, min_score: i
             candidate_score=score,
             candidate_signature=signature,
             candidate_source="content_cluster",
+            candidate_risk_level="medium",
+            candidate_upgrade_mode="semi_auto",
+            candidate_repeat_count=len(cluster),
+            candidate_domain="retrieval",
             existing_signatures=existing_signatures,
         ):
             created += 1

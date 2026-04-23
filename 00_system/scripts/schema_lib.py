@@ -129,6 +129,17 @@ def validate_page_schema(page: dict[str, object], registry: dict[str, object]) -
             if value is not None and not isinstance(value, list):
                 errors.append(f"`{field}` 必须是 YAML 列表。")
 
+    personal_relation_fields = [
+        str(item).strip()
+        for item in registry.get("personal_relation_fields", [])
+        if str(item).strip()
+    ]
+    if domain == "个人":
+        for field in personal_relation_fields:
+            value = frontmatter.get(field)
+            if value is not None and not isinstance(value, list):
+                errors.append(f"`{field}` 必须是 YAML 列表。")
+
     if note_type == "反思":
         candidate_score = frontmatter.get("candidate_score")
         if candidate_score is not None:
@@ -136,7 +147,23 @@ def validate_page_schema(page: dict[str, object], registry: dict[str, object]) -
                 int(candidate_score)
             except (TypeError, ValueError):
                 errors.append("`candidate_score` 必须是整数。")
-        for field in ("candidate_signature", "candidate_source", "promoted_to"):
+        candidate_repeat_count = frontmatter.get("candidate_repeat_count")
+        if candidate_repeat_count is not None and str(candidate_repeat_count).strip():
+            try:
+                int(candidate_repeat_count)
+            except (TypeError, ValueError):
+                errors.append("`candidate_repeat_count` 必须是整数。")
+        candidate_risk_level = str(frontmatter.get("candidate_risk_level") or "").strip()
+        if candidate_risk_level and candidate_risk_level not in {"low", "medium", "high"}:
+            errors.append(f"`candidate_risk_level` 非法: `{candidate_risk_level}`。")
+        candidate_upgrade_mode = str(frontmatter.get("candidate_upgrade_mode") or "").strip()
+        if candidate_upgrade_mode and candidate_upgrade_mode not in {"auto", "semi_auto", "manual"}:
+            errors.append(f"`candidate_upgrade_mode` 非法: `{candidate_upgrade_mode}`。")
+        candidate_freshness = frontmatter.get("candidate_freshness")
+        candidate_freshness_text = str(candidate_freshness).strip() if candidate_freshness is not None else ""
+        if candidate_freshness_text and parse_date(candidate_freshness_text) is None:
+            errors.append(f"`candidate_freshness` 不是 ISO 日期: `{candidate_freshness_text}`。")
+        for field in ("candidate_signature", "candidate_source", "candidate_domain", "promoted_to"):
             value = frontmatter.get(field)
             if value is not None and not isinstance(value, str):
                 errors.append(f"`{field}` 必须是字符串。")

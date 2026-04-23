@@ -105,6 +105,12 @@ def main() -> None:
         raise SystemExit("候选页缺少 frontmatter。")
     if str(frontmatter.get("type") or "").strip() != "反思":
         raise SystemExit("只支持从 `反思` 类型页面提升。")
+    risk_level = str(frontmatter.get("candidate_risk_level") or "").strip()
+    upgrade_mode = str(frontmatter.get("candidate_upgrade_mode") or "").strip()
+    status = str(frontmatter.get("status") or "").strip()
+    approved = status == "已批准"
+    if not approved and (risk_level == "high" or upgrade_mode == "manual"):
+        raise SystemExit("该候选属于高风险或人工审批类型，当前不能直接自动提升。")
 
     title = args.title.strip() or str(frontmatter.get("title") or source_path.stem)
     note_type = args.target_type

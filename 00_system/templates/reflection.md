@@ -10,6 +10,13 @@ summary: {{summary}}
 candidate_score: 0
 candidate_signature:
 candidate_source:
+candidate_risk_level: medium
+candidate_upgrade_mode: manual
+candidate_repeat_count: 0
+candidate_freshness: {{updated}}
+candidate_domain:
+approved_at:
+review_note:
 promoted_to:
 ---
 
