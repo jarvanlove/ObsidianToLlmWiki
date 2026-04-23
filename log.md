@@ -180,11 +180,6 @@
 - actor: agent
 - details: ingest_source.py 现在会识别 image/audio/video/document 并将个人媒体文件写入约定目录；来源笔记新增 media_type 和 parse_status 等字段；sync_source_notes.py 会为旧来源笔记自动回填这些字段；lint_wiki.py 新增待处理媒体来源检查。
 
-## [2026-04-22T16:30:00] 更新 | 新增图片 OCR 脚本并接入 P1 起点
-
-- actor: agent
-- details: 新增 parse_image_source.py 及对应包装脚本；图片 OCR 结果会写入 01_inbox/scratch/ocr，并回写来源笔记的 parse_status、has_ocr_text、parse_error；当前依赖本机安装 Tesseract OCR。
-
 ## [2026-04-22T16:45:00] 更新 | 文档切换到多模态 LLM/API 解析优先
 
 - actor: agent
