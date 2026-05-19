@@ -48,8 +48,8 @@ In practice, daily use fits into four moments.
 ### 1. Before You Start Work
 
 - If this is a new project, say: "attach the current project to the wiki"
-- If the project is already attached, have the agent read `wiki.context.json` and its own project entrypoint: Codex reads `AGENTS.md`; Claude Code and compatible tools read `CLAUDE.md`
-- Then read the project wiki's `索引.md`, `project.memory.md`, and `任务.md`
+- If the project is already attached, say: "work according to the current project rules"
+- To keep moving, say: "continue the current project"
 
 ### 2. While You Work
 
@@ -368,20 +368,19 @@ This is one of the most important use cases.
 
 Each project only needs one formal attach step. After that, the project repo root will contain:
 
-- `wiki.context.json`
-- an ObsidianToWiki managed block in `AGENTS.md`
-- an ObsidianToWiki managed block in `CLAUDE.md`
-- missing project control files: `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `SECURITY.md`, `DEPLOYMENT.md`, `OPERATIONS.md`
+- AI tool entrypoints
+- a local project control plane
+- the matching project wiki area
 
-These files form the bridge from the project repository to the project wiki and the local execution control plane.
+Together, these form the bridge from the project repository to the project wiki and the local execution control plane.
 
-`AGENTS.md` and `CLAUDE.md` are peer entrypoints, not parent/child files. Codex uses `AGENTS.md`; Claude Code and compatible tools use `CLAUDE.md`. Shared project facts should live in project control files and project wiki pages, not only in one tool-specific entry file.
+Tool entrypoints are peers, not parent/child files. Shared project facts should live in the project control plane and project wiki, not only in one tool-specific entry file.
 
-If the project already has entrypoint or control files, the attach script preserves existing content. It only appends or updates the marked ObsidianToWiki block in `AGENTS.md` and `CLAUDE.md`, and it does not overwrite existing control files. Re-running attach is safe. Use `attach_project.py --skip-control-files` when you only want the wiki bridge.
+If the project already has entrypoint or control files, the attach script preserves existing content and only updates its managed block. Re-running attach is safe.
 
 When attaching a completely new project for the first time, the system tries this order:
 
-1. existing `wiki.context.json` in the project
+1. existing wiki binding information in the project
 2. user-level wiki defaults in the local environment
 3. a sibling `ObsidianToWiki-private` next to the scaffold
 
@@ -389,13 +388,13 @@ Only if all of those fail does the user need to specify the private wiki locatio
 
 ### Work in any window
 
-In any future coding window, the agent should read:
+In any future coding window, just say:
 
-1. `wiki.context.json`
-2. the matching tool entrypoint: `AGENTS.md` for Codex, `CLAUDE.md` for Claude Code / compatible tools
-3. the project's `索引.md`
-4. the project's `project.memory.md`
-5. the project's `任务.md`
+```text
+work according to the current project rules
+```
+
+The agent should automatically restore project context, read the required rules, locate the project wiki, and continue from the current task.
 
 ### Accumulate knowledge during development
 

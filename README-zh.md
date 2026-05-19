@@ -48,8 +48,8 @@
 ### 1. 开工前
 
 - 如果是新项目，先说：`帮我把当前项目接入 wiki`
-- 如果是已接入项目，让 agent 先读项目根目录的 `wiki.context.json` 和自己的工具入口：Codex 读 `AGENTS.md`，Claude Code / 兼容工具读 `CLAUDE.md`
-- 再读项目 wiki 的 `索引.md`、`project.memory.md`、`任务.md`
+- 如果是已接入项目，直接说：`请按当前项目规则工作`
+- 要继续推进任务，直接说：`继续做当前项目`
 
 ### 2. 开发中
 
@@ -162,13 +162,11 @@ ObsidianToWiki 解决的是两个常见问题：
 
 接入后会生成：
 
-- `wiki.context.json`
-- `AGENTS.md` 中的 ObsidianToWiki managed block
-- `CLAUDE.md` 中的 ObsidianToWiki managed block
-- 缺失的项目控制文件：`PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`SECURITY.md`、`DEPLOYMENT.md`、`OPERATIONS.md`
+- 项目仓库里的 AI 工具入口
+- 项目仓库里的项目控制面
 - 对应的项目子 wiki
 
-如果项目里已经有 `AGENTS.md`、`CLAUDE.md` 或项目控制文件，接入脚本会保留原内容，只追加或更新带标记的 ObsidianToWiki 区块，不覆盖既有项目规则。
+如果项目里已经有自己的规则文件，接入脚本会保留原内容，只做兼容更新，不覆盖既有项目规则。
 
 ### 2. 资料摄入
 
@@ -383,20 +381,19 @@ ObsidianToWiki/
 
 每个项目只需要正式接入一次。接入后，项目仓库根目录会生成：
 
-- `wiki.context.json`
-- `AGENTS.md` 的 ObsidianToWiki managed block
-- `CLAUDE.md` 的 ObsidianToWiki managed block
-- 缺失的项目控制文件：`PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`SECURITY.md`、`DEPLOYMENT.md`、`OPERATIONS.md`
+- AI 工具入口
+- 项目控制面
+- 对应的项目 wiki
 
-这些文件就是“项目仓库 -> 项目 wiki -> 项目执行控制面”的桥。
+这些内容共同组成“项目仓库 -> 项目 wiki -> 项目执行控制面”的桥。
 
-`AGENTS.md` 和 `CLAUDE.md` 是并列入口，不是上下级文件。Codex 使用 `AGENTS.md`，Claude Code 和兼容工具使用 `CLAUDE.md`。共享项目事实应写入项目控制文件和项目 wiki 页面，而不是只写在某一个工具入口文件里。
+工具入口是并列关系，不是上下级文件。共享项目事实应写入项目控制面和项目 wiki，而不是只写在某一个工具入口里。
 
-重复执行接入命令是安全的：已有文件会保留，已存在的 ObsidianToWiki managed block 会被原位更新，不会重复追加。需要只接入 wiki 而不动项目控制文件时，可以使用 `attach_project.py --skip-control-files`。
+重复执行接入命令是安全的：已有文件会保留，系统只更新受控区块，不会重复追加。
 
 在第一次接入一个全新项目时，系统会优先尝试：
 
-1. 项目已有的 `wiki.context.json`
+1. 项目已有的 wiki 绑定信息
 2. 用户环境中的 wiki 默认配置
 3. 当前脚手架同级的 `ObsidianToWiki-private`
 
@@ -404,21 +401,19 @@ ObsidianToWiki/
 
 ### 任意窗口都能继续使用
 
-以后无论从哪个窗口打开这个项目，只要窗口能访问项目根目录，agent 就可以先读取这些文件，再进入项目 wiki。
+以后无论从哪个窗口打开这个项目，只要窗口能访问项目根目录，你只需要说：
 
-推荐读取顺序：
+```text
+请按当前项目规则工作。
+```
 
-1. `wiki.context.json`
-2. 匹配当前工具的入口文件：Codex 读 `AGENTS.md`，Claude Code / 兼容工具读 `CLAUDE.md`
-3. 项目 `索引.md`
-4. 项目 `project.memory.md`
-5. 项目 `任务.md`
+Agent 会自动恢复项目上下文、读取必要规则、定位项目 wiki，并继续执行当前任务。
 
 ### 开发过程中怎么沉淀知识
 
 推荐工作方式：
 
-1. 做任务前先读项目记忆
+1. 做任务前让 agent 自动恢复项目记忆
 2. 做任务时如有新资料，先进入项目来源层
 3. 做任务后把稳定结论写回项目 wiki
 4. 如果是长期有效的方法、经验、偏好或工作流，可以直接在项目窗口里说“把这次结论沉淀成个人知识”

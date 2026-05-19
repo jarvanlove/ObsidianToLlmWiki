@@ -21,12 +21,14 @@ summary: 项目级 AI 约束文件的职责分工和最小模板。用于把全�
 
 ```text
 全局 AGENTS.md / CLAUDE.md：所有项目都遵守的价值观和工作原则。
-项目 CLAUDE.md：当前项目的主 AI 手册。
-项目 AGENTS.md：Codex 对当前项目的适配说明。
+项目 CLAUDE.md：Claude Code 和兼容工具的项目入口。
+项目 AGENTS.md：Codex 的项目入口。
+项目控制文件：承载共享项目事实和执行约束。
 项目 docs/*：详细规格、流程、决策和运行手册。
 ```
 
 不要把所有内容都塞进 `CLAUDE.md` 或 `AGENTS.md`。入口文件只放高频、关键、可执行信息。
+`CLAUDE.md` 和 `AGENTS.md` 是并列入口，不是上下级文件；共享事实应放在项目控制文件和项目 wiki 中。
 
 ## 2. 推荐目录
 
@@ -138,17 +140,16 @@ For requirement changes:
 ```markdown
 # Codex Project Instructions
 
-This file adapts the project for Codex. The main project AI guide is CLAUDE.md.
+This file is the Codex project entrypoint. Do not treat CLAUDE.md as Codex's parent instruction file.
 
 ## Required Reading
 
 Before edits:
 
-1. CLAUDE.md
-2. PRODUCT_SPEC.md
-3. ARCHITECTURE.md
-4. TESTING.md
-5. TASKS.md
+1. PRODUCT_SPEC.md
+2. ARCHITECTURE.md
+3. TESTING.md
+4. TASKS.md
 
 ## Codex Execution Rules
 
@@ -386,4 +387,3 @@ See `docs/adr/`.
 ```
 
 如果文件写了但 AI 不读，等于没有文件。必须在 `CLAUDE.md` 和 `AGENTS.md` 明确“Required Reading”。
-
