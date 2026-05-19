@@ -2,7 +2,7 @@
 
 这个文件放在单个项目仓库根目录，不放在公开 wiki 根目录。
 
-它的作用是：把当前项目仓库接到你的私有 wiki。
+它的作用是：作为 Codex 的项目入口，把当前项目仓库接到你的私有 wiki，并指向项目级控制文件。
 
 ```yaml
 wiki_root: <private-wiki-root>
@@ -22,8 +22,10 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 
 ## 最小规则
 
+- 这是 Codex 项目入口；不要要求 Codex 先读 `CLAUDE.md`
 - 把 wiki 当作项目记忆层
 - 优先读取 `wiki.context.json`
 - 动手前先打开对应项目页面
+- 本地实现任务直接读取 `PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`DEPLOYMENT.md`、`OPERATIONS.md`、`SECURITY.md`
 - 稳定结论写回 wiki，不要只留在聊天窗口
 - 项目交付物留在项目仓库，长期记忆留在 wiki

@@ -48,7 +48,7 @@ In practice, daily use fits into four moments.
 ### 1. Before You Start Work
 
 - If this is a new project, say: "attach the current project to the wiki"
-- If the project is already attached, have the agent read `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md` from the project root
+- If the project is already attached, have the agent read `wiki.context.json` and its own project entrypoint: Codex reads `AGENTS.md`; Claude Code and compatible tools read `CLAUDE.md`
 - Then read the project wiki's `索引.md`, `project.memory.md`, and `任务.md`
 
 ### 2. While You Work
@@ -374,6 +374,8 @@ Each project only needs one formal attach step. After that, the project repo roo
 
 These files form the bridge from the project repository to the project wiki.
 
+`AGENTS.md` and `CLAUDE.md` are peer entrypoints, not parent/child files. Codex uses `AGENTS.md`; Claude Code and compatible tools use `CLAUDE.md`. Shared project facts should live in project control files and project wiki pages, not only in one tool-specific entry file.
+
 When attaching a completely new project for the first time, the system tries this order:
 
 1. existing `wiki.context.json` in the project
@@ -387,7 +389,7 @@ Only if all of those fail does the user need to specify the private wiki locatio
 In any future coding window, the agent should read:
 
 1. `wiki.context.json`
-2. `AGENTS.md` or `CLAUDE.md`
+2. the matching tool entrypoint: `AGENTS.md` for Codex, `CLAUDE.md` for Claude Code / compatible tools
 3. the project's `索引.md`
 4. the project's `project.memory.md`
 5. the project's `任务.md`

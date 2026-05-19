@@ -24,3 +24,7 @@ Read `wiki.context.json` first if it exists. Use the paths below as the human-re
 - Read the project index and core pages before making durable changes.
 - Write reusable conclusions back into the wiki.
 - Reuse shared patterns when similar problems have already been solved elsewhere.
+- This is the Claude Code / compatible tools entrypoint.
+- For local implementation tasks, read project control files directly: `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, and `SECURITY.md`.
+- Keep public scaffold changes in this repository and durable project memory in the private wiki project pages.
+- When changing project attach/bootstrap behavior, update `docs/templates/project-AGENTS.md` and `docs/templates/project-CLAUDE.md` if the protocol changes.

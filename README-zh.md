@@ -48,7 +48,7 @@
 ### 1. 开工前
 
 - 如果是新项目，先说：`帮我把当前项目接入 wiki`
-- 如果是已接入项目，让 agent 先读项目根目录的 `wiki.context.json`、`AGENTS.md`、`CLAUDE.md`
+- 如果是已接入项目，让 agent 先读项目根目录的 `wiki.context.json` 和自己的工具入口：Codex 读 `AGENTS.md`，Claude Code / 兼容工具读 `CLAUDE.md`
 - 再读项目 wiki 的 `索引.md`、`project.memory.md`、`任务.md`
 
 ### 2. 开发中
@@ -386,6 +386,8 @@ ObsidianToWiki/
 
 这三个文件就是“项目仓库 -> 项目 wiki”的桥。
 
+`AGENTS.md` 和 `CLAUDE.md` 是并列入口，不是上下级文件。Codex 使用 `AGENTS.md`，Claude Code 和兼容工具使用 `CLAUDE.md`。共享项目事实应写入项目控制文件和项目 wiki 页面，而不是只写在某一个工具入口文件里。
+
 在第一次接入一个全新项目时，系统会优先尝试：
 
 1. 项目已有的 `wiki.context.json`
@@ -401,7 +403,7 @@ ObsidianToWiki/
 推荐读取顺序：
 
 1. `wiki.context.json`
-2. `AGENTS.md` 或 `CLAUDE.md`
+2. 匹配当前工具的入口文件：Codex 读 `AGENTS.md`，Claude Code / 兼容工具读 `CLAUDE.md`
 3. 项目 `索引.md`
 4. 项目 `project.memory.md`
 5. 项目 `任务.md`
