@@ -163,9 +163,12 @@ ObsidianToWiki 解决的是两个常见问题：
 接入后会生成：
 
 - `wiki.context.json`
-- `AGENTS.md`
-- `CLAUDE.md`
+- `AGENTS.md` 中的 ObsidianToWiki managed block
+- `CLAUDE.md` 中的 ObsidianToWiki managed block
+- 缺失的项目控制文件：`PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`SECURITY.md`、`DEPLOYMENT.md`、`OPERATIONS.md`
 - 对应的项目子 wiki
+
+如果项目里已经有 `AGENTS.md`、`CLAUDE.md` 或项目控制文件，接入脚本会保留原内容，只追加或更新带标记的 ObsidianToWiki 区块，不覆盖既有项目规则。
 
 ### 2. 资料摄入
 
@@ -381,12 +384,15 @@ ObsidianToWiki/
 每个项目只需要正式接入一次。接入后，项目仓库根目录会生成：
 
 - `wiki.context.json`
-- `AGENTS.md`
-- `CLAUDE.md`
+- `AGENTS.md` 的 ObsidianToWiki managed block
+- `CLAUDE.md` 的 ObsidianToWiki managed block
+- 缺失的项目控制文件：`PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`SECURITY.md`、`DEPLOYMENT.md`、`OPERATIONS.md`
 
-这三个文件就是“项目仓库 -> 项目 wiki”的桥。
+这些文件就是“项目仓库 -> 项目 wiki -> 项目执行控制面”的桥。
 
 `AGENTS.md` 和 `CLAUDE.md` 是并列入口，不是上下级文件。Codex 使用 `AGENTS.md`，Claude Code 和兼容工具使用 `CLAUDE.md`。共享项目事实应写入项目控制文件和项目 wiki 页面，而不是只写在某一个工具入口文件里。
+
+重复执行接入命令是安全的：已有文件会保留，已存在的 ObsidianToWiki managed block 会被原位更新，不会重复追加。需要只接入 wiki 而不动项目控制文件时，可以使用 `attach_project.py --skip-control-files`。
 
 在第一次接入一个全新项目时，系统会优先尝试：
 
@@ -531,7 +537,7 @@ ObsidianToWiki/
 ### 接入类
 
 - `attach_project.py`
-  把一个项目正式接入 wiki，生成桥文件并建立项目知识区
+  把一个项目正式接入 wiki，安全更新桥接区块，创建缺失项目控制文件，并建立项目知识区
 
 ### 摄入类
 

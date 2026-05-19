@@ -369,12 +369,15 @@ This is one of the most important use cases.
 Each project only needs one formal attach step. After that, the project repo root will contain:
 
 - `wiki.context.json`
-- `AGENTS.md`
-- `CLAUDE.md`
+- an ObsidianToWiki managed block in `AGENTS.md`
+- an ObsidianToWiki managed block in `CLAUDE.md`
+- missing project control files: `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `SECURITY.md`, `DEPLOYMENT.md`, `OPERATIONS.md`
 
-These files form the bridge from the project repository to the project wiki.
+These files form the bridge from the project repository to the project wiki and the local execution control plane.
 
 `AGENTS.md` and `CLAUDE.md` are peer entrypoints, not parent/child files. Codex uses `AGENTS.md`; Claude Code and compatible tools use `CLAUDE.md`. Shared project facts should live in project control files and project wiki pages, not only in one tool-specific entry file.
+
+If the project already has entrypoint or control files, the attach script preserves existing content. It only appends or updates the marked ObsidianToWiki block in `AGENTS.md` and `CLAUDE.md`, and it does not overwrite existing control files. Re-running attach is safe. Use `attach_project.py --skip-control-files` when you only want the wiki bridge.
 
 When attaching a completely new project for the first time, the system tries this order:
 
@@ -516,7 +519,7 @@ If you want to understand which scripts matter most, start with these.
 ### Attachment
 
 - `attach_project.py`
-  attaches a project to the wiki, writes bridge files, and creates the project memory area
+  attaches a project to the wiki, writes safe bridge blocks, creates missing project control files, and creates the project memory area
 
 ### Ingestion
 
