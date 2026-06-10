@@ -400,17 +400,17 @@ ObsidianToWiki/
 Windows:
 
 ```powershell
-cd C:\Work\note\ObsidianToWiki
+cd <obsidiantowiki-public-root>
 git pull origin main
-python .\00_system\scripts\sync_private_vault.py --private-root C:\Work\note\ObsidianToWiki-private
+python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root>
 ```
 
 macOS / Linux:
 
 ```bash
-cd ~/Work/note/ObsidianToWiki
+cd <obsidiantowiki-public-root>
 git pull origin main
-./00_system/scripts/sync_private_vault.sh --private-root ~/Work/note/ObsidianToWiki-private
+./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
 ```
 
 不要混用不同操作系统的项目绑定路径。Windows 接入会在 `wiki.context.json` 记录 `C:\...`，macOS / Linux 接入应记录 `/Users/...` 或 `~/...` 可访问路径；换系统后对项目刷新接入一次即可。

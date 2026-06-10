@@ -387,17 +387,17 @@ Recommended order:
 Windows:
 
 ```powershell
-cd C:\Work\note\ObsidianToWiki
+cd <obsidiantowiki-public-root>
 git pull origin main
-python .\00_system\scripts\sync_private_vault.py --private-root C:\Work\note\ObsidianToWiki-private
+python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root>
 ```
 
 macOS / Linux:
 
 ```bash
-cd ~/Work/note/ObsidianToWiki
+cd <obsidiantowiki-public-root>
 git pull origin main
-./00_system/scripts/sync_private_vault.sh --private-root ~/Work/note/ObsidianToWiki-private
+./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
 ```
 
 Do not mix project binding paths across operating systems. A project attached on Windows records `C:\...` paths in `wiki.context.json`; macOS / Linux should record paths that are reachable from that environment, such as `/Users/...`. Refresh the project attach once after moving across operating systems.

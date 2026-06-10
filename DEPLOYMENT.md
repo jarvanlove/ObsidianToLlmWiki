@@ -6,8 +6,8 @@ ObsidianToWiki is not deployed as a server. It is distributed as a local scaffol
 
 Primary delivery paths:
 
-- Public scaffold repository: `C:\Work\note\ObsidianToWiki`
-- Private working vault: `C:\Work\note\ObsidianToWiki-private`
+- Public scaffold repository: `<obsidiantowiki-public-root>`
+- Private working vault: `<private-wiki-root>`
 - Attached project repositories via `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md`
 
 ## Update Flow

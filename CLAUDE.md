@@ -2,10 +2,12 @@
 
 This workspace is attached to an ObsidianToWiki project memory.
 
-Read `wiki.context.json` first if it exists. Use the paths below as the human-readable bridge into the wiki.
+Read local `wiki.context.json` first if it exists. That file is intentionally ignored by git and should contain the user's real local paths.
 
-- wiki_root: `C:\Work\note\ObsidianToWiki-private`
-- project_repo_root: `C:\Work\note\ObsidianToWiki`
+Use the placeholders below as the public, human-readable bridge shape. Do not commit machine-specific absolute paths here.
+
+- wiki_root: `<private-wiki-root>`
+- project_repo_root: `<obsidiantowiki-public-root>`
 - project_slug: `obsidiantowiki`
 - project_index: `20_projects/active/obsidiantowiki/索引.md`
 - project_overview: `20_projects/active/obsidiantowiki/概览.md`

@@ -28,7 +28,7 @@ Hooks and subagents should support those moments; they should not become a separ
 Set this environment variable to the public ObsidianToWiki scaffold root:
 
 ```powershell
-$env:OBSIDIANTOWIKI_SCAFFOLD_ROOT = "C:\Work\note\ObsidianToWiki"
+$env:OBSIDIANTOWIKI_SCAFFOLD_ROOT = "<obsidiantowiki-public-root>"
 ```
 
 Do not store private wiki paths in adapter scripts.
