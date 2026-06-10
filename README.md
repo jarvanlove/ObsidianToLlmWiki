@@ -9,6 +9,7 @@ This is not just a note template repository and not just a set of search scripts
 - This is a local wiki system for both personal knowledge and project memory
 - It supports project attachment, source ingestion, retrieval, answer file-back, shared promotion, and ongoing governance
 - Users interact through natural language while scripts, indexing, sync, and maintenance stay inside the system
+- For daily project work, remember only three cockpit phrases first: "start work", "continue", and "close work"
 - It is meant for long-term use, not for leaving knowledge trapped in chat windows or scattered folders
 
 ## Who This Is For
@@ -35,6 +36,9 @@ On first attach, the system now tries to find your private wiki automatically th
 
 After that, use natural language requests such as:
 
+- "start work"
+- "continue"
+- "close work"
 - "attach the current project to the wiki"
 - "ingest this into the current project"
 - "distill this conclusion into personal knowledge"
@@ -43,28 +47,34 @@ After that, use natural language requests such as:
 
 ## How To Use It Every Day
 
-In practice, daily use fits into four moments.
+For project development, daily use starts with three cockpit phrases.
 
-### 1. Before You Start Work
+### 1. Start Work
 
-- If this is a new project, say: "attach the current project to the wiki"
-- If the project is already attached, say: "work according to the current project rules"
-- To keep moving, say: "continue the current project"
+Say: "start work".
 
-### 2. While You Work
+The agent should attach the project if needed, run a strict attach check, or restore context if the project is already attached.
+
+### 2. Continue
+
+Say: "continue".
+
+The agent should inspect project state, tasks, current diff, and wiki binding before choosing the next action.
+
+### 3. Close Work
+
+Say: "close work".
+
+The agent should inspect the diff and verification, update relevant control files, and file back only durable conclusions.
+
+### 4. While You Work
 
 - When new material appears, say: "ingest this into the current project"
 - When a conclusion is worth keeping, say: "save this conclusion into the wiki"
 - If it is a long-term personal method, preference, or lesson, say: "distill this conclusion into personal knowledge"
 - If it is reusable across projects, say: "promote this into shared knowledge"
 
-### 3. After You Finish
-
-- File stable conclusions back into the project wiki
-- At minimum, update the pages that matter: `概览.md`, `架构.md`, `决策.md`, `任务.md`, and `来源.md`
-- If it is just an analysis, retrospective, or one-off output, file it into the outputs layer
-
-### 4. When Organizing Personal Knowledge
+### 5. When Organizing Personal Knowledge
 
 - You can also work directly inside the private wiki
 - Common requests are: "ingest this into personal knowledge"

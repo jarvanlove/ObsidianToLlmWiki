@@ -4,12 +4,23 @@ This project has optional ObsidianToWiki AI adapters installed.
 
 Adapters are execution helpers, not a second source of truth.
 
+The primary daily interface remains the project cockpit:
+
+```text
+开始工作
+继续
+收工
+```
+
+Hooks and subagents should support those moments; they should not become a separate workflow the user has to remember.
+
 ## Rules
 
 - Project control files remain the local source of truth.
 - Wiki pages are only for durable conclusions.
 - Adapters call the ObsidianToWiki lifecycle protocol instead of defining their own workflow.
 - Adapters generate checklists and candidates by default; they do not directly rewrite project documents.
+- Adapters stay low-noise: remind, check, and propose candidates only when the lifecycle moment requires it.
 - Hooks and subagents should be enabled only after the manual lifecycle works for this project.
 
 ## Required Environment

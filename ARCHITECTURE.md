@@ -19,6 +19,14 @@ ObsidianToWiki is a local markdown-first wiki scaffold plus automation scripts.
 
 Important: `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Shared project facts belong in `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, `SECURITY.md`, and private wiki project pages.
 
+Daily project work is exposed through the project cockpit:
+
+| User phrase | Internal lifecycle |
+|---|---|
+| `开始工作` | Detect attach state, attach if needed, run project session check, summarize next safe action |
+| `继续` | Restore context, inspect task/diff state, run task start guidance |
+| `收工` | Inspect diff and verification, generate control-file and wiki file-back candidates |
+
 ## Core Scripts
 
 | Script | Purpose |
@@ -49,6 +57,8 @@ Important: `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Shared project fact
 - Private vault contains real user/project knowledge.
 - ObsidianToWiki defines the AI coding lifecycle protocol; attached projects execute it through local control files.
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
+- Natural-language project attach must be followed by a strict project session check before reporting success.
+- User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
 - Script changes must preserve existing user content unless explicitly migrating it.
 - High-risk learning candidates require review before promotion.
 - Multimodal direction remains in-session parsing plus wiki file-back unless a future task changes it.

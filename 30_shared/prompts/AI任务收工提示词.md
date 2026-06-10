@@ -16,7 +16,7 @@ summary: 接入 ObsidianToWiki 的项目在完成 AI coding 任务后用于更�
 ## 用户说法
 
 ```text
-请按当前项目规则收工，更新该更新的文件。
+收工。
 ```
 
 ```text

@@ -25,6 +25,7 @@ Read `wiki.context.json` first if it exists. Use the paths below as the human-re
 - Write reusable conclusions back into the wiki.
 - Reuse shared patterns when similar problems have already been solved elsewhere.
 - This is the Codex entrypoint. Do not treat `CLAUDE.md` as Codex's parent instruction file.
+- Daily project workflow should use `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.
 - For local implementation tasks, Codex reads project control files directly: `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, and `SECURITY.md`.
 - Keep public scaffold changes in this repository and durable project memory in the private wiki project pages.
 - When changing project attach/bootstrap behavior, update `docs/templates/project-AGENTS.md` and `docs/templates/project-CLAUDE.md` if the protocol changes.

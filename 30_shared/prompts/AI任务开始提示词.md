@@ -16,7 +16,11 @@ summary: 接入 ObsidianToWiki 的项目在开始 AI coding 任务时使用的�
 ## 用户说法
 
 ```text
-做 TASKS.md 里的下一个任务。
+开始工作。
+```
+
+```text
+继续。
 ```
 
 ```text
@@ -26,9 +30,9 @@ summary: 接入 ObsidianToWiki 的项目在开始 AI coding 任务时使用的�
 
 ## Agent 内部动作
 
-1. 读取 `wiki.context.json`。
-2. 读取项目入口文件和项目控制文件。
-3. 读取项目 wiki 的索引、任务、架构、决策、风险和 project.memory。
+1. 判断项目驾驶舱状态：未接入、已接入空闲、执行中、需要收工。
+2. 未接入时先接入 wiki 并运行严格检查。
+3. 已接入时读取 `wiki.context.json`、项目入口文件、项目控制文件和项目 wiki 核心页。
 4. 判断任务类型：普通任务、需求变更、bug 修复、发布检查、运维排障。
 5. 判断风险等级：P3/P2/P1/P0。
 6. 输出最小计划、预计触碰文件、验证方式。

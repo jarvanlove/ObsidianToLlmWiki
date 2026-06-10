@@ -2,6 +2,18 @@
 
 This project is attached to ObsidianToWiki and uses project control files as the local execution layer.
 
+## Project Cockpit
+
+Daily user-facing commands:
+
+| User says | Agent does |
+|---|---|
+| `开始工作` | Attach the project if needed, run a strict check, or restore context for an attached project. |
+| `继续` | Inspect task state, current diff, wiki binding, and continue the next actionable step. |
+| `收工` | Inspect diff and verification, update relevant control files, and produce wiki file-back candidates. |
+
+Users should not need to remember script names, file names, hook names, or subagent names.
+
 ## Start A Task
 
 Before editing:
@@ -15,7 +27,7 @@ Before editing:
 Optional checklist command from the ObsidianToWiki scaffold:
 
 ```powershell
-python <obsidiantowiki-root>\00_system\scripts\project_session.py start --repo-root .
+python <obsidiantowiki-root>\00_system\scripts\handle_nl_request.py --request "开始工作" --repo-root .
 ```
 
 ## Close A Task
@@ -31,7 +43,7 @@ Before reporting completion:
 Optional checklist command:
 
 ```powershell
-python <obsidiantowiki-root>\00_system\scripts\project_session.py close --repo-root . --verification "<commands and result>"
+python <obsidiantowiki-root>\00_system\scripts\handle_nl_request.py --request "收工" --repo-root . --conclusion "<commands and result>"
 ```
 
 ## Update Rules

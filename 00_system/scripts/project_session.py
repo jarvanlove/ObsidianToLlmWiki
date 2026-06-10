@@ -18,6 +18,8 @@ CONTROL_FILES = (
     "CHANGELOG.md",
 )
 
+REQUIRED_SUPPORT_DIRECTORIES = ("docs/adr", "docs/ai-workflows", "scripts/ai")
+
 WIKI_CORE_KEYS = (
     "project_index",
     "project_overview",
@@ -101,7 +103,7 @@ def project_state(repo_root: Path) -> dict[str, Any]:
     control_files = {file_name: "ok" if (repo_root / file_name).exists() else "missing" for file_name in CONTROL_FILES}
     support_directories = {
         dir_name: "ok" if (repo_root / dir_name).exists() else "missing"
-        for dir_name in ("docs/adr", "docs/ai-workflows", "scripts/ai")
+        for dir_name in REQUIRED_SUPPORT_DIRECTORIES
     }
     wiki_pages: dict[str, str] = {}
     if context:
@@ -109,11 +111,22 @@ def project_state(repo_root: Path) -> dict[str, Any]:
         for key in WIKI_CORE_KEYS:
             rel = str(context.get(key) or "")
             wiki_pages[key] = "ok" if rel and (wiki_root / rel).exists() else "missing"
+    missing_required = []
+    if not context:
+        missing_required.append("wiki.context.json")
+    missing_required.extend(name for name, status in control_files.items() if status != "ok")
+    missing_required.extend(name for name, status in support_directories.items() if status != "ok")
+    missing_required.extend(key for key, status in wiki_pages.items() if status != "ok")
+    changed = changed_files(repo_root)
+    cockpit_state = "not_attached" if not context else "needs_close" if changed else "attached_idle"
     return {
         "repo_root": str(repo_root),
         "wiki_root": str(context.get("wiki_root") or "") if context else "",
         "project_slug": str(context.get("project_slug") or "") if context else "",
         "wiki_context": "ok" if context else "missing_or_invalid",
+        "cockpit_state": cockpit_state,
+        "changed_files": changed,
+        "missing_required": missing_required,
         "control_files": control_files,
         "support_directories": support_directories,
         "wiki_core_pages": wiki_pages,
@@ -155,10 +168,21 @@ def close_report(repo_root: Path, verification: str) -> dict[str, Any]:
 
 def render_check_text(report: dict[str, Any]) -> str:
     lines = ["Project session check", f"- repo_root: {report['repo_root']}"]
+    lines.append(f"- cockpit_state: {report.get('cockpit_state', 'unknown')}")
     if report["wiki_context"] == "ok":
         lines.extend([f"- wiki_root: {report['wiki_root']}", f"- project_slug: {report['project_slug']}"])
     else:
         lines.append("- wiki_context: missing or invalid")
+
+    changed = report.get("changed_files") or []
+    if changed:
+        lines.append("\nChanged files")
+        lines.extend(f"- {path}" for path in changed)
+
+    missing_required = report.get("missing_required") or []
+    if missing_required:
+        lines.append("\nMissing required items")
+        lines.extend(f"- {item}" for item in missing_required)
 
     lines.append("\nControl files")
     for file_name in CONTROL_FILES:
@@ -218,6 +242,7 @@ def main() -> None:
     parser.add_argument("--repo-root", default=".", help="Project repository root.")
     parser.add_argument("--task", default="", help="Task description for start.")
     parser.add_argument("--verification", default="", help="Verification summary for close.")
+    parser.add_argument("--strict", action="store_true", help="Exit with code 1 when required attach items are missing.")
     parser.add_argument("--format", choices=["text", "json", "markdown"], default="text", help="Output format.")
     parser.add_argument("--output", default="", help="Optional output file.")
     args = parser.parse_args()
@@ -240,6 +265,9 @@ def main() -> None:
         write_or_print(render_start_text(report), args.output)
     else:
         write_or_print(render_close_text(report), args.output)
+
+    if args.strict and report.get("missing_required"):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

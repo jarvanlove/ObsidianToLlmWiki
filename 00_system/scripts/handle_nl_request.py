@@ -48,6 +48,13 @@ def run_python(script_name: str, args: list[str], env: dict[str, str] | None = N
     subprocess.run([sys.executable, str(SCRIPT_DIR / script_name), *args], check=True, env=env)
 
 
+def run_project_session(repo_root: Path, command: str, extra_args: list[str] | None = None) -> None:
+    args = [command, "--repo-root", str(repo_root)]
+    if extra_args:
+        args.extend(extra_args)
+    run_python("project_session.py", args)
+
+
 def load_required_project_context(repo_root: Path) -> tuple[dict[str, object], Path, str, str]:
     context = load_project_context(repo_root)
     if not context:
@@ -65,6 +72,12 @@ def classify_request(text: str) -> str:
     lowered = text.strip().lower()
     compact = lowered.replace(" ", "")
 
+    if any(token in compact for token in ("开始工作", "开始当前项目", "请按当前项目规则工作")) or compact in {"开工"}:
+        return "start_work"
+    if compact in {"继续"} or any(token in compact for token in ("继续做当前项目", "继续当前项目")):
+        return "continue_work"
+    if compact in {"收工"} or any(token in compact for token in ("今天收工", "整理收工", "当前任务收工")):
+        return "close_work"
     if "接入wiki" in compact or "接入 wiki" in lowered:
         return "attach_project"
     if "基于当前项目wiki回答" in compact or "当前项目wiki回答" in compact or "基于当前项目 wiki 回答" in lowered:
@@ -102,6 +115,29 @@ def handle_attach_project(repo_root: Path, request: str, tags: str, wiki_root_ar
     if wiki_root_arg.strip():
         args.extend(["--wiki-root", wiki_root_arg.strip()])
     run_python("attach_project.py", args)
+    run_project_session(repo_root, "check", ["--strict"])
+
+
+def handle_start_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str) -> None:
+    if not load_project_context(repo_root):
+        handle_attach_project(repo_root, request, tags, wiki_root_arg)
+        print("\n当前项目已完成 wiki 接入和严格检查。")
+    else:
+        run_project_session(repo_root, "check", ["--strict"])
+    run_project_session(repo_root, "start", ["--task", "Read TASKS.md and select the next actionable task."])
+
+
+def handle_continue_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str) -> None:
+    if not load_project_context(repo_root):
+        handle_start_work(repo_root, request, tags, wiki_root_arg)
+        return
+    run_project_session(repo_root, "check")
+    print("\n继续执行当前项目：请结合 TASKS.md、本次 diff 和上面的驾驶舱状态选择下一步。")
+
+
+def handle_close_work(repo_root: Path, verification: str) -> None:
+    load_required_project_context(repo_root)
+    run_project_session(repo_root, "close", ["--verification", verification.strip()])
 
 
 def handle_ingest_personal(source: str, title: str, tags: str) -> None:
@@ -211,6 +247,15 @@ def main() -> None:
 
     if request_kind == "attach_project":
         handle_attach_project(repo_root, args.request, tags, args.wiki_root)
+        return
+    if request_kind == "start_work":
+        handle_start_work(repo_root, args.request, tags, args.wiki_root)
+        return
+    if request_kind == "continue_work":
+        handle_continue_work(repo_root, args.request, tags, args.wiki_root)
+        return
+    if request_kind == "close_work":
+        handle_close_work(repo_root, args.conclusion or args.question)
         return
     if request_kind == "answer_project":
         handle_answer_project(repo_root, args.question)

@@ -98,6 +98,7 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
             "- Write reusable conclusions back into the wiki.",
             "- Reuse shared patterns when similar problems have already been solved elsewhere.",
             f"- {peer_rule}",
+            "- Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.",
             "- Run AI coding tasks through the project lifecycle: task_start -> task_plan -> task_implement -> task_verify -> task_close -> memory_file_back.",
             "- Before closing a task, update relevant project control files and only file back durable conclusions to the wiki.",
             "- For local implementation tasks, read project control files directly when they exist:",

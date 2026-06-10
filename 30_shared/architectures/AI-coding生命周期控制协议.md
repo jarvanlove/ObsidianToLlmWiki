@@ -24,6 +24,27 @@ summary: 定义接入 ObsidianToWiki 的项目在 AI coding 过程中如何开�
 
 ObsidianToWiki 负责定义协议、模板和脚本；接入项目负责在本地执行协议；wiki 负责沉淀长期结论。
 
+## 项目驾驶舱
+
+日常使用不应该要求用户记住所有命令。主路径收敛为三句话：
+
+| 用户说法 | 系统内部动作 |
+|---|---|
+| `开始工作` | 判断项目是否接入；未接入则执行接入并检查；已接入则恢复上下文和当前任务 |
+| `继续` | 判断当前任务和工作区状态；继续当前任务或提示先收工 |
+| `收工` | 查看 diff 和验证结果；生成控制文件更新候选和 wiki 回写候选 |
+
+高级话术仍然可用，但不作为日常主入口。
+
+## 项目状态机
+
+| 状态 | 识别方式 | 默认动作 |
+|---|---|---|
+| `not_attached` | 缺少 `wiki.context.json` 或核心入口 | 运行项目接入并执行严格检查 |
+| `attached_idle` | 已接入，无明显未收工 diff | 读取任务和 wiki 上下文，给出下一步 |
+| `in_progress` | 有任务上下文或代码变更 | 继续任务，验证后进入收工 |
+| `needs_close` | 有 diff，缺少验证或任务状态未整理 | 运行收工检查，更新控制文件候选 |
+
 ## 分层
 
 | 层 | 职责 |
@@ -43,6 +64,12 @@ ObsidianToWiki 负责定义协议、模板和脚本；接入项目负责在本�
 | `task_verify` | 修改后 | `TESTING.md`, 本次 diff | 验证命令、结果、未验证风险 |
 | `task_close` | 收工前 | git diff、验证结果、`TASKS.md` | 任务状态更新、后续项、CHANGELOG/ADR/wiki 候选 |
 | `memory_file_back` | 产生长期结论时 | 本次结论、证据、目标层 | 项目 wiki / shared / personal 回写 |
+
+接入也属于生命周期节点：
+
+| 节点 | 触发 | 必读输入 | 输出 |
+|---|---|---|---|
+| `project_attach` | 项目未接入或用户要求重新接入 | 当前 repo root、wiki root、项目名 | `wiki.context.json`、入口文件、控制文件、support dirs、项目 wiki 页、严格检查报告 |
 
 ## 更新规则矩阵
 
@@ -110,9 +137,9 @@ adapter 通过 `OBSIDIANTOWIKI_SCAFFOLD_ROOT` 找到公开 scaffold，不写死�
 第一版只要求 agent 在自然语言任务中执行：
 
 ```text
-1. 开始前读项目入口、控制文件和项目 wiki 核心页。
-2. 修改前说明任务边界、风险等级、验证方式。
+1. 用户说“开始工作”时，先判断项目状态；未接入就接入并严格检查。
+2. 用户说“继续”时，恢复项目上下文，确认任务边界、风险等级和验证方式。
 3. 修改后运行最小相关验证。
-4. 收工前更新 TASKS.md，并判断是否需要更新 CHANGELOG / ARCHITECTURE / TESTING / DEPLOYMENT / OPERATIONS / SECURITY。
+4. 用户说“收工”时，检查 diff、验证结果和控制文件更新候选。
 5. 只有长期有效结论才回写 wiki。
 ```

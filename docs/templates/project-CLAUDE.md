@@ -26,6 +26,7 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Treat the wiki as the project memory layer.
 - Treat this file as the bridge from the project repo to the private wiki.
 - Read `wiki.context.json` first when it exists, then use this file as the human-readable bootstrap.
+- Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, checks, and file-back are agent responsibilities.
 - For local implementation tasks, read `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, and `SECURITY.md` directly.
 - Open the project wiki pages before making changes.
 - Write durable conclusions back into the wiki.
