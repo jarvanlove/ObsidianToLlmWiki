@@ -10,6 +10,15 @@ PowerShell wrappers:
 .\00_system\scripts\version_status.ps1
 ```
 
+macOS / Linux wrappers:
+
+```bash
+./00_system/scripts/lint_wiki.sh
+./00_system/scripts/rebuild_indexes.sh
+./00_system/scripts/version_status.sh
+./00_system/scripts/project_session.sh check --repo-root . --strict
+```
+
 Python scripts can also be run directly when needed:
 
 ```powershell

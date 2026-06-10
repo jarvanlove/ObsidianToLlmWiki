@@ -11,4 +11,4 @@ else
     exit 127
 fi
 
-"$PYTHON_BIN" "$SCRIPT_DIR/sync_private_vault.py" "$@"
+"$PYTHON_BIN" "$SCRIPT_DIR/project_session.py" "$@"

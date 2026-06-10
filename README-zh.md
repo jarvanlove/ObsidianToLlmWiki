@@ -375,6 +375,9 @@ ObsidianToWiki/
 
 最常用的自然语言说法：
 
+- `开始工作`
+- `继续`
+- `收工`
 - `帮我把当前项目接入 wiki`
 - `把这份资料收进当前项目`
 - `把这份资料收进个人知识库`
@@ -382,6 +385,37 @@ ObsidianToWiki/
 - `边开发边沉淀`
 - `把这次结论记下来`
 - `把这个经验提升成共享知识`
+
+### 已有用户升级
+
+已有用户升级时，不需要重建私有库，也不需要把每个项目手工拆掉重接。
+
+推荐顺序：
+
+1. 在公开脚手架里 `git pull`
+2. 把新脚手架同步到自己的 `ObsidianToWiki-private`
+3. 打开正在工作的项目，说 `开始工作`
+4. 如果项目入口仍是旧协议，说“按最新版 ObsidianToWiki 刷新当前项目接入并严格检查”
+
+Windows:
+
+```powershell
+cd C:\Work\note\ObsidianToWiki
+git pull origin main
+python .\00_system\scripts\sync_private_vault.py --private-root C:\Work\note\ObsidianToWiki-private
+```
+
+macOS / Linux:
+
+```bash
+cd ~/Work/note/ObsidianToWiki
+git pull origin main
+./00_system/scripts/sync_private_vault.sh --private-root ~/Work/note/ObsidianToWiki-private
+```
+
+不要混用不同操作系统的项目绑定路径。Windows 接入会在 `wiki.context.json` 记录 `C:\...`，macOS / Linux 接入应记录 `/Users/...` 或 `~/...` 可访问路径；换系统后对项目刷新接入一次即可。
+
+这些脚本命令是可执行路径，不是用户每天要背的操作。日常项目里仍然优先只说：`开始工作`、`继续`、`收工`。
 
 ## 项目怎么使用这套系统
 

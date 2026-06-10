@@ -362,6 +362,9 @@ At first, do only two things:
 
 Typical requests:
 
+- "start work"
+- "continue"
+- "close work"
 - "attach the current project to the wiki"
 - "ingest this into the current project"
 - "ingest this into personal knowledge"
@@ -369,6 +372,37 @@ Typical requests:
 - "keep filing knowledge back while you work"
 - "save this conclusion into the wiki"
 - "promote this into shared knowledge"
+
+### Existing User Upgrade
+
+Existing users do not need to rebuild their private vault or detach projects.
+
+Recommended order:
+
+1. Pull the latest public scaffold.
+2. Sync scaffold files into `ObsidianToWiki-private`.
+3. Open the project you are working on and say "start work".
+4. If the project still has old entrypoint wording, ask the agent to refresh the project attach with the latest ObsidianToWiki scaffold and run a strict check.
+
+Windows:
+
+```powershell
+cd C:\Work\note\ObsidianToWiki
+git pull origin main
+python .\00_system\scripts\sync_private_vault.py --private-root C:\Work\note\ObsidianToWiki-private
+```
+
+macOS / Linux:
+
+```bash
+cd ~/Work/note/ObsidianToWiki
+git pull origin main
+./00_system/scripts/sync_private_vault.sh --private-root ~/Work/note/ObsidianToWiki-private
+```
+
+Do not mix project binding paths across operating systems. A project attached on Windows records `C:\...` paths in `wiki.context.json`; macOS / Linux should record paths that are reachable from that environment, such as `/Users/...`. Refresh the project attach once after moving across operating systems.
+
+The commands are the executable path for agents and advanced users. Daily project work should still start with "start work", "continue", and "close work".
 
 ## How Projects Use The System
 
