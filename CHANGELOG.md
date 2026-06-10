@@ -13,6 +13,8 @@ All notable changes to this repository should be documented in this file.
 - Source ingest, search, index rebuild, and lint tooling
 - Shared prompt templates
 - Session start page
+- AI coding lifecycle protocol, control-file templates, and project session checklist script
+- Optional hook/subagent adapter templates for projects that explicitly opt in
 
 ### Changed
 

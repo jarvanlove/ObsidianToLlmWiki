@@ -518,7 +518,10 @@ If you want to understand which scripts matter most, start with these.
 ### Attachment
 
 - `attach_project.py`
-  attaches a project to the wiki, writes safe bridge blocks, creates missing project control files, and creates the project memory area
+  attaches a project to the wiki, writes safe bridge blocks, creates missing project control files, and creates the project memory area. Optional hook/subagent adapters are installed only with `--install-ai-adapters`
+
+- `project_session.py`
+  generates AI coding lifecycle `check/start/close` checklists and control-file update candidates. By default it only reports suggestions and does not write project files or sync the private wiki
 
 ### Ingestion
 
@@ -601,6 +604,7 @@ This stage also adds:
 If you only remember five scripts, remember these:
 
 - `attach_project.py`
+- `project_session.py`
 - `ingest_source.py`
 - `handle_nl_request.py`
 - `search_wiki.py`

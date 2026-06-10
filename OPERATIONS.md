@@ -3,10 +3,12 @@
 ## Routine Operations
 
 - Attach project: `attach_project.py` / `.ps1`.
+  Optional AI adapters are installed only with `--install-ai-adapters` or `-安装AI适配器`.
 - Ingest source: `ingest_source.py` / `.ps1`.
 - Search wiki: `search_wiki.py` / `.ps1`.
 - File back answer: `file_back_query.py` / `.ps1`.
 - Natural language routing: `handle_nl_request.py` / `.ps1`.
+- Project AI session checklist: `project_session.py` / `.ps1`.
 - Governance: `lint_wiki.py` / `.ps1`.
 - Rebuild indexes: `rebuild_indexes.py` / `.ps1`.
 - Sync private vault: `sync_private_vault.py` / `.ps1`.

@@ -28,6 +28,7 @@ Important: `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Shared project fact
 | `search_wiki.py` | Search wiki with weighting and relation summaries |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
+| `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
 | `lint_wiki.py` | Governance and health checks |
 | `sync_private_vault.py` | Sync public scaffold into private vault |
 | `rebuild_indexes.py` | Rebuild indexes |
@@ -36,6 +37,8 @@ Important: `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Shared project fact
 
 - `docs/templates/project-AGENTS.md` defines Codex project bridge behavior.
 - `docs/templates/project-CLAUDE.md` defines Claude Code / compatible tool bridge behavior.
+- `docs/templates/project-control/` defines project control file templates used during project attach.
+- `docs/templates/project-adapters/` defines optional hook/subagent adapter templates; these are only installed with an explicit attach flag.
 - `00_system/templates/` defines wiki page schemas, not project repo control files.
 - `30_shared/` holds reusable prompts, patterns, tools, and architecture notes.
 
@@ -44,6 +47,8 @@ Important: `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Shared project fact
 - Markdown remains source of truth.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.
+- ObsidianToWiki defines the AI coding lifecycle protocol; attached projects execute it through local control files.
+- Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Script changes must preserve existing user content unless explicitly migrating it.
 - High-risk learning candidates require review before promotion.
 - Multimodal direction remains in-session parsing plus wiki file-back unless a future task changes it.

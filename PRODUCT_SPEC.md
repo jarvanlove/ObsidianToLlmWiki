@@ -20,6 +20,8 @@ Must have:
 - Governance/linting and index rebuild.
 - Private vault sync.
 - AI project control workflow assets for production-grade AI-assisted development.
+- AI coding lifecycle protocol for task start, verification, close, control-file updates, and wiki file-back candidates.
+- Optional hook/subagent adapter templates that call the lifecycle protocol without becoming a separate source of truth.
 
 Explicitly not doing unless added to `TASKS.md`:
 
@@ -68,3 +70,5 @@ Explicitly not doing unless added to `TASKS.md`:
 | Date | Change | Reason | Impact |
 |---|---|---|---|
 | 2026-05-19 | Added AI project control workflow to public scaffold | Make production-grade AI coding workflow reusable across attached projects | Documentation/control-plane only |
+| 2026-06-10 | Added AI coding lifecycle protocol scaffold | Make project control files update during AI coding instead of remaining static attach artifacts | Scaffold protocol and checklist tooling |
+| 2026-06-10 | Added optional AI adapter layer | Allow projects to opt into hook/subagent helpers after the lifecycle protocol is stable | Source scaffold only; adapters are not installed by default |

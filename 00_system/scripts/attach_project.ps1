@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory = $true)][string]$仓库根目录,
     [Parameter(Mandatory = $true)][string]$项目名,
     [string]$Wiki根目录 = "",
-    [string]$标签 = ""
+    [string]$标签 = "",
+    [switch]$安装AI适配器
 )
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -14,6 +15,9 @@ if ($Wiki根目录 -ne "") {
 }
 if ($标签 -ne "") {
     $argsList += @("--tags", $标签)
+}
+if ($安装AI适配器) {
+    $argsList += @("--install-ai-adapters")
 }
 
 python $pythonScript @argsList

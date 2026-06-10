@@ -532,7 +532,10 @@ Agent 会自动恢复项目上下文、读取必要规则、定位项目 wiki，
 ### 接入类
 
 - `attach_project.py`
-  把一个项目正式接入 wiki，安全更新桥接区块，创建缺失项目控制文件，并建立项目知识区
+  把一个项目正式接入 wiki，安全更新桥接区块，创建缺失项目控制文件，并建立项目知识区。默认不安装 hook/subagent 适配层；需要时显式加 `--install-ai-adapters`
+
+- `project_session.py`
+  为 AI coding 生命周期生成 `check/start/close` 检查清单和控制文件更新候选。它默认只输出建议，不直接改项目文件或同步个人 wiki
 
 ### 摄入类
 
@@ -615,6 +618,7 @@ Agent 会自动恢复项目上下文、读取必要规则、定位项目 wiki，
 如果你只想记最重要的 5 个，就记：
 
 - `attach_project.py`
+- `project_session.py`
 - `ingest_source.py`
 - `handle_nl_request.py`
 - `search_wiki.py`

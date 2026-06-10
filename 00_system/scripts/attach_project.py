@@ -25,10 +25,28 @@ CONTROL_FILE_NAMES = (
     "SECURITY.md",
     "DEPLOYMENT.md",
     "OPERATIONS.md",
+    "CHANGELOG.md",
 )
 
 MANAGED_BLOCK_START = "<!-- OBSIDIANTOWIKI:PROJECT_CONTROL_START -->"
 MANAGED_BLOCK_END = "<!-- OBSIDIANTOWIKI:PROJECT_CONTROL_END -->"
+PROJECT_CONTROL_TEMPLATE_DIR = SCRIPT_DIR.parent.parent / "docs" / "templates" / "project-control"
+PROJECT_ADAPTER_TEMPLATE_DIR = SCRIPT_DIR.parent.parent / "docs" / "templates" / "project-adapters"
+PROJECT_SUPPORT_DIRS = (
+    "docs/adr",
+    "docs/design",
+    "docs/product",
+    "docs/runbooks",
+    "docs/growth",
+    "docs/ai-workflows",
+    "scripts/ai",
+    "scripts/verify",
+    "scripts/deploy",
+    "scripts/db",
+)
+PROJECT_SUPPORT_FILES = {
+    "docs/ai-workflows/AI_CODING_LIFECYCLE.md": "AI_CODING_LIFECYCLE.md",
+}
 
 
 def project_file_map(project_slug: str) -> dict[str, str]:
@@ -80,6 +98,8 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
             "- Write reusable conclusions back into the wiki.",
             "- Reuse shared patterns when similar problems have already been solved elsewhere.",
             f"- {peer_rule}",
+            "- Run AI coding tasks through the project lifecycle: task_start -> task_plan -> task_implement -> task_verify -> task_close -> memory_file_back.",
+            "- Before closing a task, update relevant project control files and only file back durable conclusions to the wiki.",
             "- For local implementation tasks, read project control files directly when they exist:",
             "  - `PRODUCT_SPEC.md`",
             "  - `ARCHITECTURE.md`",
@@ -88,6 +108,7 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
             "  - `SECURITY.md`",
             "  - `DEPLOYMENT.md`",
             "  - `OPERATIONS.md`",
+            "  - `CHANGELOG.md`",
         ]
     )
     return "\n".join(lines) + "\n"
@@ -148,51 +169,15 @@ def detect_project_shape(repo_root: Path) -> dict[str, object]:
     }
 
 
-def render_product_spec(project_name: str, project_slug: str) -> str:
-    return f"""# Product Spec
-
-## Product
-
-- Name: {project_name}
-- Project slug: `{project_slug}`
-- Target users: TODO
-- Core problem: TODO
-- Promise: TODO
-
-## Current Scope
-
-Must have:
-
-- TODO
-
-Explicitly not doing unless added to `TASKS.md`:
-
-- TODO
-
-## Core User Flows
-
-### Flow 1
-
-- Entry: TODO
-- Steps: TODO
-- Success: TODO
-- Failure states: TODO
-
-## Acceptance Criteria
-
-- Every non-trivial task is represented in `TASKS.md`.
-- Scope changes update this file before implementation.
-- Implementation work follows `ARCHITECTURE.md` and is verified through `TESTING.md`.
-
-## Change Log
-
-| Date | Change | Reason | Impact |
-|---|---|---|---|
-| {datetime.now().date().isoformat()} | Project control files initialized | Attach project to ObsidianToWiki AI workflow | Documentation/control-plane only |
-"""
+def render_template(template_name: str, replacements: dict[str, str]) -> str:
+    template_path = PROJECT_CONTROL_TEMPLATE_DIR / template_name
+    text = template_path.read_text(encoding="utf-8")
+    for key, value in replacements.items():
+        text = text.replace("{{" + key + "}}", value)
+    return text
 
 
-def render_architecture(project_name: str, shape: dict[str, object]) -> str:
+def render_detected_shape(shape: dict[str, object]) -> str:
     package_lines: list[str] = []
     if shape["has_root_package_json"]:
         package_lines.append("- Root `package.json` detected.")
@@ -208,65 +193,10 @@ def render_architecture(project_name: str, shape: dict[str, object]) -> str:
         package_lines.append("- Docker compose files: " + ", ".join(f"`{name}`" for name in shape["docker_compose"]) + ".")
     if not package_lines:
         package_lines.append("- TODO: document project runtime and framework shape.")
-
-    detected = "\n".join(package_lines)
-    return f"""# Architecture
-
-## System Shape
-
-{detected}
-
-## Module Boundaries
-
-| Module | Owns | Must not do |
-|---|---|---|
-| TODO | TODO | TODO |
-
-## Data / Contract Boundaries
-
-- Data model: TODO
-- API contract: TODO
-- Auth/permission model: TODO
-- External integrations: TODO
-
-## Invariants
-
-- Do not change module boundaries without updating this file.
-- Do not change public behavior without updating tests or acceptance criteria.
-- Do not introduce new infrastructure without an explicit task and rationale.
-
-## Architecture Decisions
-
-Record durable architecture decisions in `docs/adr/` or the project wiki decisions page.
-"""
+    return "\n".join(package_lines)
 
 
-def render_tasks() -> str:
-    today = datetime.now().date().isoformat()
-    return f"""# Tasks
-
-## Now
-
-| ID | Task | Risk | Acceptance | Status |
-|---|---|---|---|---|
-| CTRL-001 | Adopt ObsidianToWiki project control files | P3 | Control files exist and entrypoints reference them without overwriting project-specific rules | Done |
-
-## Next
-
-- Fill TODO fields in `PRODUCT_SPEC.md` and `ARCHITECTURE.md`.
-- Add a one-command verification path if the project does not have one.
-
-## Blocked
-
-- None.
-
-## Done
-
-- {today}: Initialized project-level AI control files.
-"""
-
-
-def render_testing(shape: dict[str, object]) -> str:
+def render_test_commands(shape: dict[str, object]) -> str:
     command_lines: list[str] = []
     if shape["has_root_package_json"]:
         command_lines.extend(
@@ -308,112 +238,54 @@ def render_testing(shape: dict[str, object]) -> str:
         )
     if not command_lines:
         command_lines.append("TODO: document install, lint, test, build, and manual verification commands.")
+    return "\n\n".join(command_lines)
 
-    commands = "\n\n".join(command_lines)
-    return f"""# Testing
 
-## Commands
+def render_deployment_files(shape: dict[str, object]) -> str:
+    compose = shape["docker_compose"]
+    if compose:
+        return "\n".join(f"- `{name}`" for name in compose)
+    return "- TODO: document deployment entrypoints."
 
-{commands}
 
-## Minimum Verification Matrix
+def render_product_spec(project_name: str, project_slug: str) -> str:
+    return render_template(
+        "PRODUCT_SPEC.md",
+        {
+            "PROJECT_NAME": project_name,
+            "PROJECT_SLUG": project_slug,
+            "TODAY": datetime.now().date().isoformat(),
+        },
+    )
 
-| Change type | Required checks |
-|---|---|
-| Documentation/config only | Read-through and affected-link check |
-| UI/frontend | Build/typecheck/lint where available plus manual UI smoke |
-| Backend/domain/API | Targeted test plus startup/request smoke |
-| Database/auth/security/deployment | Dedicated review, migration/rollback notes, and manual smoke |
 
-## Completion Rule
+def render_architecture(project_name: str, shape: dict[str, object]) -> str:
+    _ = project_name
+    return render_template("ARCHITECTURE.md", {"DETECTED_SHAPE": render_detected_shape(shape)})
 
-Report exact commands run. If commands are TODO or cannot run locally, state the blocker and the remaining risk.
-"""
+
+def render_tasks() -> str:
+    return render_template("TASKS.md", {"TODAY": datetime.now().date().isoformat()})
+
+
+def render_testing(shape: dict[str, object]) -> str:
+    return render_template("TESTING.md", {"TEST_COMMANDS": render_test_commands(shape)})
 
 
 def render_security() -> str:
-    return """# Security
-
-## Sensitive Areas
-
-- Authentication and authorization.
-- User data and private files.
-- Secrets, API keys, tokens, and environment files.
-- Database migrations and destructive operations.
-- File upload/download and path handling.
-- External integrations and callbacks.
-
-## Rules
-
-- Do not commit real secrets.
-- Do not weaken authentication, authorization, or validation without explicit task scope.
-- Treat database migrations, data deletion, payment, permission, and deployment changes as high risk.
-- Add or identify security-relevant tests for auth, permission, file, and integration changes.
-
-## Incident Response
-
-1. Preserve logs and reproduction steps.
-2. Rotate affected secrets if needed.
-3. Patch with a regression test or documented manual verification.
-4. Update this file or `OPERATIONS.md` if a repeatable prevention rule is learned.
-"""
+    return render_template("SECURITY.md", {})
 
 
 def render_deployment(shape: dict[str, object]) -> str:
-    compose = shape["docker_compose"]
-    compose_lines = "\n".join(f"- `{name}`" for name in compose) if compose else "- TODO: document deployment entrypoints."
-    return f"""# Deployment
-
-## Environments
-
-- Local development: TODO
-- Staging: TODO
-- Production: TODO
-
-## Known Deployment Files
-
-{compose_lines}
-
-## Deploy Steps
-
-TODO: document exact deploy steps for this project.
-
-## Environment Variables
-
-TODO: document required environment variables. Do not commit real secrets.
-
-## Rollback
-
-TODO: document rollback steps. At minimum, identify how to restore the previous application version and configuration.
-"""
+    return render_template("DEPLOYMENT.md", {"DEPLOYMENT_FILES": render_deployment_files(shape)})
 
 
 def render_operations() -> str:
-    return """# Operations
+    return render_template("OPERATIONS.md", {})
 
-## Runtime Checks
 
-- TODO: service URLs / ports.
-- TODO: health checks.
-- TODO: key logs.
-
-## Common Incidents
-
-| Symptom | Check | Likely fix |
-|---|---|---|
-| TODO | TODO | TODO |
-
-## Data and Backup
-
-- TODO: database/storage backup path.
-- TODO: restore procedure.
-
-## Maintenance Rules
-
-- Prefer targeted restarts over full restarts.
-- Do not run destructive commands without verified target paths and explicit task scope.
-- Record repeatable operations in this file instead of leaving them in chat history.
-"""
+def render_changelog() -> str:
+    return render_template("CHANGELOG.md", {})
 
 
 def ensure_project_control_files(repo_root: Path, project_name: str, project_slug: str) -> dict[str, str]:
@@ -426,6 +298,7 @@ def ensure_project_control_files(repo_root: Path, project_name: str, project_slu
         "SECURITY.md": render_security,
         "DEPLOYMENT.md": lambda: render_deployment(shape),
         "OPERATIONS.md": render_operations,
+        "CHANGELOG.md": render_changelog,
     }
     results: dict[str, str] = {}
     for file_name in CONTROL_FILE_NAMES:
@@ -435,6 +308,33 @@ def ensure_project_control_files(repo_root: Path, project_name: str, project_slu
             continue
         write_text(path, renderers[file_name]())
         results[file_name] = "created"
+    for dir_name in PROJECT_SUPPORT_DIRS:
+        path = repo_root / dir_name
+        existed = path.exists()
+        path.mkdir(parents=True, exist_ok=True)
+        results[dir_name] = "exists" if existed else "created"
+    for relative_path, template_name in PROJECT_SUPPORT_FILES.items():
+        path = repo_root / relative_path
+        if path.exists():
+            results[relative_path] = "exists"
+            continue
+        write_text(path, render_template(template_name, {}))
+        results[relative_path] = "created"
+    return results
+
+
+def install_ai_adapters(repo_root: Path) -> dict[str, str]:
+    results: dict[str, str] = {}
+    for source in PROJECT_ADAPTER_TEMPLATE_DIR.rglob("*"):
+        if source.is_dir():
+            continue
+        relative_path = source.relative_to(PROJECT_ADAPTER_TEMPLATE_DIR)
+        destination = repo_root / relative_path
+        if destination.exists():
+            results[relative_path.as_posix()] = "exists"
+            continue
+        write_text(destination, source.read_text(encoding="utf-8"))
+        results[relative_path.as_posix()] = "created"
     return results
 
 
@@ -499,6 +399,7 @@ def main() -> None:
     parser.add_argument("--wiki-root", default="", help="中心 wiki 根目录")
     parser.add_argument("--tags", default="", help="项目标签，英文逗号分隔")
     parser.add_argument("--skip-control-files", action="store_true", help="只接入 wiki，不创建或更新项目级 AI 控制文件")
+    parser.add_argument("--install-ai-adapters", action="store_true", help="安装可选 AI hook/subagent adapter 模板；默认不启用")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).expanduser().resolve()
@@ -536,6 +437,8 @@ def main() -> None:
     control_results: dict[str, str] = {}
     if not args.skip_control_files:
         control_results.update(ensure_project_control_files(repo_root, project_name, project_slug))
+        if args.install_ai_adapters:
+            control_results.update({f"adapter:{name}": action for name, action in install_ai_adapters(repo_root).items()})
         control_results["AGENTS.md"] = upsert_marked_block(
             repo_root / "AGENTS.md",
             render_managed_block("AGENTS.md", repo_root, wiki_root, project_slug),

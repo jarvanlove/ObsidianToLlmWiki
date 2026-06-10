@@ -29,3 +29,5 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - 本地实现任务直接读取 `PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`DEPLOYMENT.md`、`OPERATIONS.md`、`SECURITY.md`
 - 稳定结论写回 wiki，不要只留在聊天窗口
 - 项目交付物留在项目仓库，长期记忆留在 wiki
+- AI coding 任务按生命周期执行：开始前确认任务边界、修改后验证、收工前更新控制文件并判断是否回写 wiki
+- 可用 `project_session.py check/start/close` 或对应 wrapper 生成任务开始和收工检查清单

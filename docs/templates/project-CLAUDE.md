@@ -31,3 +31,5 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Write durable conclusions back into the wiki.
 - Keep project deliverables in the project repository.
 - Reuse shared knowledge when the same pattern appears in other projects.
+- Run AI coding work through the lifecycle: confirm task boundary before edits, verify after edits, update control files before close, and file back only durable conclusions.
+- Use `project_session.py check/start/close` or the matching wrapper when a task needs an explicit start/close checklist.

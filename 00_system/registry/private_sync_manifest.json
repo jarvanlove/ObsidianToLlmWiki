@@ -19,7 +19,7 @@
       "docs"
     ],
     "prompts": [
-      "30_shared/prompts"
+      "30_shared"
     ]
   },
   "ignore_globs": [
