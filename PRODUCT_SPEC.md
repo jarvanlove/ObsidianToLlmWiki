@@ -14,6 +14,7 @@ Must have:
 - Public scaffold repository plus private vault operating model.
 - Project attachment through `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md`.
 - Source ingestion for text, documents, code, and registered media sources.
+- Structured source ingestion for long documents with source notes, document maps, section notes, and provenance references.
 - Project memory pages: overview, architecture, decisions, tasks, sources, relations, risks, timeline, runtime memory.
 - Personal knowledge distillation and shared knowledge promotion.
 - Search and answer file-back.
@@ -51,8 +52,8 @@ Explicitly not doing unless added to `TASKS.md`:
 ### Ingest a source
 
 - Entry: user provides file/material.
-- Steps: preserve original -> create source note -> derive durable page if needed -> link to project/personal/shared layer.
-- Success: source is searchable and has provenance.
+- Steps: preserve original -> create source note -> extract text -> create document map and section notes for structured documents -> recommend project/personal/shared/output routing.
+- Success: source is searchable, has provenance, and long documents are not reduced to a single vague summary.
 
 ### File back an answer
 
@@ -73,6 +74,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Public scaffold and private vault stay balanced: reusable scaffold assets in public, real project memory in private.
 - Scripts are conservative with existing user files and avoid overwriting project-specific rules without preserving them.
 - Natural-language project attach must end with a machine-checkable report; missing required files means the attach is not complete.
+- Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
 
 ## Change Log
 
@@ -82,3 +84,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-10 | Added AI coding lifecycle protocol scaffold | Make project control files update during AI coding instead of remaining static attach artifacts | Scaffold protocol and checklist tooling |
 | 2026-06-10 | Added optional AI adapter layer | Allow projects to opt into hook/subagent helpers after the lifecycle protocol is stable | Source scaffold only; adapters are not installed by default |
 | 2026-06-10 | Added project cockpit workflow | Reduce daily user burden to start / continue / close while keeping lifecycle checks internal | Product workflow and natural-language entry hardening |
+| 2026-06-10 | Added structured source ingestion P0 | Prevent long documents from collapsing into one weak summary | Source note, document map, section notes, and routing candidates |

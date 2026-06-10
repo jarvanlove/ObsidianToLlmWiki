@@ -34,11 +34,28 @@ def resolve_link(target: str, page_map: dict[str, Path], stem_map: dict[str, lis
     return None
 
 
-def compute_status(derived_pages: list[str], current_status: str) -> str:
-    if any(path.startswith("30_shared/") or path.startswith("10_personal/") for path in derived_pages):
+STRUCTURAL_DERIVED_TYPES = {"文档地图", "章节笔记"}
+
+
+def should_ignore_backlink(rel_path: str) -> bool:
+    return (
+        rel_path == "index.md"
+        or rel_path.endswith("/索引.md")
+        or rel_path.endswith("/关系索引.md")
+        or rel_path.endswith("来源.md")
+    )
+
+
+def compute_status(derived_pages: list[str], derived_types: dict[str, str], current_status: str) -> str:
+    non_structural = [
+        path for path in derived_pages if derived_types.get(path, "").strip() not in STRUCTURAL_DERIVED_TYPES
+    ]
+    if any(path.startswith("30_shared/") or path.startswith("10_personal/") for path in non_structural):
         return "已提升"
-    if derived_pages:
+    if non_structural:
         return "已沉淀"
+    if derived_pages:
+        return "已解析"
     if current_status in {"已归档", "已提升", "已沉淀"}:
         return current_status
     if current_status == "已总结":
@@ -98,21 +115,23 @@ def main() -> None:
             continue
 
         backlinks = []
+        backlink_types: dict[str, str] = {}
         for backlink in sorted(incoming.get(page["path"], set())):
             rel_path = backlink.relative_to(VAULT_ROOT).as_posix()
-            if rel_path.endswith("来源.md"):
+            if should_ignore_backlink(rel_path):
                 continue
             meta = page_by_path.get(backlink.resolve())
             if meta and isinstance(meta["frontmatter"], dict):
                 backlink_type = str(meta["frontmatter"].get("type") or "").strip()
                 if backlink_type == "来源":
                     continue
+                backlink_types[rel_path] = backlink_type
             backlinks.append(rel_path)
 
         existing_derived = frontmatter.get("derived_pages")
         existing_derived_list = [str(item) for item in existing_derived] if isinstance(existing_derived, list) else []
         current_status = str(frontmatter.get("ingest_status") or "").strip()
-        next_status = compute_status(backlinks, current_status)
+        next_status = compute_status(backlinks, backlink_types, current_status)
 
         updates_needed = False
         payload: dict[str, object] = {}

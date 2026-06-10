@@ -40,10 +40,12 @@ def source_recommendations(page: dict[str, object], *, shared_tags: set[str], pr
         elif project_tag_counts[tag] >= 2:
             recommendations.append(f"promote-shared:{tag}")
 
+    if project_slug:
+        recommendations.append(f"file-project:{project_slug}")
     derived_pages = frontmatter.get("derived_pages")
     derived_list = [str(item) for item in derived_pages] if isinstance(derived_pages, list) else []
-    if not derived_list and project_slug:
-        recommendations.append(f"file-project:{project_slug}")
+    if not project_slug and not recommendations:
+        recommendations.extend(["review-personal", "review-shared"])
     if derived_list and not any(path.startswith("30_shared/") for path in derived_list):
         overlap_tags = [tag for tag in tags if tag not in shared_tags and project_tag_counts[tag] >= 2]
         if overlap_tags:

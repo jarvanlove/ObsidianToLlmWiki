@@ -39,6 +39,7 @@ python .\00_system\scripts\version_status.py
 | Python script | targeted script run plus `lint_wiki.ps1` |
 | Private sync behavior | run against known private vault only after checking changed paths |
 | Schema/template change | `lint_wiki.ps1` and inspect affected generated pages |
+| Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, and schema |
 
 ## Manual Checks
 

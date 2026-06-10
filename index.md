@@ -18,13 +18,13 @@
 
 ## 最近更新
 
-- [[30_shared/architectures/AI-coding生命周期控制协议|AI coding 生命周期控制协议]] - 定义接入 ObsidianToWiki 的项目在 AI coding 过程中如何开始任务、收工、更新项目控制文件和回写 wiki。
 - [[30_shared/prompts/AI任务开始提示词|AI任务开始提示词]] - 接入 ObsidianToWiki 的项目在开始 AI coding 任务时使用的自然语言入口和内部检查。
+- [[30_shared/prompts/AI任务执行提示词|AI任务执行提示词]] - 用项目驾驶舱自然语言让 AI 在项目控制面约束下执行任务，避免直接开写和越界修改。
 - [[30_shared/prompts/AI任务收工提示词|AI任务收工提示词]] - 接入 ObsidianToWiki 的项目在完成 AI coding 任务后用于更新控制文件和生成 wiki 回写候选。
-- [[30_shared/prompts/体检优化提示词|体检优化提示词]] - 让 agent 定期对知识库做结构体检和修复，而不只是输出问题列表。
-- [[30_shared/prompts/查询沉淀提示词|查询沉淀提示词]] - 让一次问答不只停留在聊天窗口，而是沉淀成知识库资产。
-- [[30_shared/prompts/资料摄入提示词|资料摄入提示词]] - 让 Codex 或 Claude Code 按统一流程把新资料摄入知识库。
-- [[30_shared/prompts/项目启动清单|项目启动清单]] - 新项目开始时，如何让 agent 自动接入 wiki 的启动清单。
-- [[30_shared/prompts/项目接入提示词|项目接入提示词]] - 用自然语言把项目接入 ObsidianToWiki，并由 agent 自动完成项目控制面初始化。
-- [[30_shared/prompts/项目更新提示词|项目更新提示词]] - 让 agent 在项目推进过程中持续维护项目 wiki。
-- [[30_shared/prompts/项目首次接入提示词|项目首次接入提示词]] - 用于把一个全新项目仓库首次接入用户自己的私有 vault 的标准提示词。
+- [[30_shared/patterns/独立开发者AI项目实操工作流|独立开发者AI项目实操工作流]] - 面向一个人负责 0-1 项目的实操工作流，覆盖需求、原型、设计、前后端、数据库、测试、部署、运维、文档、推广和销售。用户层只记开始工作、继续、收工，内部由项目文件约束 AI 执行。
+- [[30_shared/prompts/资料摄入提示词|资料摄入提示词]] - 让 Codex 或 Claude Code 按统一流程把新资料摄入知识库，并保留结构、引用和沉淀路由。
+- [[30_shared/architectures/资料摄入质量协议|资料摄入质量协议]] - 定义资料摄入时如何保留来源、结构、引用和沉淀路由，避免长文档被压缩成空泛摘要。
+- [[30_shared/prompts/项目启动清单|项目启动清单]] - 新项目开始时，如何让 agent 通过项目驾驶舱自动接入 wiki 的启动清单。
+- [[30_shared/prompts/项目接入提示词|项目接入提示词]] - 用自然语言把项目接入 ObsidianToWiki，并由 agent 自动完成项目控制面初始化和严格检查。
+- [[30_shared/prompts/项目更新提示词|项目更新提示词]] - 让 agent 在项目推进过程中通过项目驾驶舱持续维护项目 wiki。
+- [[30_shared/prompts/项目首次接入提示词|项目首次接入提示词]] - 用于把一个全新项目仓库首次接入用户自己的私有 vault，并进入项目驾驶舱工作流。
