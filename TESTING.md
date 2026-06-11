@@ -35,6 +35,7 @@ python .\00_system\scripts\version_status.py
 | Shared prompt/pattern/index | `lint_wiki.ps1`, verify `30_shared/索引.md` |
 | Project attach templates | inspect generated template wording; if possible, test on disposable project |
 | AI session protocol/script | run `project_session.py check --strict` and `handle_nl_request.py --request "开始工作"` / `"继续"` / `"收工"` on a disposable attached project |
+| Natural-language project attach | run `handle_nl_request.py --request "开始工作"` against an existing disposable git repo and an empty disposable wiki root; verify `wiki.context.json`, control files, wiki core pages, runtime templates, and `page_schemas.json` exist |
 | AI adapter templates | test disposable attach with `--install-ai-adapters`; verify no private wiki path is written |
 | Python script | targeted script run plus `lint_wiki.ps1` |
 | Private sync behavior | run against known private vault only after checking changed paths |

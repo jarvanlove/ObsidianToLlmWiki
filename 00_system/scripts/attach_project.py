@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -32,6 +33,10 @@ MANAGED_BLOCK_START = "<!-- OBSIDIANTOWIKI:PROJECT_CONTROL_START -->"
 MANAGED_BLOCK_END = "<!-- OBSIDIANTOWIKI:PROJECT_CONTROL_END -->"
 PROJECT_CONTROL_TEMPLATE_DIR = SCRIPT_DIR.parent.parent / "docs" / "templates" / "project-control"
 PROJECT_ADAPTER_TEMPLATE_DIR = SCRIPT_DIR.parent.parent / "docs" / "templates" / "project-adapters"
+WIKI_RUNTIME_PATHS = (
+    "00_system/templates",
+    "00_system/registry/page_schemas.json",
+)
 PROJECT_SUPPORT_DIRS = (
     "docs/adr",
     "docs/design",
@@ -249,6 +254,39 @@ def render_deployment_files(shape: dict[str, object]) -> str:
     return "- TODO: document deployment entrypoints."
 
 
+def copy_missing_runtime_path(relative_path: str, wiki_root: Path) -> list[str]:
+    source = SCRIPT_DIR.parent.parent / relative_path
+    destination = wiki_root / relative_path
+    actions: list[str] = []
+    if not source.exists():
+        return actions
+    if source.is_file():
+        if destination.exists():
+            return actions
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+        return [f"{relative_path}: created"]
+
+    for item in source.rglob("*"):
+        if item.is_dir():
+            continue
+        rel = item.relative_to(source)
+        target = destination / rel
+        if target.exists():
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(item, target)
+        actions.append(f"{relative_path}/{rel.as_posix()}: created")
+    return actions
+
+
+def ensure_wiki_runtime_files(wiki_root: Path) -> list[str]:
+    actions: list[str] = []
+    for relative_path in WIKI_RUNTIME_PATHS:
+        actions.extend(copy_missing_runtime_path(relative_path, wiki_root))
+    return actions
+
+
 def render_product_spec(project_name: str, project_slug: str) -> str:
     return render_template(
         "PRODUCT_SPEC.md",
@@ -410,6 +448,7 @@ def main() -> None:
         wiki_root = detect_wiki_root(repo_root=repo_root, explicit_root=args.wiki_root.strip())
     except FileNotFoundError as exc:
         raise SystemExit(str(exc))
+    runtime_results = ensure_wiki_runtime_files(wiki_root)
 
     project_name = args.project.strip()
     project_slug = slugify(project_name)
@@ -461,10 +500,12 @@ def main() -> None:
         wiki_root,
         "项目",
         f"接入 {project_name}",
-        f"repo_root: {repo_root} | wiki_root: {wiki_root} | project_slug: {project_slug} | user_config: {config_path} | control_files: {control_results or 'skipped'}",
+        f"repo_root: {repo_root} | wiki_root: {wiki_root} | project_slug: {project_slug} | user_config: {config_path} | runtime_files: {runtime_results or 'ok'} | control_files: {control_results or 'skipped'}",
     )
     subprocess.run([sys.executable, str(SCRIPT_DIR / "rebuild_indexes.py")], check=True, env=env)
     print(repo_root / "wiki.context.json")
+    for item in runtime_results:
+        print(f"wiki_runtime:{item}")
     if control_results:
         for name, action in sorted(control_results.items()):
             print(f"{name}: {action}")

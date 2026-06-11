@@ -74,6 +74,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Public scaffold and private vault stay balanced: reusable scaffold assets in public, real project memory in private.
 - Scripts are conservative with existing user files and avoid overwriting project-specific rules without preserving them.
 - Natural-language project attach must end with a machine-checkable report; missing required files means the attach is not complete.
+- Natural-language project attach must bootstrap missing wiki runtime templates and schema files when the selected wiki root is otherwise usable.
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
 
 ## Change Log
@@ -85,3 +86,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-10 | Added optional AI adapter layer | Allow projects to opt into hook/subagent helpers after the lifecycle protocol is stable | Source scaffold only; adapters are not installed by default |
 | 2026-06-10 | Added project cockpit workflow | Reduce daily user burden to start / continue / close while keeping lifecycle checks internal | Product workflow and natural-language entry hardening |
 | 2026-06-10 | Added structured source ingestion P0 | Prevent long documents from collapsing into one weak summary | Source note, document map, section notes, and routing candidates |
+| 2026-06-11 | Hardened natural-language project attach | Make `开始工作` stable for empty but valid wiki roots | Missing runtime templates/schema are bootstrapped before project page creation |

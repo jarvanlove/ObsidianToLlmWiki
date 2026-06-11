@@ -22,6 +22,7 @@ All notable changes to this repository should be documented in this file.
 - Documentation tightened for open-source publication
 - Project entrypoint wording clarified: Codex uses `AGENTS.md`, Claude Code/compatible tools use `CLAUDE.md`, and shared project facts live in project control files
 - Source promotion sync now treats document maps and section notes as parsed source structure instead of final knowledge deposition
+- Natural-language project attach now bootstraps missing wiki runtime templates and schema files before creating project pages
 
 ### Removed
 
