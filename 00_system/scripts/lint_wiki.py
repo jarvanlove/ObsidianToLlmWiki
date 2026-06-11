@@ -128,6 +128,7 @@ def check_structured_ingest_quality(page: dict[str, object]) -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="执行知识库体检，检查结构与治理问题。")
     parser.add_argument("--stale-days", type=int, default=45, help="超过多少天未更新则视为过期")
+    parser.add_argument("--section-backlog-days", type=int, default=14, help="章节笔记超过多少天未沉淀则视为积压")
     args = parser.parse_args()
 
     subprocess.run([sys.executable, str(SCRIPT_DIR / "sync_source_notes.py")], check=True)
@@ -173,6 +174,7 @@ def main() -> None:
     stale: list[dict[str, object]] = []
     unfiled_sources: list[dict[str, object]] = []
     pending_media_sources: list[dict[str, object]] = []
+    section_promotion_backlog: list[dict[str, object]] = []
 
     for page in pages:
         rel_path = str(page["rel_path"])
@@ -188,6 +190,11 @@ def main() -> None:
                 stale.append(page)
 
             note_type = str(frontmatter.get("type") or "").strip()
+            if note_type == "章节笔记":
+                status = str(frontmatter.get("status") or "").strip()
+                has_targets = bool(list_items(frontmatter.get("recommended_targets")))
+                if updated is not None and status == "已生成" and has_targets and (today - updated).days > args.section_backlog_days:
+                    section_promotion_backlog.append(page)
             if note_type == "来源":
                 media_type = str(frontmatter.get("media_type") or "").strip()
                 parse_status = str(frontmatter.get("parse_status") or "").strip()
@@ -235,6 +242,7 @@ def main() -> None:
         f"- 重复标题组: {duplicate_title_count}",
         f"- 未沉淀来源: {len(unfiled_sources)}",
         f"- 待处理媒体来源: {len(pending_media_sources)}",
+        f"- 章节沉淀积压: {len(section_promotion_backlog)}",
         "",
         "## 孤儿页面",
         "",
@@ -290,6 +298,15 @@ def main() -> None:
     if unfiled_sources:
         for page in sorted(unfiled_sources, key=lambda item: str(item["rel_path"])):
             lines.append(f"- {page_link(str(page['rel_path']), str(page['title']))}")
+    else:
+        lines.append("- 无。")
+
+    lines.extend(["", "## 章节沉淀积压", ""])
+    if section_promotion_backlog:
+        for page in sorted(section_promotion_backlog, key=lambda item: str(item["rel_path"])):
+            frontmatter = page["frontmatter"]
+            targets = list_items(frontmatter.get("recommended_targets")) if isinstance(frontmatter, dict) else []
+            lines.append(f"- {page_link(str(page['rel_path']), str(page['title']))}: {', '.join(f'`{target}`' for target in targets)}")
     else:
         lines.append("- 无。")
 

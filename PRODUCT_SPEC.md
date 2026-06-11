@@ -52,7 +52,7 @@ Explicitly not doing unless added to `TASKS.md`:
 ### Ingest a source
 
 - Entry: user provides file/material.
-- Steps: preserve original -> create source note -> extract text -> create document map and section notes for structured documents -> recommend project/personal/shared/output routing.
+- Steps: preserve original -> create source note -> extract text -> create document map and section notes for structured documents -> recommend project/personal/shared/output routing -> generate reviewable promotion candidates.
 - Success: source is searchable, has provenance, and long documents are not reduced to a single vague summary.
 
 ### File back an answer
@@ -77,6 +77,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Natural-language project attach must bootstrap missing wiki runtime templates and schema files when the selected wiki root is otherwise usable.
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
 - Section-level source notes must expose reviewable quality fields: theme, concepts, facts, process, bounded excerpt, follow-up questions, and promotion candidates.
+- Source promotion candidates must be review reports, not automatic formal knowledge pages; each candidate must include source section, source refs, target layer, rationale, and next action.
 
 ## Change Log
 
@@ -89,3 +90,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-10 | Added structured source ingestion P0 | Prevent long documents from collapsing into one weak summary | Source note, document map, section notes, and routing candidates |
 | 2026-06-11 | Hardened natural-language project attach | Make `开始工作` stable for empty but valid wiki roots | Missing runtime templates/schema are bootstrapped before project page creation |
 | 2026-06-11 | Added structured source section quality checks | Make source ingestion outputs reviewable before promotion | Section notes gain quality fields and lint reports malformed structured ingestion outputs |
+| 2026-06-11 | Added source promotion candidate workflow | Prevent section notes from becoming a dead end | Candidate report lists source refs, targets, rationale, and next actions |

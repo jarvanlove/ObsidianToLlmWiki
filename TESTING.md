@@ -7,6 +7,7 @@ PowerShell wrappers:
 ```powershell
 .\00_system\scripts\lint_wiki.ps1
 .\00_system\scripts\rebuild_indexes.ps1
+.\00_system\scripts\source_promotion_candidates.ps1
 .\00_system\scripts\version_status.ps1
 ```
 
@@ -15,6 +16,7 @@ macOS / Linux wrappers:
 ```bash
 ./00_system/scripts/lint_wiki.sh
 ./00_system/scripts/rebuild_indexes.sh
+./00_system/scripts/source_promotion_candidates.sh
 ./00_system/scripts/version_status.sh
 ./00_system/scripts/project_session.sh check --repo-root . --strict
 ```
@@ -24,6 +26,7 @@ Python scripts can also be run directly when needed:
 ```powershell
 python .\00_system\scripts\lint_wiki.py
 python .\00_system\scripts\rebuild_indexes.py
+python .\00_system\scripts\source_promotion_candidates.py
 python .\00_system\scripts\version_status.py
 ```
 
@@ -40,7 +43,7 @@ python .\00_system\scripts\version_status.py
 | Python script | targeted script run plus `lint_wiki.ps1` |
 | Private sync behavior | run against known private vault only after checking changed paths |
 | Schema/template change | `lint_wiki.ps1` and inspect affected generated pages |
-| Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, section quality headings, excerpt limits, routing candidates, and schema |
+| Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, section quality headings, excerpt limits, routing candidates, promotion candidate report, and schema |
 
 ## Manual Checks
 
