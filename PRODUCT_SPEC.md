@@ -53,7 +53,7 @@ Explicitly not doing unless added to `TASKS.md`:
 
 - Entry: user provides file/material.
 - Steps: preserve original -> create source note -> extract text -> create document map and section notes for structured documents -> recommend project/personal/shared/output routing -> generate reviewable promotion candidates.
-- Success: source is searchable, has provenance, and long documents are not reduced to a single vague summary.
+- Success: source is searchable, has provenance, can be reviewed as promotion candidates, and selected sections can be explicitly promoted to formal knowledge pages.
 
 ### File back an answer
 
@@ -78,6 +78,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
 - Section-level source notes must expose reviewable quality fields: theme, concepts, facts, process, bounded excerpt, follow-up questions, and promotion candidates.
 - Source promotion candidates must be review reports, not automatic formal knowledge pages; each candidate must include source section, source refs, target layer, rationale, and next action.
+- Source section promotion must be explicit per section; promoted pages must preserve source section backlinks and source refs, and the source section must record `promoted_to`.
 
 ## Change Log
 
@@ -91,3 +92,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-11 | Hardened natural-language project attach | Make `开始工作` stable for empty but valid wiki roots | Missing runtime templates/schema are bootstrapped before project page creation |
 | 2026-06-11 | Added structured source section quality checks | Make source ingestion outputs reviewable before promotion | Section notes gain quality fields and lint reports malformed structured ingestion outputs |
 | 2026-06-11 | Added source promotion candidate workflow | Prevent section notes from becoming a dead end | Candidate report lists source refs, targets, rationale, and next actions |
+| 2026-06-11 | Added explicit source section promotion | Turn selected section notes into formal knowledge pages without bulk auto-writing | Promoted pages preserve backlinks and source refs |

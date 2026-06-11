@@ -18,6 +18,7 @@ All notable changes to this repository should be documented in this file.
 - Structured source ingestion with document maps, section notes, extracted text scratch files, and source reference schemas
 - Structured source section quality fields for theme, concepts, facts, process, bounded excerpts, follow-up questions, and promotion candidates
 - Source promotion candidate reports generated from section notes
+- Explicit source section promotion into project, personal, shared, or output pages
 
 ### Changed
 
@@ -27,6 +28,7 @@ All notable changes to this repository should be documented in this file.
 - Natural-language project attach now bootstraps missing wiki runtime templates and schema files before creating project pages
 - Wiki lint now reports malformed structured ingestion outputs, including missing section links, missing source references, and oversized section excerpts
 - Wiki lint now reports generated section notes that still need promotion review after the backlog threshold
+- Promoted source pages preserve source section backlinks and source refs, while the section note records `promoted_to`
 
 ### Removed
 
