@@ -76,6 +76,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Natural-language project attach must end with a machine-checkable report; missing required files means the attach is not complete.
 - Natural-language project attach must bootstrap missing wiki runtime templates and schema files when the selected wiki root is otherwise usable.
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
+- Section-level source notes must expose reviewable quality fields: theme, concepts, facts, process, bounded excerpt, follow-up questions, and promotion candidates.
 
 ## Change Log
 
@@ -87,3 +88,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-10 | Added project cockpit workflow | Reduce daily user burden to start / continue / close while keeping lifecycle checks internal | Product workflow and natural-language entry hardening |
 | 2026-06-10 | Added structured source ingestion P0 | Prevent long documents from collapsing into one weak summary | Source note, document map, section notes, and routing candidates |
 | 2026-06-11 | Hardened natural-language project attach | Make `开始工作` stable for empty but valid wiki roots | Missing runtime templates/schema are bootstrapped before project page creation |
+| 2026-06-11 | Added structured source section quality checks | Make source ingestion outputs reviewable before promotion | Section notes gain quality fields and lint reports malformed structured ingestion outputs |

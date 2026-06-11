@@ -10,6 +10,7 @@
 | OTW-CTRL-004 | Add project cockpit workflow | P2 | Users can rely on `开始工作` / `继续` / `收工`; natural-language attach runs strict checks before reporting success | Done |
 | OTW-CTRL-005 | Harden natural-language project cockpit attach | P1 | `开始工作` on an existing project with an empty wiki root bootstraps required runtime templates/schema and `开始工作` / `继续` / `收工` pass on a disposable project | Done |
 | OTW-INGEST-001 | Add structured source ingestion P0 | P1 | Document ingestion creates source note, document map, section notes, extracted text scratch file, and routing candidates | Done |
+| OTW-INGEST-002 | Add structured ingestion quality fields and lint | P1 | Section notes include theme, concepts, facts, process, bounded excerpts, follow-up questions, promotion candidates, and lint reports missing/oversized structured ingestion outputs | Done |
 
 ## Next
 
@@ -27,3 +28,4 @@
 - 2026-06-10: Added opt-in hook/subagent adapter templates and `--install-ai-adapters`.
 - Existing public/private bridge protocol established through `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md`.
 - 2026-06-11: Hardened natural-language project cockpit attach for empty wiki roots.
+- 2026-06-11: Added structured source section quality fields and lint reporting.

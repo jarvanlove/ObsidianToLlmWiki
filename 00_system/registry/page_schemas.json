@@ -46,7 +46,7 @@
     },
     "章节笔记": {
       "domain": ["个人", "项目"],
-      "required": ["source_note", "source_path", "source_hash", "source_refs", "document_map", "recommended_targets"]
+      "required": ["source_note", "source_path", "source_hash", "source_refs", "document_map", "excerpt_limit_chars", "recommended_targets"]
     },
     "项目": {
       "domain": ["项目"],

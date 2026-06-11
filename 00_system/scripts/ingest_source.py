@@ -31,6 +31,7 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".tif", ".
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".m4v"}
 STRUCTURED_DOCUMENT_MODES = {"text", "docx", "pptx", "pdf"}
+SECTION_EXCERPT_LIMIT_CHARS = 1200
 HEADING_RE = re.compile(
     r"^(#{1,6}\s+.+|第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|chapter\s+\d+.*|\d+(?:\.\d+){0,4}\s+.+)$",
     re.IGNORECASE,
@@ -118,6 +119,7 @@ def render_source_note(
     source_path: str,
     source_hash: str,
     media_type: str,
+    extract_mode: str,
     parse_status: str,
     ingest_status: str,
 ) -> str:
@@ -138,6 +140,7 @@ def render_source_note(
         "source_path:": f"source_path: {source_path}",
         "source_hash:": f"source_hash: {source_hash}",
         "media_type: document": f"media_type: {media_type}",
+        "extract_mode:": f"extract_mode: {extract_mode}",
         "parse_status: 已提取": f"parse_status: {parse_status}",
         "ingest_status: 已登记": f"ingest_status: {ingest_status}",
         "review_due:": f"review_due: {today_iso()}",
@@ -371,7 +374,97 @@ def bullet_points_from_text(text: str, limit: int = 5) -> str:
     return "\n".join(points) if points else "- 待人工复核。"
 
 
-def excerpt_from_text(text: str, limit: int = 1800) -> str:
+def content_lines(text: str) -> list[str]:
+    lines: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip().lstrip("-*").strip()
+        if not line or line.startswith("```"):
+            continue
+        lines.append(line)
+    return lines
+
+
+def section_theme_from_text(title: str, text: str) -> str:
+    for line in content_lines(text):
+        cleaned = line.lstrip("#").strip()
+        if 8 <= len(cleaned) <= 140:
+            return f"- {cleaned}"
+    return f"- {title}"
+
+
+def key_concepts_from_text(text: str, limit: int = 6) -> str:
+    candidates: list[str] = []
+    for line in content_lines(text):
+        if len(line) > 120:
+            continue
+        if any(token in line for token in ("定义", "概念", "架构", "模型", "原则", "机制", "流程", "组件", "模块", "接口")):
+            candidates.append(f"- {line}")
+        if len(candidates) >= limit:
+            break
+    return "\n".join(candidates) if candidates else "- 待人工复核：本节未自动识别出稳定概念。"
+
+
+def key_facts_from_text(text: str, limit: int = 6) -> str:
+    candidates: list[str] = []
+    for line in content_lines(text):
+        if len(line) > 180:
+            continue
+        has_fact_marker = any(char.isdigit() for char in line) or any(
+            token in line for token in ("必须", "支持", "包含", "用于", "通过", "需要", "限制", "依赖", "默认")
+        )
+        if has_fact_marker:
+            candidates.append(f"- {line}")
+        if len(candidates) >= limit:
+            break
+    return "\n".join(candidates) if candidates else "- 待人工复核：本节未自动识别出明确事实。"
+
+
+def process_steps_from_text(text: str, limit: int = 6) -> str:
+    candidates: list[str] = []
+    step_re = re.compile(r"^(\d+[.)、]|第[一二三四五六七八九十]+步|step\s+\d+)", re.IGNORECASE)
+    for line in content_lines(text):
+        if len(line) > 180:
+            continue
+        if step_re.match(line) or any(token in line for token in ("首先", "然后", "接着", "最后", "步骤", "流程", "执行", "运行")):
+            candidates.append(f"- {line}")
+        if len(candidates) >= limit:
+            break
+    return "\n".join(candidates) if candidates else "- 本节未自动识别出操作流程；如用于教学或执行，请人工补充。"
+
+
+def follow_up_questions_for(section_title: str) -> str:
+    return "\n".join(
+        [
+            f"- `{section_title}` 中哪些结论值得提升为正式知识页？",
+            "- 本节是否包含需要回到原文核对的参数、步骤或限制？",
+            "- 本节内容应该沉淀到个人、项目、共享还是输出层？",
+        ]
+    )
+
+
+def recommended_targets_for(domain: str, project_slug: str) -> list[str]:
+    if domain == "项目" and project_slug:
+        return [f"file-project:{project_slug}", "review-shared"]
+    return ["review-personal", "review-shared", "review-output"]
+
+
+def promotion_candidates_for(domain: str, project_slug: str) -> str:
+    targets = recommended_targets_for(domain, project_slug)
+    labels = {
+        "review-personal": "个人层：长期认知、偏好、学习笔记。",
+        "review-shared": "共享层：可跨项目复用的方法、模式、提示词、架构经验。",
+        "review-output": "输出层：一次性分析、课程材料、复盘报告。",
+    }
+    lines: list[str] = []
+    for target in targets:
+        if target.startswith("file-project:"):
+            lines.append(f"- `{target}`：项目事实、项目决策、项目任务或项目来源。")
+        else:
+            lines.append(f"- `{target}`：{labels.get(target, '待人工复核。')}")
+    return "\n".join(lines)
+
+
+def excerpt_from_text(text: str, limit: int = SECTION_EXCERPT_LIMIT_CHARS) -> str:
     cleaned = "\n".join(line.rstrip() for line in text.strip().splitlines() if line.strip())
     if not cleaned:
         return "- 未提取到可用正文。"
@@ -438,6 +531,7 @@ def create_document_derivatives(
         section_title = f"{title} - {index:02d} {section.title}"
         section_path = section_dir / f"{index:02d}-{slugify(section.title)}.md"
         section_rel = section_path.relative_to(VAULT_ROOT).as_posix()
+        recommended_targets = recommended_targets_for(domain, project_slug)
         content = render_template(
             TEMPLATE_DIR / "source-section-note.md",
             {
@@ -452,11 +546,19 @@ def create_document_derivatives(
                 "source_hash": source_hash,
                 "source_refs": render_quoted_list(section.refs),
                 "document_map": map_rel,
+                "excerpt_limit_chars": str(SECTION_EXCERPT_LIMIT_CHARS),
+                "recommended_targets": render_quoted_list(recommended_targets),
                 "source_note_link": source_note_link,
                 "document_map_link": document_map_link,
                 "source_ref_label": page_ref_label(section.refs),
                 "key_points": bullet_points_from_text(section.text),
+                "section_theme": section_theme_from_text(section.title, section.text),
+                "key_concepts": key_concepts_from_text(section.text),
+                "key_facts": key_facts_from_text(section.text),
+                "process_steps": process_steps_from_text(section.text),
                 "structured_excerpt": excerpt_from_text(section.text),
+                "follow_up_questions": follow_up_questions_for(section.title),
+                "promotion_candidates": promotion_candidates_for(domain, project_slug),
                 "routing_report": routing_report_for(domain, project_slug),
             },
         )
@@ -596,6 +698,7 @@ def main() -> None:
         source_path=stored_source.relative_to(VAULT_ROOT).as_posix(),
         source_hash=source_hash,
         media_type=media_type,
+        extract_mode=extract_mode,
         parse_status=parse_status,
         ingest_status=ingest_status,
     )

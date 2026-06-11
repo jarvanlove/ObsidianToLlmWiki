@@ -10,6 +10,7 @@ summary: {{summary}}
 source_path:
 source_hash:
 media_type: document
+extract_mode:
 parse_status: 已提取
 duration_seconds:
 language:

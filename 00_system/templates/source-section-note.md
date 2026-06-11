@@ -12,7 +12,8 @@ source_path: {{source_path}}
 source_hash: {{source_hash}}
 source_refs: [{{source_refs}}]
 document_map: {{document_map}}
-recommended_targets: []
+excerpt_limit_chars: {{excerpt_limit_chars}}
+recommended_targets: [{{recommended_targets}}]
 ---
 
 # {{title}}
@@ -28,9 +29,35 @@ recommended_targets: []
 
 {{key_points}}
 
-## 结构化摘录
+## 本节主题
+
+{{section_theme}}
+
+## 关键概念
+
+{{key_concepts}}
+
+## 关键事实
+
+{{key_facts}}
+
+## 操作步骤或流程
+
+{{process_steps}}
+
+## 原文摘录
+
+- 摘录限制: {{excerpt_limit_chars}} 字符以内
 
 {{structured_excerpt}}
+
+## 待追问问题
+
+{{follow_up_questions}}
+
+## 沉淀候选
+
+{{promotion_candidates}}
 
 ## 可沉淀方向
 

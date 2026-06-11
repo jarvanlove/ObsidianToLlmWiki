@@ -12,6 +12,15 @@ from schema_lib import load_schema_registry, page_link, validate_page_schema
 from wiki_lib import SCRIPT_DIR, VAULT_ROOT, append_log, iter_markdown_files, load_page, parse_date, write_text
 
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
+SECTION_NOTE_REQUIRED_HEADINGS = (
+    "## 本节主题",
+    "## 关键概念",
+    "## 关键事实",
+    "## 操作步骤或流程",
+    "## 原文摘录",
+    "## 待追问问题",
+    "## 沉淀候选",
+)
 
 
 def resolve_link(target: str, page_map: dict[str, Path], stem_map: dict[str, list[Path]]) -> Path | None:
@@ -45,6 +54,77 @@ def should_skip_orphan(rel_path: str) -> bool:
     )
 
 
+def extract_section(body: str, heading: str) -> str:
+    start = body.find(heading)
+    if start == -1:
+        return ""
+    start += len(heading)
+    next_heading = body.find("\n## ", start)
+    if next_heading == -1:
+        return body[start:].strip()
+    return body[start:next_heading].strip()
+
+
+def list_items(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item).strip()]
+
+
+def check_structured_ingest_quality(page: dict[str, object]) -> list[str]:
+    frontmatter = page["frontmatter"]
+    if not isinstance(frontmatter, dict):
+        return []
+    note_type = str(frontmatter.get("type") or "").strip()
+    body = str(page["body"])
+    errors: list[str] = []
+
+    if note_type == "来源":
+        extract_mode = str(frontmatter.get("extract_mode") or "").strip()
+        media_type = str(frontmatter.get("media_type") or "").strip()
+        if media_type == "document" and extract_mode in {"text", "docx", "pptx", "pdf"}:
+            derived_pages = list_items(frontmatter.get("derived_pages"))
+            if not any(path.endswith("-document-map.md") for path in derived_pages):
+                errors.append("structured document source is missing a document map in derived_pages")
+            if not any("-sections/" in path for path in derived_pages):
+                errors.append("structured document source is missing section notes in derived_pages")
+
+    if note_type == "文档地图":
+        derived_sections = list_items(frontmatter.get("derived_sections"))
+        if not derived_sections:
+            errors.append("document map has no derived_sections")
+        try:
+            section_count = int(str(frontmatter.get("section_count") or "0"))
+        except ValueError:
+            section_count = 0
+        if section_count <= 0:
+            errors.append("document map section_count must be greater than 0")
+        elif derived_sections and len(derived_sections) != section_count:
+            errors.append("document map section_count does not match derived_sections length")
+
+    if note_type == "章节笔记":
+        for heading in SECTION_NOTE_REQUIRED_HEADINGS:
+            if heading not in body:
+                errors.append(f"section note is missing heading: {heading}")
+        source_refs = list_items(frontmatter.get("source_refs"))
+        if not source_refs:
+            errors.append("section note has no source_refs")
+        try:
+            excerpt_limit = int(str(frontmatter.get("excerpt_limit_chars") or "0"))
+        except ValueError:
+            excerpt_limit = 0
+        excerpt = extract_section(body, "## 原文摘录")
+        excerpt = re.sub(r"^- 摘录限制:.*$", "", excerpt, flags=re.MULTILINE).strip()
+        if excerpt_limit <= 0:
+            errors.append("section note excerpt_limit_chars must be greater than 0")
+        elif len(excerpt) > excerpt_limit + 120:
+            errors.append("section note excerpt appears to exceed excerpt_limit_chars")
+        recommended_targets = list_items(frontmatter.get("recommended_targets"))
+        if not recommended_targets:
+            errors.append("section note has no recommended_targets")
+    return errors
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="执行知识库体检，检查结构与治理问题。")
     parser.add_argument("--stale-days", type=int, default=45, help="超过多少天未更新则视为过期")
@@ -63,6 +143,7 @@ def main() -> None:
     dead_links: dict[Path, list[str]] = defaultdict(list)
     schema_registry = load_schema_registry()
     schema_errors: dict[Path, list[str]] = defaultdict(list)
+    structured_ingest_errors: dict[Path, list[str]] = defaultdict(list)
     duplicate_titles: dict[str, list[dict[str, object]]] = defaultdict(list)
 
     for rel_path, path in page_map.items():
@@ -79,6 +160,8 @@ def main() -> None:
 
         for error in validate_page_schema(page, schema_registry):
             schema_errors[page["path"]].append(error)
+        for error in check_structured_ingest_quality(page):
+            structured_ingest_errors[page["path"]].append(error)
 
         title = str(page["title"]).strip()
         rel_path = str(page["rel_path"])
@@ -137,6 +220,7 @@ def main() -> None:
     }
     dead_link_count = sum(len(items) for items in dead_links.values())
     schema_issue_count = sum(len(items) for items in schema_errors.values())
+    structured_ingest_issue_count = sum(len(items) for items in structured_ingest_errors.values())
     duplicate_title_count = len(duplicate_groups)
 
     report_path = VAULT_ROOT / "40_outputs" / "analyses" / f"知识库体检-{today.isoformat()}.md"
@@ -146,6 +230,7 @@ def main() -> None:
         f"- 孤儿页面: {len(orphans)}",
         f"- 过期页面: {len(stale)}",
         f"- Schema 问题: {schema_issue_count}",
+        f"- 结构化摄入问题: {structured_ingest_issue_count}",
         f"- 死链接: {dead_link_count}",
         f"- 重复标题组: {duplicate_title_count}",
         f"- 未沉淀来源: {len(unfiled_sources)}",
@@ -172,6 +257,15 @@ def main() -> None:
         for page in sorted((page for page in pages if page["path"] in schema_errors), key=lambda item: str(item["rel_path"])):
             lines.append(f"- {page_link(str(page['rel_path']), str(page['title']))}")
             for error in schema_errors[page["path"]]:
+                lines.append(f"  - {error}")
+    else:
+        lines.append("- 无。")
+
+    lines.extend(["", "## 结构化摄入问题", ""])
+    if structured_ingest_errors:
+        for page in sorted((page for page in pages if page["path"] in structured_ingest_errors), key=lambda item: str(item["rel_path"])):
+            lines.append(f"- {page_link(str(page['rel_path']), str(page['title']))}")
+            for error in structured_ingest_errors[page["path"]]:
                 lines.append(f"  - {error}")
     else:
         lines.append("- 无。")
