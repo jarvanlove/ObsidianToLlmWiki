@@ -8,7 +8,7 @@ tags:
   - 项目控制文件
   - 生命周期
   - 回写
-updated: 2026-06-10
+updated: 2026-06-19
 summary: 定义接入 ObsidianToWiki 的项目在 AI coding 过程中如何开始任务、收工、更新项目控制文件和回写 wiki。
 ---
 
@@ -61,8 +61,8 @@ ObsidianToWiki 负责定义协议、模板和脚本；接入项目负责在本�
 | `task_start` | 开始一个任务 | `wiki.context.json`, `TASKS.md`, `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md` | 任务边界、风险等级、预计触碰文件、验证方式 |
 | `task_plan` | 非平凡修改前 | 相关源码、控制文件、项目 wiki 核心页 | 最小计划和验收标准 |
 | `task_implement` | 范围明确后 | 计划、源码、测试 | 最小 diff |
-| `task_verify` | 修改后 | `TESTING.md`, 本次 diff | 验证命令、结果、未验证风险 |
-| `task_close` | 收工前 | git diff、验证结果、`TASKS.md` | 任务状态更新、后续项、CHANGELOG/ADR/wiki 候选 |
+| `task_verify` | 修改后 | `TESTING.md`, 本次 diff, [[30_shared/architectures/AI模块测试验收证据协议|AI模块测试验收证据协议]] | 分层验证证据、真实链路结果、未验证风险 |
+| `task_close` | 收工前 | git diff、验证结果、`TASKS.md`, 测试证据 | 任务状态更新、后续项、CHANGELOG/ADR/wiki 候选 |
 | `memory_file_back` | 产生长期结论时 | 本次结论、证据、目标层 | 项目 wiki / shared / personal 回写 |
 
 接入也属于生命周期节点：
@@ -86,6 +86,25 @@ ObsidianToWiki 负责定义协议、模板和脚本；接入项目负责在本�
 | 版本级用户可见变化 | `CHANGELOG.md` | 项目时间线 |
 | 跨项目可复用经验 | 无固定项目文件 | `30_shared/` |
 | 个人偏好或工作方法 | 无固定项目文件 | `10_personal/` |
+
+## 验证证据门禁
+
+任务关闭必须以证据为准，而不是以“代码已写完”为准。
+
+最小门禁：
+
+1. 明确本次变更涉及哪些层级：UI、API、数据库、权限、数据、AI、文件、部署。
+2. 按 [[30_shared/architectures/AI模块测试验收证据协议|AI模块测试验收证据协议]] 选择对应验证层级。
+3. 记录实际执行的命令、真实 HTTP/DB/浏览器 smoke、失败项和未验证风险。
+4. UI 变更必须做浏览器级验证；涉及 hydration 或控制台错误时必须使用无插件浏览器复测。
+5. 认证、权限、数据库、文件、外部服务相关变更必须包含反向路径或明确风险说明。
+
+不能接受的收工方式：
+
+- 只说“已测试”，不写命令和结果。
+- 只跑 lint/typecheck，就关闭有 UI/API/DB 的模块。
+- 浏览器控制台有应用自身错误但仍标记完成。
+- 真实环境未跑通却不写残留风险。
 
 ## 回写边界
 
@@ -139,7 +158,7 @@ adapter 通过 `OBSIDIANTOWIKI_SCAFFOLD_ROOT` 找到公开 scaffold，不写死�
 ```text
 1. 用户说“开始工作”时，先判断项目状态；未接入就接入并严格检查。
 2. 用户说“继续”时，恢复项目上下文，确认任务边界、风险等级和验证方式。
-3. 修改后运行最小相关验证。
-4. 用户说“收工”时，检查 diff、验证结果和控制文件更新候选。
-5. 只有长期有效结论才回写 wiki。
+3. 修改后按分层验收模型运行最小但充分的验证。
+4. 用户说“收工”时，检查 diff、验证证据、未验证风险和控制文件更新候选。
+5. 只有长期有效结论才回写 wiki；跨项目可复用的测试门禁回写共享层。
 ```

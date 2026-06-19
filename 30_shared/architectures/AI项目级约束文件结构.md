@@ -9,7 +9,7 @@ tags:
   - 约束文件
   - CLAUDE.md
   - AGENTS.md
-updated: 2026-05-19
+updated: 2026-06-19
 summary: 项目级 AI 约束文件的职责分工和最小模板。用于把全局 AI 原则落到具体项目，避免 AI 每次重新理解项目、越界修改或忽略验证。
 ---
 
@@ -315,7 +315,34 @@ See `docs/adr/`.
 ## Manual Smoke Test
 
 - 
+
+## Layered Acceptance
+
+Do not close a module only because code was written or lint passed.
+
+For each change, record which layers are involved:
+
+| Layer | Required when |
+|---|---|
+| Static | Any code change |
+| Unit/API | Public logic, API, service, validation, permission |
+| Real DB | Migration, seed, schema, data persistence |
+| Real HTTP | Auth, session, frontend/backend integration |
+| Browser QA | UI, navigation, forms, charts, hydration |
+| Security | Auth, role, secret, file, payment, data deletion |
+| Data quality | Source, metric, report, AI output, external data |
+| Docs | Commands, scope, architecture, risk, behavior changed |
+
+Each completed task should report:
+
+- Commands run.
+- Real HTTP/DB/browser smoke results when involved.
+- Console or hydration result for UI changes.
+- Negative path or permission result when involved.
+- Known unverified risks.
 ```
+
+项目级 `TESTING.md` 可以更详细，但不能弱于 [[30_shared/architectures/AI模块测试验收证据协议|AI模块测试验收证据协议]] 的分层验收要求。
 
 ## 9. DEPLOYMENT.md 最小模板
 
