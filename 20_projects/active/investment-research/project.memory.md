@@ -61,6 +61,7 @@ summary: investment-research 的会话启动摘要与运行态记忆。
 - Slice 10 已完成样板报告闭环：新增只读聚合 API `/api/sample-closures` 和 `/api/sample-closures/{sample_key}`，新增 `/sample-closures` 总览和详情页，覆盖行业总览、材料国产替代、光刻胶专题、上市公司完整版投研和高管校友图谱 5 类样板。
 - Slice 10 数据边界：不新增新的业务主数据表，只聚合报告、资料、指标、图表、审稿、AI run、内容计划、公司深度和高管校友数据；`seed_slice10.py` 是开发演示种子，不能视为已核验真实投资事实。
 - Slice 10 验收结果：后端 `ruff/mypy/pytest` 通过，pytest 为 55 tests；前端 `lint/typecheck/build` 通过；Alembic head、`seed_slice10`、真实 HTTP 和无插件 Chrome 浏览器 smoke 均通过。真实 HTTP 中 5 个样板均为 100%，`ready_samples=5`，`average_completion=100`。
+- Slice 0-10 阶段收口评审已完成：当前系统可以演示内部研究工作台主链路，但不能宣称为正式投研产品、完整真实数据库或可直接对外交付的研报系统。下一阶段建议顺序是演示稳定化包、第一份真实样板报告、报告导出与图表资产化。
 
 ## 当前阻塞
 
@@ -111,6 +112,7 @@ summary: investment-research 的会话启动摘要与运行态记忆。
 - 将微信截图样本、GaN PDF 样本和老板手工公司投研样本分别沉淀成可执行报告模板。
 - 将高管校友图谱需求沉淀为数据源评估清单、字段字典和第一批样板公司/学校范围。
 - 若用户继续推进开发，下一步不能自动开启新 Slice；应先由用户确认方向。候选方向包括真实数据治理、样板报告质量打磨、报告导出/排版、部署交付准备、权限审计或产品 UX 打磨。
+- 阶段收口评审文档: `docs/product/02-planning/Slice_0-10_阶段收口评审.md`。后续确定下一阶段前应先读该文档。
 - 若用户要先补真实数据，下一步应填写 4 个 CSV 模板并确认字段，而不是直接写导入代码或爬虫。
 - 审阅已拆分的 `02-planning/` 总纲、公共工程契约和 Slice 工程说明书，确认 Slice 1 是否还需要继续下钻到更细的任务包。
 
