@@ -62,9 +62,24 @@ summary: investment-research 的会话启动摘要与运行态记忆。
 - Slice 10 数据边界：不新增新的业务主数据表，只聚合报告、资料、指标、图表、审稿、AI run、内容计划、公司深度和高管校友数据；`seed_slice10.py` 是开发演示种子，不能视为已核验真实投资事实。
 - Slice 10 验收结果：后端 `ruff/mypy/pytest` 通过，pytest 为 55 tests；前端 `lint/typecheck/build` 通过；Alembic head、`seed_slice10`、真实 HTTP 和无插件 Chrome 浏览器 smoke 均通过。真实 HTTP 中 5 个样板均为 100%，`ready_samples=5`，`average_completion=100`。
 - Slice 0-10 阶段收口评审已完成：当前系统可以演示内部研究工作台主链路，但不能宣称为正式投研产品、完整真实数据库或可直接对外交付的研报系统。下一阶段建议顺序是演示稳定化包、第一份真实样板报告、报告导出与图表资产化。
-- 2026-06-21 已完成 P1 研究工作台化改造：Dashboard、报告生产和公司研究已从对象管理页面升级为研究任务驱动的工作台主线。
+- 2026-06-21 已完成第一轮演示稳定化：Dashboard 从 Slice 0 占位页升级为 Slice 0-10 MVP 演示总览，读取 `/api/health/ready` 和 `/api/sample-closures` 展示 API ready 与样板闭环 `5/5`；新增 `pnpm demo:seed` 和 `pnpm demo:check`。
+- 演示稳定化验收结果：后端 `ruff/mypy/pytest` 通过，pytest 为 56 tests；前端 `lint/typecheck/build` 通过；`pnpm demo:seed` 和 `pnpm demo:check` 通过；Playwright 浏览器 smoke 覆盖登录 -> Dashboard 演示总览 -> `/sample-closures`，控制台应用错误为空。
+- 后续验证规则补充：前端 `typecheck` 和 `next build` 不要并行执行，因为 `next build` 会刷新 `.next/types`，可能导致并发 `tsc --noEmit` 出现假的 `TS6053` 缺失文件错误。
+- 本地环境注意事项：项目标准后端端口仍是 `8002`，但本机 untracked `apps/web/.env` 可能指向 `127.0.0.1:8003`；若登录无报错但不跳 Dashboard，先检查 `NEXT_PUBLIC_API_BASE_URL` 与实际后端端口。
+- 2026-06-21 用户纠正项目验收口径：当前 MVP 是真实产品原型，后续要迭代上线给用户使用，不能按“给老板演示”心态修改和验收。已将 Dashboard 可见文案、脚本快捷命令、README/TESTING/ARCHITECTURE/TASKS 和部分规划文档从“演示稳定化”校准为“产品稳定性/本地开发验收”。
+- 当前本地开发默认入口改为 `localhost:3001 -> localhost:8002`；`apps/web/.env` 和 `apps/api/.env` 已在本地未跟踪文件中同步为 localhost。`pnpm dev:seed`、`pnpm dev:check` 和 localhost Playwright smoke 均已通过。
+- 2026-06-21 用户反馈当前 MVP 体验偏后台管理系统。结论：业务方向没有跑偏，Slice 0-10 已完成投研系统的数据底座和流程骨架，但产品体验仍偏“对象管理后台”，需要升级为“研究任务驱动的投研工作台”。
+- 已新增 `docs/product/02-planning/Slice_0-10_产品体验重构规划.md` 和 `docs/product/02-planning/Slice_0-10_产品体验审计清单.md`。下一阶段不应继续新增业务模块，应先做产品体验审计、Dashboard 研究驾驶舱、报告生产工作台、公司研究驾驶舱、样板质量控制台和导航分组改造规划。
+- 2026-06-21 已完成第一轮产品体验审计：使用 localhost + 无插件 Playwright/Chrome 抓取 15 个页面，控制台应用错误和失败请求均为 0；结论是技术链路可用，但体验仍偏对象管理后台。P1 改造顺序确定为 Dashboard 研究驾驶舱、报告生产工作台、公司研究驾驶舱；P2 再处理样板质量控制台、资料证据台账、图表资产库、审稿队列和上下文 AI。
+- 2026-06-21 已完成 `docs/product/02-planning/Dashboard_研究驾驶舱改造计划.md`：Dashboard 改造目标是从产品总览/模块入口升级为今日任务、质量风险、样板质量和快捷动作组成的研究驾驶舱；首版建议前端复用现有 API 聚合，后续再考虑 `GET /api/dashboard/summary` 聚合接口。
+- 2026-06-21 已完成 `docs/product/02-planning/报告生产工作台改造计划.md`：报告详情改造目标是从章节编辑器升级为报告生产工作台，包含报告阶段条、章节缺口、证据/图表/AI/审稿/导出 tabs、提交审稿门禁和 Markdown 导出边界；首版建议前端复用现有报告、审稿、AI、图表 API，后续再考虑 `GET /api/reports/{id}/production-summary`。
+- 2026-06-21 已完成 `docs/product/02-planning/公司研究驾驶舱改造计划.md`：公司研究页改造目标是从财务指标维护页升级为单公司研究判断页，包含公司研究名片、研究成熟度、数据缺口、财务趋势、完整版报告推进流程和高管校友入口；首版建议前端复用现有公司、财务指标、报告、审稿和高管 API，后续再考虑 `GET /api/companies/{id}/research-summary`。
+- 2026-06-21 已完成 `docs/product/02-planning/P1_研究工作台化改造实施顺序.md`：P1 体验改造实施顺序确定为先抽共享 `research-workbench` helper 和指标中文名，再依次改 Dashboard、报告生产、公司研究、跨页面串联和总体验收；代码实现需用户明确确认后从 Task P1-0 开始。
+- 2026-06-21 已完成 P1-0 共享研究工作台 helper：新增 `apps/web/lib/research-workbench.ts`，包含任务、缺口、报告生产阶段、公司研究成熟度、财务指标中文名、趋势方向和指标覆盖度的前端复用口径；同步补充 i18n 文案，前端 lint/typecheck/build 均通过。下一步代码实现应进入 P1-1 Dashboard 研究驾驶舱。
+- 2026-06-21 已完成 P1-1 Dashboard 研究驾驶舱：`/dashboard` 已从产品总览升级为今日研究概况、研究任务队列、质量风险队列、样板质量状态、快捷动作和产品边界；复用现有 health、sample closure、reports、reviews、AI runs、data sync jobs 和 companies API 做前端聚合，不新增后端 API。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 通过，控制台错误和失败请求均为空。
 - 2026-06-22 已完成 P2 第一份真实样板报告选题确认：新增 `docs/product/02-planning/P2_第一份真实样板报告选题确认.md`，用户已确认第一份真实样板选择 `北方华创完整版投研分析 v0.1`。该选题用于验证上市公司完整版投研报告主链路，覆盖资料、公司、指标、图表、报告、AI、审稿、导出边界和样板闭环。
-- 2026-06-22 已完成 P2 北方华创真实资料包与数据清单：新增 `docs/product/02-planning/P2_北方华创真实资料包与数据清单.md`，列出 2025 年报、2025 半年报、2025 三季报、2026 一季报、官网、产品页和 ESG 报告等第一批资料入口，以及资料缺口、公司基础字段、产品技术字段、财务指标、图表需求、章节映射和系统录入顺序。下一步应先人工下载/登记官方资料并提取 2021-2025 年核心指标，不直接写代码。
+- 2026-06-22 已完成 P2 北方华创真实资料包与数据清单：新增 `docs/product/02-planning/P2_北方华创真实资料包与数据清单.md`，列出 2025 年报、2025 半年报、2025 三季报、2026 一季报、官网、产品页和 ESG 报告等第一批资料入口，以及资料缺口、公司基础字段、产品技术字段、财务指标、图表需求、章节映射和系统录入顺序。
+- 2026-06-22 已完成 P2-2 第一批官方资料下载与指标/图表结构化整理：7 份官方 PDF 已下载到 `docs/product/04-source-materials/raw/beifang-huachuang/official-reports/`，提取文本位于 ignored raw 目录；仓库内新增 `docs/product/03-templates/research/beifang-huachuang/P2_北方华创资料下载与指标提取记录.md`、`bfhc_financial_metrics_2021_2025.csv` 和 `bfhc_chart_dataset_seed.csv`。数据状态仍为 `extracted_pending_review` 或 `located_pending_pdf_crosscheck`，不得直接标为 verified。
 
 ## 当前阻塞
 
@@ -114,8 +129,19 @@ summary: investment-research 的会话启动摘要与运行态记忆。
 - 生成两个 Word 原始输入的 extracted Markdown 版本，便于后续智能体读取。
 - 将微信截图样本、GaN PDF 样本和老板手工公司投研样本分别沉淀成可执行报告模板。
 - 将高管校友图谱需求沉淀为数据源评估清单、字段字典和第一批样板公司/学校范围。
-- 若用户继续推进，下一步不能自动开启新 Slice；P2 已进入真实样板报告与产品化推进阶段。第一份真实样板已确认为 `北方华创完整版投研分析 v0.1`，P2-2 资料/指标/图表清单已形成；下一步应先下载/登记官方资料，人工提取 2021-2025 年核心指标和图表数据，再决定是否进入系统内跑 P2-3。
+- 若用户继续推进，下一步不能自动开启新 Slice；P1 研究工作台化改造已完成，P2 已进入真实样板报告与产品化推进阶段。第一份真实样板已确认为 `北方华创完整版投研分析 v0.1`，P2-2 资料/指标/图表清单和第一批 CSV 输入已形成；下一步应补齐 2021-2024 年报全文、人工核对 CSV 页码/单位/口径，再决定是否进入系统内跑 P2-3。
 - 阶段收口评审文档: `docs/product/02-planning/Slice_0-10_阶段收口评审.md`。后续确定下一阶段前应先读该文档。
 - 若用户要先补真实数据，下一步应填写 4 个 CSV 模板并确认字段，而不是直接写导入代码或爬虫。
 - 审阅已拆分的 `02-planning/` 总纲、公共工程契约和 Slice 工程说明书，确认 Slice 1 是否还需要继续下钻到更细的任务包。
+
+- 2026-06-21 已完成 P1-2 报告生产阶段和章节缺口：`/reports/[id]` 已显示报告生产阶段条、章节缺口数量、当前章节缺口和中英文缺口标签；复用现有报告数据和 `research-workbench` helper，不新增后端 API。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 通过，控制台错误和失败请求均为空。随后已完成 P1-3 报告右侧研究辅助面板。
+
+
+- 2026-06-21 已完成 P1-3 报告右侧研究辅助面板：`/reports/[id]` 右侧面板已按证据、图表、AI 草稿、审稿、导出组织为 tabs；AI 仍只生成草稿并要求人工确认，导出仍标明为内部 Markdown 预览。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 通过，控制台错误和失败请求均为空。随后已完成 P1-4 公司研究首屏和成熟度。
+- 2026-06-21 已完成 P1-4 公司研究首屏和成熟度：`/companies/[id]/research` 首屏已从财务指标维护优先调整为公司研究名片、研究成熟度、数据缺口和下一步动作优先；财务指标维护已折叠下沉，指标名称支持中英文标签。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 通过，控制台错误、失败请求和横向溢出均为空。随后已完成 P1-5 公司财务趋势和报告推进。
+- 2026-06-21 已完成 P1-5 公司财务趋势和报告推进：`/companies/[id]/research` 已展示核心财务指标最新值、年份覆盖、来源覆盖、趋势观察和数据不足提示；完整版报告动作已整理为选择关联报告、生成 checklist、生成财务草稿、生成估值辅助草稿、进入报告生产工作台的流程。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 通过，控制台错误、失败请求和横向溢出均为空。随后已完成 P1-6 跨页面串联与总体验收。
+- 2026-06-22 已完成 P1-6 跨页面串联与总体验收：Dashboard 新增研究工作流路径，串联公司研究、报告生产、审稿入口和样板闭环；工作流卡片在数据加载前不可点击，加载后公司研究入口直达 `/companies/[id]/research`；报告详情页新增关联公司研究入口。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 覆盖登录 -> Dashboard -> 公司研究 -> 报告详情 -> 关联公司研究，控制台错误、失败请求和横向溢出均为空。
+- 2026-06-22 已完成 P2 下一阶段规划：新增 `docs/product/02-planning/P2_真实样板报告与产品化推进总计划.md` 和 `docs/product/02-planning/P2_产品体验细节优化清单.md`。P2 总计划把后续拆为路线固化、真实样板选题、真实资料/指标/图表清单、系统内跑真实样板、缺口复盘和下一轮代码优先级确认；体验清单按 Dashboard、报告、公司、资料、图表、审稿、AI、数据治理、商业化和登录细节拆分问题。当前不写代码，下一步是确认第一份真实样板报告主题。
+- 2026-06-22 已完成 P2 第一份真实样板报告选题确认：新增 `docs/product/02-planning/P2_第一份真实样板报告选题确认.md`，用户已确认选择 `北方华创完整版投研分析 v0.1`，并列明推荐理由、替代选题、10 个一级章节、最小数据范围、图表需求、现有系统覆盖能力、预计缺口和执行边界。
+- 2026-06-22 已完成 P2 北方华创真实资料包与数据清单：新增 `docs/product/02-planning/P2_北方华创真实资料包与数据清单.md`；随后完成官方资料下载、PDF 文本提取、核心指标 CSV 和图表数据种子。当前不写代码；下一步是补齐 2021-2024 年报全文、人工核验指标页码/单位/口径，再按 P2-3 在系统中跑真实样板报告。
 

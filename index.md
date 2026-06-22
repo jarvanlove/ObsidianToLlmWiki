@@ -1,6 +1,6 @@
 # 总索引
 
-最近重建: 2026-06-20
+最近重建: 2026-06-22
 
 ## 分区入口
 
@@ -14,11 +14,10 @@
 
 ## 进行中的项目
 
-- 暂无。
+- [[20_projects/active/investment-research/索引|索引]] - 最近重建: 2026-06-20
 
 ## 最近更新
 
-- [[30_shared/architectures/AI-coding生命周期控制协议|AI coding 生命周期控制协议]] - 定义接入 ObsidianToWiki 的项目在 AI coding 过程中如何开始任务、收工、更新项目控制文件和回写 wiki。
 - [[30_shared/prompts/AI任务执行提示词|AI任务执行提示词]] - 用项目驾驶舱自然语言让 AI 在项目控制面约束下执行任务，避免直接开写和越界修改。
 - [[30_shared/prompts/AI任务收工提示词|AI任务收工提示词]] - 接入 ObsidianToWiki 的项目在完成 AI coding 任务后用于更新控制文件和生成 wiki 回写候选。
 - [[30_shared/prompts/AI发布检查提示词|AI发布检查提示词]] - 用于发布前检查验证、风险、回滚、环境变量、数据库迁移和上线后观察项。
@@ -27,4 +26,5 @@
 - [[20_projects/active/investment-research/任务|investment-research 任务]] - investment-research 的任务追踪页。
 - [[20_projects/active/investment-research/时间线|investment-research 时间线]] - investment-research 的关键事件、里程碑与演化记录。
 - [[20_projects/active/investment-research/架构|investment-research 架构]] - investment-research 的架构说明。
+- [[20_projects/active/investment-research/概览|investment-research 概览]] - investment-research 的项目概览。
 - [[20_projects/active/investment-research/project.memory|investment-research 运行记忆]] - investment-research 的会话启动摘要与运行态记忆。
