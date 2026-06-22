@@ -5,7 +5,7 @@ domain: 项目
 project: investment-research
 status: 活跃
 tags: [investment, research]
-updated: 2026-06-22
+updated: 2026-06-23
 summary: investment-research 的会话启动摘要与运行态记忆。
 ---
 
@@ -79,8 +79,8 @@ summary: investment-research 的会话启动摘要与运行态记忆。
 - 2026-06-21 已完成 P1-1 Dashboard 研究驾驶舱：`/dashboard` 已从产品总览升级为今日研究概况、研究任务队列、质量风险队列、样板质量状态、快捷动作和产品边界；复用现有 health、sample closure、reports、reviews、AI runs、data sync jobs 和 companies API 做前端聚合，不新增后端 API。前端 lint/typecheck/build 通过，桌面和移动 Playwright smoke 通过，控制台错误和失败请求均为空。
 - 2026-06-22 已完成 P2 第一份真实样板报告选题确认：新增 `docs/product/02-planning/P2_第一份真实样板报告选题确认.md`，用户已确认第一份真实样板选择 `北方华创完整版投研分析 v0.1`。该选题用于验证上市公司完整版投研报告主链路，覆盖资料、公司、指标、图表、报告、AI、审稿、导出边界和样板闭环。
 - 2026-06-22 已完成 P2 北方华创真实资料包与数据清单：新增 `docs/product/02-planning/P2_北方华创真实资料包与数据清单.md`，列出 2025 年报、2025 半年报、2025 三季报、2026 一季报、官网、产品页和 ESG 报告等第一批资料入口，以及资料缺口、公司基础字段、产品技术字段、财务指标、图表需求、章节映射和系统录入顺序。
-- 2026-06-22 已完成 P2-2 第一批资料下载与指标/图表结构化整理：第一批 PDF 已下载到 `docs/product/04-source-materials/raw/beifang-huachuang/official-reports/`，提取文本位于 ignored raw 目录；仓库内新增 `docs/product/03-templates/research/beifang-huachuang/P2_北方华创资料下载与指标提取记录.md`、`bfhc_financial_metrics_2021_2025.csv` 和 `bfhc_chart_dataset_seed.csv`。2021-2024 年报全文已通过公告附件镜像补齐，2021/2022 核心指标来源已切到对应年报全文，研发投入数据已覆盖 2021-2025。数据状态仍为 `extracted_pending_review` 或 `calculated_pending_review`，不得直接标为 verified。
-- 2026-06-22 已新增 `bfhc_metric_manual_verification_checklist.csv` 和 `P2_北方华创指标人工核验清单.md`，把 47 项指标/图表数据拆成逐项人工核验任务。P2-3 前必须先核对 PDF 页码、行号、单位、来源范围、调整后/原年报口径和冲突情况，再录入系统。
+- 2026-06-22 已完成 P2-2 第一批资料下载与指标/图表结构化整理：第一批 PDF 已下载到 `docs/product/04-source-materials/raw/beifang-huachuang/official-reports/`，提取文本位于 ignored raw 目录；仓库内新增 `docs/product/03-templates/research/beifang-huachuang/P2_北方华创资料下载与指标提取记录.md`、`bfhc_financial_metrics_2021_2025.csv` 和 `bfhc_chart_dataset_seed.csv`。2021-2024 年报全文已通过公告附件镜像补齐，2021/2022 核心指标来源已切到对应年报全文，研发投入数据已覆盖 2021-2025。
+- 2026-06-23 已完成北方华创 47 项指标文本核验：按本地年报 PDF 提取文本核对页码、单位、口径和调整后/原年报范围；`bfhc_metric_manual_verification_checklist.csv` 和 `bfhc_financial_metrics_2021_2025.csv` 已全部标记为 `verified`，`bfhc_chart_dataset_seed.csv` 已标记为 `verified/calculated_verified`。2021-2024 年报来源仍建议从公告附件镜像替换为巨潮/深交所官方直链。
 
 ## 当前阻塞
 
@@ -130,7 +130,7 @@ summary: investment-research 的会话启动摘要与运行态记忆。
 - 生成两个 Word 原始输入的 extracted Markdown 版本，便于后续智能体读取。
 - 将微信截图样本、GaN PDF 样本和老板手工公司投研样本分别沉淀成可执行报告模板。
 - 将高管校友图谱需求沉淀为数据源评估清单、字段字典和第一批样板公司/学校范围。
-- 若用户继续推进，下一步不能自动开启新 Slice；P1 研究工作台化改造已完成，P2 已进入真实样板报告与产品化推进阶段。第一份真实样板已确认为 `北方华创完整版投研分析 v0.1`，P2-2 资料/指标/图表清单、第一批 CSV 输入和 47 项人工核验清单已形成，2021-2024 年报全文已补齐为公告附件镜像；下一步应按核验清单人工核对 PDF 页码、单位、口径和调整范围，回补巨潮/深交所直链，再决定是否进入系统内跑 P2-3。
+- 若用户继续推进，下一步不能自动开启新 Slice；P1 研究工作台化改造已完成，P2 已进入真实样板报告与产品化推进阶段。第一份真实样板已确认为 `北方华创完整版投研分析 v0.1`，P2-2 资料/指标/图表清单、第一批 CSV 输入、47 项人工核验清单和 47 项指标文本核验已完成；下一步应回补巨潮/深交所官方直链，并编写 P2-3 系统内跑北方华创真实样板报告的执行计划。
 - 阶段收口评审文档: `docs/product/02-planning/Slice_0-10_阶段收口评审.md`。后续确定下一阶段前应先读该文档。
 - 若用户要先补真实数据，下一步应填写 4 个 CSV 模板并确认字段，而不是直接写导入代码或爬虫。
 - 审阅已拆分的 `02-planning/` 总纲、公共工程契约和 Slice 工程说明书，确认 Slice 1 是否还需要继续下钻到更细的任务包。

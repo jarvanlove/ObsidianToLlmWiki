@@ -14,7 +14,7 @@
 
 ## 进行中的项目
 
-- [[20_projects/active/investment-research/索引|索引]] - 最近重建: 2026-06-22
+- [[20_projects/active/investment-research/索引|索引]] - 最近重建: 2026-06-23
 
 ## 最近更新
 
