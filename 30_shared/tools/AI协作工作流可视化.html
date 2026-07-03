@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 协作工作流可视化</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f9fb;
+      --surface: #ffffff;
+      --surface-strong: #eef3f7;
+      --ink: #111827;
+      --muted: #5b6472;
+      --line: #d7dee8;
+      --accent: #136f63;
+      --accent-soft: #dff2ed;
+      --warn: #9a5b13;
+      --warn-soft: #fff2d9;
+      --radius: 18px;
+      --shadow: 0 22px 70px rgba(33, 44, 63, .12);
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --surface: #151b23;
+        --surface-strong: #1d2633;
+        --ink: #edf2f7;
+        --muted: #a9b4c2;
+        --line: #2c3848;
+        --accent: #38bda4;
+        --accent-soft: #11342f;
+        --warn: #f0b35e;
+        --warn-soft: #382614;
+        --shadow: 0 28px 90px rgba(0, 0, 0, .34);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(19, 111, 99, .14), transparent 28rem),
+        linear-gradient(180deg, var(--bg), var(--surface-strong));
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+
+    .hero {
+      min-height: 78dvh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+      gap: 36px;
+      align-items: center;
+      padding: 32px 0 44px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(42px, 6vw, 76px);
+      line-height: 1.02;
+      letter-spacing: -.035em;
+      max-width: 10ch;
+    }
+
+    .lead {
+      max-width: 62ch;
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: clamp(17px, 1.7vw, 21px);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 700;
+      box-shadow: 0 8px 22px rgba(25, 35, 50, .08);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+
+    .button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .button:active {
+      transform: translateY(1px) scale(.99);
+    }
+
+    .map-card {
+      position: relative;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .map-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(19, 111, 99, .14), transparent 36%),
+        radial-gradient(circle at 80% 20%, rgba(19, 111, 99, .16), transparent 14rem);
+      pointer-events: none;
+    }
+
+    .map-card > * {
+      position: relative;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stack-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .row-title {
+      margin: 0;
+      font-weight: 800;
+    }
+
+    .row-copy {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    section {
+      padding: 44px 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.08;
+      letter-spacing: -.025em;
+    }
+
+    .section-head p {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 14px 48px rgba(33, 44, 63, .08);
+    }
+
+    .panel.large {
+      grid-column: span 7;
+    }
+
+    .panel.side {
+      grid-column: span 5;
+    }
+
+    .panel.third {
+      grid-column: span 4;
+    }
+
+    .panel.full {
+      grid-column: 1 / -1;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing: -.015em;
+    }
+
+    .panel p,
+    .panel li {
+      color: var(--muted);
+    }
+
+    .panel p {
+      margin: 0;
+    }
+
+    .lane {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+    }
+
+    .num {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .step span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .rail {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .rail-item {
+      min-height: 128px;
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    .rail-item strong {
+      display: block;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .rail-item span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .evidence {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .evidence div {
+      min-height: 88px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      font-size: 13px;
+    }
+
+    .evidence strong {
+      display: block;
+      color: var(--accent);
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .warning {
+      background: var(--warn-soft);
+      border-color: color-mix(in srgb, var(--warn) 35%, var(--line));
+    }
+
+    .warning strong {
+      color: var(--warn);
+    }
+
+    footer {
+      padding-top: 28px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .grid,
+      .rail,
+      .evidence {
+        grid-template-columns: 1fr;
+      }
+
+      .panel.large,
+      .panel.side,
+      .panel.third,
+      .panel.full {
+        grid-column: auto;
+      }
+
+      h1 {
+        max-width: 12ch;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .panel,
+      .map-card,
+      .button {
+        animation: rise .5s ease both;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">AI WORKFLOW MAP</p>
+        <h1>把聊天变成可控工程系统</h1>
+        <p class="lead">这张图把个人工作流、团队协作、项目控制文件、验收证据和 Wiki 回写放在同一个视图里，方便人快速理解，方便 AI 严格执行。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="../patterns/独立开发者AI项目实操工作流.md">个人工作流</a>
+          <a class="button" href="../patterns/AI团队协作项目工作流.md">团队工作流</a>
+        </div>
+      </div>
+      <div class="map-card" aria-label="AI 协作控制面示意">
+        <div class="stack">
+          <div class="stack-row">
+            <span class="tag">User</span>
+            <div>
+              <p class="row-title">只说目标</p>
+              <p class="row-copy">开始工作、继续、收工、需求变更、Bug、发布检查。</p>
+            </div>
+          </div>
+          <div class="stack-row">
+            <span class="tag">Repo</span>
+            <div>
+              <p class="row-title">仓库保存事实</p>
+              <p class="row-copy">控制文件、任务状态、验证命令、过程记忆。</p>
+            </div>
+          </div>
+          <div class="stack-row">
+            <span class="tag">Agent</span>
+            <div>
+              <p class="row-title">AI 执行生命周期</p>
+              <p class="row-copy">开始、计划、实现、验证、关闭、记忆回写。</p>
+            </div>
+          </div>
+          <div class="stack-row">
+            <span class="tag">Wiki</span>
+            <div>
+              <p class="row-title">沉淀长期结论</p>
+              <p class="row-copy">项目记忆、共享模式、提示词、架构协议。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>一套工作流，三层控制面</h2>
+        <p>个人项目、多人团队和 Wiki 共享层不是三套规则，而是逐层叠加的控制系统。</p>
+      </div>
+      <div class="grid">
+        <article class="panel large">
+          <h3>个人工作流是执行原子</h3>
+          <p>一个人和 AI 完成一个任务时，必须先恢复上下文，确认边界，给出计划，执行最小修改，跑验证，最后更新任务和记忆。</p>
+          <div class="lane">
+            <div class="step"><span class="num">1</span><div><strong>开始</strong><span>读取控制文件和项目记忆。</span></div></div>
+            <div class="step"><span class="num">2</span><div><strong>计划</strong><span>确认影响范围、风险和验收标准。</span></div></div>
+            <div class="step"><span class="num">3</span><div><strong>实现</strong><span>只改当前任务直接相关文件。</span></div></div>
+            <div class="step"><span class="num">4</span><div><strong>验证</strong><span>按涉及层级提供证据。</span></div></div>
+            <div class="step"><span class="num">5</span><div><strong>收工</strong><span>更新任务、风险、下一步和回写候选。</span></div></div>
+          </div>
+        </article>
+        <article class="panel side">
+          <h3>团队工作流是协作控制层</h3>
+          <p>多人开发时，个人任务闭环外面必须增加角色、分支、组长集成、公共文档冲突规则和共享服务边界。</p>
+          <div class="lane">
+            <div class="step"><span class="num">A</span><div><strong>个人分支</strong><span>组员只在自己的 workspace 分支提交。</span></div></div>
+            <div class="step"><span class="num">B</span><div><strong>组长分支</strong><span>一个人一合并，一验证，一记录。</span></div></div>
+            <div class="step"><span class="num">C</span><div><strong>总集成</strong><span>项目负责人只看证据、风险和阶段结论。</span></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>AI 必须执行的生命周期</h2>
+        <p>这条链路来自共享架构协议。任何任务都不应该跳过验证和收工。</p>
+      </div>
+      <div class="rail">
+        <div class="rail-item"><strong>task_start</strong><span>确认任务、身份、分支、风险和上下文。</span></div>
+        <div class="rail-item"><strong>task_plan</strong><span>输出最小计划、预计文件和验证方式。</span></div>
+        <div class="rail-item"><strong>task_implement</strong><span>按边界实现，不做无关扩展。</span></div>
+        <div class="rail-item"><strong>task_verify</strong><span>运行最小但充分的验证。</span></div>
+        <div class="rail-item"><strong>task_close</strong><span>更新任务、索引、风险和提交记录。</span></div>
+        <div class="rail-item"><strong>memory_file_back</strong><span>只把长期有效结论写入 Wiki。</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>验收证据从 L0 到 L8</h2>
+        <p>任务完成不能只说“已测试”。涉及哪一层，就必须验证哪一层。</p>
+      </div>
+      <div class="panel full">
+        <div class="evidence">
+          <div><strong>L0</strong>静态检查</div>
+          <div><strong>L1</strong>单元测试</div>
+          <div><strong>L2</strong>API 或服务</div>
+          <div><strong>L3</strong>真实数据层</div>
+          <div><strong>L4</strong>前后端集成</div>
+          <div><strong>L5</strong>浏览器 QA</div>
+          <div><strong>L6</strong>安全权限</div>
+          <div><strong>L7</strong>数据质量</div>
+          <div><strong>L8</strong>文档回写</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>仓库和 Wiki 的边界</h2>
+        <p>仓库记录项目事实和执行过程，Wiki 记录长期记忆和可复用方法。</p>
+      </div>
+      <div class="grid">
+        <article class="panel third">
+          <h3>仓库</h3>
+          <p>保存 README、AGENTS、CLAUDE、TASKS、TESTING、progress-log、学生任务和验证证据。</p>
+        </article>
+        <article class="panel third">
+          <h3>项目 Wiki</h3>
+          <p>保存稳定决策、架构解释、风险、里程碑和项目运行记忆。</p>
+        </article>
+        <article class="panel third warning">
+          <h3>共享层</h3>
+          <p>只保存跨项目可复用的模式、提示词和架构协议，不写账号、路径、客户材料和项目流水账。</p>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <p>来源：30_shared/patterns、30_shared/architectures、30_shared/prompts。开源版本保留方法论，不包含个人项目数据。</p>
+    </footer>
+  </main>
+</body>
+</html>
