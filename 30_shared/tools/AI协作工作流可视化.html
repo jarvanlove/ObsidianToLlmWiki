@@ -8,21 +8,19 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6faf8;
-      --bg-2: #eef6f2;
-      --panel: rgba(255, 255, 255, .78);
-      --panel-strong: rgba(255, 255, 255, .94);
-      --text: #13211d;
-      --muted: #62746e;
-      --line: rgba(21, 62, 52, .14);
-      --line-strong: rgba(21, 62, 52, .24);
-      --green: #147d6f;
-      --mint: #e1f6ed;
-      --amber: #d99035;
-      --rose: #b95762;
-      --blue: #315f99;
-      --shadow: 0 24px 80px rgba(24, 62, 52, .14);
-      --radius: 18px;
+      --page: #f7f8f5;
+      --surface: #ffffff;
+      --surface-soft: #eef4ef;
+      --ink: #17211d;
+      --muted: #66736d;
+      --line: #dbe4df;
+      --line-strong: #b8cbc2;
+      --accent: #14746a;
+      --accent-soft: #dcefe9;
+      --accent-ink: #0b5049;
+      --warn: #a76d21;
+      --shadow: 0 18px 55px rgba(23, 33, 29, .08);
+      --radius: 14px;
       font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
     }
 
@@ -36,42 +34,13 @@
 
     body {
       margin: 0;
-      min-height: 100dvh;
+      color: var(--ink);
       background:
-        radial-gradient(circle at 16% 8%, rgba(20, 125, 111, .14), transparent 25rem),
-        radial-gradient(circle at 84% 12%, rgba(49, 95, 153, .10), transparent 26rem),
-        linear-gradient(135deg, #fbfdfb, var(--bg) 48%, #edf6f2);
-      color: var(--text);
+        radial-gradient(circle at 12% 8%, rgba(20, 116, 106, .10), transparent 24rem),
+        radial-gradient(circle at 86% 18%, rgba(20, 116, 106, .06), transparent 26rem),
+        var(--page);
+      line-height: 1.62;
       overflow-x: hidden;
-      line-height: 1.6;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(rgba(21, 62, 52, .045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(21, 62, 52, .045) 1px, transparent 1px);
-      background-size: 44px 44px;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 78%);
-      z-index: 0;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      width: 420px;
-      height: 420px;
-      left: var(--mouse-x, 50%);
-      top: var(--mouse-y, 35%);
-      transform: translate(-50%, -50%);
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(20, 125, 111, .09), transparent 62%);
-      pointer-events: none;
-      filter: blur(10px);
-      z-index: 1;
     }
 
     a {
@@ -79,311 +48,251 @@
       text-decoration: none;
     }
 
-    .shell {
-      position: relative;
-      z-index: 2;
-      width: min(1220px, calc(100% - 36px));
-      margin: 0 auto;
-      padding: 30px 0 72px;
+    button {
+      font: inherit;
     }
 
-    .nav {
-      position: sticky;
-      top: 18px;
-      z-index: 20;
+    .shell {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 22px 0 72px;
+    }
+
+    .topbar {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      min-height: 64px;
-      padding: 10px 12px 10px 20px;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 58px;
+      padding: 10px 14px;
       border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, .82);
-      backdrop-filter: blur(22px);
-      box-shadow: 0 18px 52px rgba(24, 62, 52, .12);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .86);
+      box-shadow: 0 10px 30px rgba(23, 33, 29, .06);
     }
 
     .brand {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 10px;
-      font-weight: 900;
-      letter-spacing: -.02em;
+      min-width: max-content;
+      font-weight: 800;
+      letter-spacing: -.01em;
     }
 
     .brand-mark {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: linear-gradient(135deg, #d9f5ec, #f8e8c9);
-      color: var(--green);
-      font-weight: 1000;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .nav a,
-    .mode-button {
-      border: 1px solid transparent;
-      border-radius: 999px;
-      padding: 10px 14px;
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 14px;
-      transition: transform .2s ease, color .2s ease, background .2s ease, border-color .2s ease;
-    }
-
-    .nav a:hover,
-    .mode-button:hover {
-      transform: translateY(-1px);
-      color: var(--text);
-      background: rgba(244, 248, 244, .08);
-      border-color: var(--line);
-    }
-
-    .hero {
-      min-height: calc(100dvh - 92px);
-      display: grid;
-      grid-template-columns: minmax(0, .92fr) minmax(390px, .88fr);
-      align-items: center;
-      gap: 44px;
-      padding: 56px 0 74px;
-    }
-
-    .kicker {
-      width: fit-content;
-      margin: 0 0 22px;
-      padding: 8px 12px;
-      border: 1px solid rgba(20, 125, 111, .24);
-      border-radius: 999px;
-      color: var(--green);
-      background: rgba(20, 125, 111, .08);
+      color: #fff;
+      background: var(--accent);
       font-size: 13px;
       font-weight: 900;
-      letter-spacing: .08em;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 2px;
+    }
+
+    .nav a {
+      padding: 8px 11px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .nav a:hover {
+      color: var(--accent-ink);
+      background: var(--accent-soft);
+      transform: translateY(-1px);
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 34px;
+      align-items: end;
+      padding: 78px 0 34px;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin: 0 0 16px;
+      padding: 6px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--accent-ink);
+      background: rgba(255, 255, 255, .72);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .05em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
     }
 
     h1 {
-      margin: 0;
-      max-width: 10ch;
-      font-size: clamp(46px, 6.4vw, 88px);
-      line-height: .96;
-      letter-spacing: -.052em;
-    }
-
-    .gradient-word {
-      display: inline-block;
-      color: transparent;
-      background: linear-gradient(115deg, var(--green), #6e9f8f 58%, var(--blue));
-      -webkit-background-clip: text;
-      background-clip: text;
+      max-width: 16ch;
+      margin-bottom: 16px;
+      font-size: clamp(34px, 4.2vw, 46px);
+      line-height: 1.08;
+      letter-spacing: -.035em;
     }
 
     .lead {
       max-width: 58ch;
-      margin: 28px 0 0;
+      margin-bottom: 0;
       color: var(--muted);
-      font-size: clamp(16px, 1.35vw, 19px);
+      font-size: clamp(16px, 1.6vw, 18px);
     }
 
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 34px;
-    }
-
-    .button {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 0 20px;
+    .intro-panel {
       border: 1px solid var(--line);
-      border-radius: 999px;
-      overflow: hidden;
-      color: var(--text);
-      background: rgba(255, 255, 255, .66);
-      font-weight: 900;
-      isolation: isolate;
-      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
-    }
-
-    .button::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(120deg, rgba(20, 125, 111, .16), rgba(217, 144, 53, .12));
-      transform: translateX(-110%) skewX(-18deg);
-      transition: transform .42s ease;
-      z-index: -1;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-      border-color: rgba(20, 125, 111, .38);
-      box-shadow: 0 16px 44px rgba(20, 125, 111, .12);
-    }
-
-    .button:hover::before {
-      transform: translateX(0) skewX(0);
-    }
-
-    .button.primary {
-      background: linear-gradient(135deg, var(--green), #2aa58f);
-      color: #ffffff;
-      border-color: transparent;
-    }
-
-    .button:active,
-    .mode-button:active {
-      transform: translateY(1px) scale(.99);
-    }
-
-    .orbit-card {
-      position: relative;
-      min-height: 560px;
-      border: 1px solid var(--line);
-      border-radius: 34px;
-      background:
-        radial-gradient(circle at 52% 50%, rgba(20, 125, 111, .12), transparent 10rem),
-        linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .62));
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .78);
       box-shadow: var(--shadow);
       overflow: hidden;
-      transform-style: preserve-3d;
     }
 
-    .orbit-card::before {
-      content: "";
-      position: absolute;
-      inset: 34px;
-      border: 1px solid rgba(21, 62, 52, .12);
-      border-radius: 50%;
-      animation: spin 18s linear infinite;
-    }
-
-    .orbit-card::after {
-      content: "";
-      position: absolute;
-      inset: 92px;
-      border: 1px dashed rgba(21, 62, 52, .14);
-      border-radius: 50%;
-      animation: spin 28s linear reverse infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .core {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 186px;
-      height: 186px;
+    .intro-row {
       display: grid;
-      place-items: center;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, .78), transparent 30%),
-        linear-gradient(145deg, var(--green), var(--amber));
-      color: #0e201c;
-      text-align: center;
-      font-weight: 1000;
-      font-size: 21px;
-      line-height: 1.05;
-      box-shadow: 0 20px 70px rgba(20, 125, 111, .20);
-      z-index: 3;
+      grid-template-columns: 86px 1fr;
+      gap: 16px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
     }
 
-    .node {
-      position: absolute;
-      width: 190px;
-      min-height: 118px;
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, .88);
-      backdrop-filter: blur(20px);
-      transition: transform .24s ease, border-color .24s ease, background .24s ease;
-      z-index: 4;
+    .intro-row:last-child {
+      border-bottom: 0;
     }
 
-    .node:hover {
-      transform: translateY(-8px) scale(1.03);
-      border-color: rgba(20, 125, 111, .32);
-      background: rgba(255, 255, 255, .96);
+    .intro-row span {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 850;
     }
 
-    .node strong {
+    .intro-row strong {
       display: block;
-      margin-bottom: 6px;
-      color: var(--green);
+      margin-bottom: 2px;
+      font-size: 15px;
+    }
+
+    .intro-row em {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      font-style: normal;
+    }
+
+    .control-map {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0 54px;
+    }
+
+    .map-node {
+      min-height: 132px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .72);
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .map-node:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-strong);
+      background: var(--surface);
+    }
+
+    .map-node .tag {
+      display: inline-flex;
+      margin-bottom: 24px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .map-node strong {
+      display: block;
+      margin-bottom: 4px;
       font-size: 17px;
     }
 
-    .node span {
+    .map-node p {
+      margin: 0;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
     }
 
-    .node.user { left: 42px; top: 74px; }
-    .node.repo { right: 42px; top: 112px; }
-    .node.agent { right: 56px; bottom: 118px; }
-    .node.wiki { left: 54px; bottom: 90px; }
-
     section {
-      padding: 62px 0;
+      padding: 42px 0;
     }
 
     .section-head {
-      display: grid;
-      grid-template-columns: minmax(0, .85fr) minmax(280px, .55fr);
-      gap: 28px;
-      align-items: end;
-      margin-bottom: 26px;
+      max-width: 720px;
+      margin-bottom: 22px;
     }
 
     h2 {
-      margin: 0;
-      max-width: 14ch;
-      font-size: clamp(30px, 3.8vw, 54px);
-      line-height: 1.02;
-      letter-spacing: -.038em;
+      margin-bottom: 8px;
+      font-size: clamp(25px, 3vw, 30px);
+      line-height: 1.18;
+      letter-spacing: -.025em;
     }
 
     .section-head p {
-      margin: 0;
+      margin-bottom: 0;
       color: var(--muted);
-      font-size: 16px;
+      font-size: 15px;
     }
 
     .switcher {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 24px 0;
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .70);
     }
 
     .mode-button {
+      min-width: 104px;
       cursor: pointer;
-      background: rgba(255, 255, 255, .64);
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 14px;
       color: var(--muted);
-      font-family: inherit;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 800;
+      transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .mode-button:hover {
+      transform: translateY(-1px);
+      color: var(--accent-ink);
     }
 
     .mode-button.active {
-      background: var(--green);
-      color: #ffffff;
-      border-color: transparent;
+      color: #fff;
+      background: var(--accent);
     }
 
     .workflow-stage {
@@ -392,106 +301,84 @@
 
     .workflow-stage.active {
       display: block;
+      animation: fadeUp .28s ease both;
     }
 
-    .grid {
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .workflow-board {
       display: grid;
-      grid-template-columns: repeat(12, 1fr);
+      grid-template-columns: minmax(0, 1fr) 310px;
       gap: 16px;
     }
 
     .panel {
-      position: relative;
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background: var(--panel);
-      box-shadow: 0 18px 54px rgba(24, 62, 52, .10);
+      background: rgba(255, 255, 255, .78);
+      box-shadow: 0 12px 36px rgba(23, 33, 29, .06);
       overflow: hidden;
-      transition: transform .24s ease, border-color .24s ease, background .24s ease;
     }
 
-    .panel:hover {
-      transform: translateY(-6px);
-      border-color: rgba(20, 125, 111, .28);
-      background: var(--panel-strong);
+    .panel-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .72);
     }
 
-    .panel-inner {
-      position: relative;
-      padding: 24px;
-      z-index: 2;
+    .panel-header h3 {
+      margin-bottom: 4px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: -.01em;
     }
 
-    .large { grid-column: span 7; }
-    .side { grid-column: span 5; }
-    .third { grid-column: span 4; }
-    .full { grid-column: 1 / -1; }
-
-    .panel h3 {
-      margin: 0 0 10px;
-      font-size: 21px;
-      letter-spacing: -.025em;
-    }
-
-    .panel p {
-      margin: 0;
+    .panel-header p {
+      margin-bottom: 0;
       color: var(--muted);
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 18px;
-    }
-
-    .chip {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 8px 10px;
-      color: var(--green);
-      background: rgba(20, 125, 111, .07);
-      font-size: 13px;
-      font-weight: 800;
+      font-size: 14px;
     }
 
     .path {
       display: grid;
-      gap: 10px;
-      margin-top: 22px;
     }
 
     .path-item {
       display: grid;
       grid-template-columns: 42px 1fr;
-      gap: 12px;
-      align-items: start;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, .66);
-      transition: transform .2s ease, background .2s ease;
+      gap: 14px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      transition: background .18s ease;
+    }
+
+    .path-item:last-child {
+      border-bottom: 0;
     }
 
     .path-item:hover {
-      transform: translateX(8px);
-      background: rgba(20, 125, 111, .07);
+      background: var(--surface-soft);
     }
 
     .num {
-      width: 42px;
-      height: 42px;
+      width: 34px;
+      height: 34px;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: rgba(20, 125, 111, .12);
-      color: var(--green);
-      font-weight: 1000;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 13px;
+      font-weight: 900;
     }
 
     .path-item strong {
       display: block;
       margin-bottom: 2px;
+      font-size: 15px;
     }
 
     .path-item span {
@@ -499,80 +386,94 @@
       font-size: 14px;
     }
 
+    .side-list {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--accent-ink);
+      background: rgba(255, 255, 255, .70);
+      font-size: 14px;
+      font-weight: 760;
+      transition: transform .18s ease, border-color .18s ease;
+    }
+
+    .chip:hover {
+      transform: translateX(3px);
+      border-color: var(--line-strong);
+    }
+
     .lifecycle {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .life {
-      position: relative;
-      min-height: 168px;
-      padding: 18px;
       border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .78);
       overflow: hidden;
     }
 
-    .life::before {
-      content: "";
-      position: absolute;
-      inset: auto 16px 16px auto;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: var(--green);
-      opacity: .18;
-      transition: transform .25s ease, opacity .25s ease;
+    .life {
+      min-height: 136px;
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      transition: background .18s ease;
     }
 
-    .life:hover::before {
-      transform: scale(3.5);
-      opacity: .1;
+    .life:last-child {
+      border-right: 0;
+    }
+
+    .life:hover {
+      background: var(--surface-soft);
     }
 
     .life strong {
-      position: relative;
       display: block;
-      margin-bottom: 12px;
-      color: var(--green);
-      font-size: 16px;
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: -.01em;
     }
 
     .life span {
-      position: relative;
       color: var(--muted);
       font-size: 13px;
     }
 
     .evidence {
       display: grid;
-      grid-template-columns: repeat(9, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
     }
 
     .evidence-card {
-      min-height: 128px;
-      padding: 14px;
+      min-height: 96px;
+      padding: 15px;
       border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel);
-      transition: transform .22s ease, background .22s ease, border-color .22s ease;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .76);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
     }
 
     .evidence-card:hover {
-      transform: translateY(-8px) rotate(-1deg);
-      border-color: rgba(217, 144, 53, .36);
-      background: rgba(255, 255, 255, .95);
+      transform: translateY(-3px);
+      border-color: var(--line-strong);
+      background: var(--surface);
     }
 
     .evidence-card strong {
       display: block;
-      margin-bottom: 7px;
-      color: var(--amber);
-      font-size: 20px;
-      letter-spacing: -.03em;
+      margin-bottom: 6px;
+      color: var(--warn);
+      font-size: 16px;
     }
 
     .evidence-card span {
@@ -580,69 +481,64 @@
       font-size: 13px;
     }
 
-    .roles {
+    .roles,
+    .memory-map {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
 
-    .role-card {
-      min-height: 210px;
-      padding: 20px;
+    .memory-map {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .role-card,
+    .memory {
+      min-height: 170px;
+      padding: 18px;
       border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--panel);
-      transition: transform .24s ease, border-color .24s ease;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .76);
+      transition: transform .18s ease, border-color .18s ease;
     }
 
-    .role-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(49, 95, 153, .32);
+    .role-card:hover,
+    .memory:hover {
+      transform: translateY(-3px);
+      border-color: var(--line-strong);
     }
 
-    .role-card h3 {
-      margin: 0 0 14px;
-      font-size: 21px;
+    .role-card h3,
+    .memory h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
     }
 
     .role-card ul {
       margin: 0;
       padding-left: 18px;
       color: var(--muted);
-    }
-
-    .memory-map {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .memory {
-      min-height: 240px;
-      padding: 22px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: var(--panel);
-    }
-
-    .memory.repo { border-color: rgba(20, 125, 111, .28); }
-    .memory.project { border-color: rgba(49, 95, 153, .26); }
-    .memory.shared { border-color: rgba(217, 144, 53, .28); }
-
-    .memory h3 {
-      margin: 0 0 12px;
-      font-size: 23px;
+      font-size: 14px;
     }
 
     .memory p {
-      margin: 0 0 14px;
+      margin-bottom: 12px;
       color: var(--muted);
+      font-size: 14px;
+    }
+
+    .memory .chip {
+      display: inline-flex;
+      margin: 0 6px 6px 0;
+      min-height: auto;
+      padding: 6px 9px;
+      font-size: 12px;
     }
 
     .reveal {
       opacity: 0;
-      transform: translateY(30px);
-      transition: opacity .7s ease, transform .7s ease;
+      transform: translateY(18px);
+      transition: opacity .5s ease, transform .5s ease;
     }
 
     .reveal.show {
@@ -651,15 +547,17 @@
     }
 
     footer {
-      margin-top: 40px;
-      padding: 28px 0 0;
+      margin-top: 36px;
+      padding-top: 20px;
       border-top: 1px solid var(--line);
       color: var(--muted);
+      font-size: 13px;
     }
 
-    @media (max-width: 1040px) {
-      .hero,
-      .section-head,
+    @media (max-width: 980px) {
+      .intro,
+      .workflow-board,
+      .control-map,
       .lifecycle,
       .evidence,
       .roles,
@@ -667,57 +565,45 @@
         grid-template-columns: 1fr;
       }
 
-      .large,
-      .side,
-      .third,
-      .full {
-        grid-column: auto;
-      }
-
-      .orbit-card {
-        min-height: 560px;
-      }
-    }
-
-    @media (max-width: 760px) {
-      .shell {
-        width: min(100% - 24px, 1220px);
+      .topbar {
+        align-items: flex-start;
+        border-radius: 18px;
       }
 
       .nav {
-        align-items: flex-start;
-        border-radius: 24px;
-        flex-direction: column;
-        gap: 10px;
+        display: none;
       }
 
-      .nav-links {
-        flex-wrap: wrap;
+      .intro {
+        padding-top: 44px;
+      }
+
+      .life {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .life:last-child {
+        border-bottom: 0;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .shell {
+        width: min(100% - 26px, 1120px);
       }
 
       h1 {
-        font-size: clamp(48px, 17vw, 72px);
+        font-size: 32px;
       }
 
-      .orbit-card {
-        min-height: 620px;
+      h2 {
+        font-size: 24px;
       }
 
-      .node {
-        width: calc(100% - 42px);
-        left: 21px !important;
-        right: auto !important;
-      }
-
-      .node.user { top: 28px; }
-      .node.repo { top: 170px; }
-      .node.agent { bottom: 170px; }
-      .node.wiki { bottom: 28px; }
-
-      .core {
-        width: 148px;
-        height: 148px;
-        font-size: 21px;
+      .intro-row,
+      .path-item {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -725,21 +611,22 @@
       *,
       *::before,
       *::after {
-        animation: none !important;
-        transition: none !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
         scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
       }
     }
   </style>
 </head>
 <body>
   <main class="shell">
-    <nav class="nav" aria-label="页面导航">
+    <nav class="topbar" aria-label="页面导航">
       <a class="brand" href="#top">
         <span class="brand-mark">AI</span>
         <span>协作工作流地图</span>
       </a>
-      <div class="nav-links">
+      <div class="nav">
         <a href="#workflow">工作流</a>
         <a href="#lifecycle">生命周期</a>
         <a href="#evidence">验收证据</a>
@@ -748,25 +635,50 @@
       </div>
     </nav>
 
-    <section class="hero" id="top">
-      <div class="reveal">
-        <p class="kicker">AI WORKFLOW VISUAL SYSTEM</p>
-        <h1>把规则变成<span class="gradient-word">可执行地图</span></h1>
-        <p class="lead">这不是 Markdown 阅读页。它把个人执行、团队集成、项目控制、验收证据和 Wiki 沉淀做成一个可扫读、可演示、可交接的交互视图。</p>
-        <div class="hero-actions">
-          <a class="button primary" href="#workflow">查看工作流</a>
-          <a class="button" href="#evidence">查看验收证据</a>
+    <section class="intro reveal" id="top">
+      <div>
+        <p class="label">AI WORKFLOW MAP</p>
+        <h1>把规则整理成可执行的项目地图</h1>
+        <p class="lead">这张图把个人执行、团队集成、项目控制、验收证据和 Wiki 沉淀放在一个可扫读的页面里，方便复盘、交接和约束 AI 执行。</p>
+      </div>
+      <aside class="intro-panel" aria-label="阅读顺序">
+        <div class="intro-row">
+          <span>入口</span>
+          <div><strong>用户只说目标</strong><em>开始工作、继续、收工、修 Bug、发布检查。</em></div>
         </div>
-      </div>
-
-      <div class="orbit-card reveal" aria-label="AI 协作四层控制面">
-        <div class="core">AI<br>控制面</div>
-        <div class="node user"><strong>用户层</strong><span>只说目标，不背脚本和读取顺序。</span></div>
-        <div class="node repo"><strong>仓库层</strong><span>保存事实、任务、验证和过程记忆。</span></div>
-        <div class="node agent"><strong>执行层</strong><span>AI 按生命周期推进并提供证据。</span></div>
-        <div class="node wiki"><strong>沉淀层</strong><span>长期结论进入项目或共享 Wiki。</span></div>
-      </div>
+        <div class="intro-row">
+          <span>执行</span>
+          <div><strong>仓库保存过程</strong><em>控制文件、任务状态、验证命令和过程记忆。</em></div>
+        </div>
+        <div class="intro-row">
+          <span>沉淀</span>
+          <div><strong>Wiki 保存结论</strong><em>只把长期有效的方法、协议和复盘写回共享层。</em></div>
+        </div>
+      </aside>
     </section>
+
+    <div class="control-map reveal" aria-label="AI 协作四层控制面">
+      <article class="map-node">
+        <span class="tag">USER</span>
+        <strong>用户层</strong>
+        <p>目标清楚，不负责背规则和读取顺序。</p>
+      </article>
+      <article class="map-node">
+        <span class="tag">REPO</span>
+        <strong>仓库层</strong>
+        <p>保存事实、任务、验证、分支和过程记忆。</p>
+      </article>
+      <article class="map-node">
+        <span class="tag">AGENT</span>
+        <strong>执行层</strong>
+        <p>AI 按生命周期推进，提交前给出证据。</p>
+      </article>
+      <article class="map-node">
+        <span class="tag">WIKI</span>
+        <strong>沉淀层</strong>
+        <p>长期结论进入项目 Wiki 或共享 Wiki。</p>
+      </article>
+    </div>
 
     <section id="workflow" class="reveal">
       <div class="section-head">
@@ -780,71 +692,71 @@
       </div>
 
       <div class="workflow-stage active" data-stage="solo">
-        <div class="grid">
-          <article class="panel large">
-            <div class="panel-inner">
-              <h3>一个人驱动 AI 做 0-1 项目</h3>
-              <p>从想法到发布，每一步都必须有文件承载、AI 输入、验收条件和下一步出口。</p>
-              <div class="path">
-                <div class="path-item"><span class="num">01</span><div><strong>想法入库</strong><span>把模糊想法拆成目标用户、痛点、MVP 和非目标。</span></div></div>
-                <div class="path-item"><span class="num">02</span><div><strong>规格与架构</strong><span>用 PRODUCT_SPEC 和 ARCHITECTURE 固定产品和技术边界。</span></div></div>
-                <div class="path-item"><span class="num">03</span><div><strong>垂直切片</strong><span>每个 Slice 端到端覆盖数据、API、页面和验收。</span></div></div>
-                <div class="path-item"><span class="num">04</span><div><strong>验证收工</strong><span>用证据关闭任务，再更新 TASKS、TESTING 和 Wiki 候选。</span></div></div>
-              </div>
+        <div class="workflow-board">
+          <article class="panel">
+            <div class="panel-header">
+              <h3>一个人驱动 AI 做 0 到 1 项目</h3>
+              <p>每一步都必须有文件承载、AI 输入、验收条件和下一步出口。</p>
+            </div>
+            <div class="path">
+              <div class="path-item"><span class="num">01</span><div><strong>想法入库</strong><span>把模糊想法拆成目标用户、痛点、MVP 和非目标。</span></div></div>
+              <div class="path-item"><span class="num">02</span><div><strong>规格与架构</strong><span>用 PRODUCT_SPEC 和 ARCHITECTURE 固定产品和技术边界。</span></div></div>
+              <div class="path-item"><span class="num">03</span><div><strong>垂直切片</strong><span>每个 Slice 端到端覆盖数据、API、页面和验收。</span></div></div>
+              <div class="path-item"><span class="num">04</span><div><strong>验证收工</strong><span>用证据关闭任务，再更新 TASKS、TESTING 和 Wiki 候选。</span></div></div>
             </div>
           </article>
-          <article class="panel side">
-            <div class="panel-inner">
-              <h3>最少只记三句话</h3>
-              <p>简单入口背后对应完整项目状态机。</p>
-              <div class="chips">
-                <span class="chip">开始工作</span>
-                <span class="chip">继续</span>
-                <span class="chip">收工</span>
-                <span class="chip">需求变更</span>
-                <span class="chip">Bug 修复</span>
-                <span class="chip">发布检查</span>
-              </div>
+          <aside class="panel">
+            <div class="panel-header">
+              <h3>入口只保留三句话</h3>
+              <p>复杂流程由仓库和 AI 执行。</p>
             </div>
-          </article>
+            <div class="side-list">
+              <span class="chip">开始工作</span>
+              <span class="chip">继续</span>
+              <span class="chip">收工</span>
+              <span class="chip">需求变更</span>
+              <span class="chip">Bug 修复</span>
+              <span class="chip">发布检查</span>
+            </div>
+          </aside>
         </div>
       </div>
 
       <div class="workflow-stage" data-stage="team">
-        <div class="grid">
-          <article class="panel large">
-            <div class="panel-inner">
-              <h3>多人弱编码团队的 AI 协作控制面</h3>
-              <p>每个人只关心自己的任务文档，AI 负责读取公共规则。组长逐个集成，项目负责人只看证据和风险。</p>
-              <div class="path">
-                <div class="path-item"><span class="num">01</span><div><strong>个人分支</strong><span>学生只在自己的 workspace 分支提交。</span></div></div>
-                <div class="path-item"><span class="num">02</span><div><strong>组长集成</strong><span>一个人一合并，一验证，一记录。</span></div></div>
-                <div class="path-item"><span class="num">03</span><div><strong>共享服务治理</strong><span>server、API、数据库、公共文档必须声明影响范围。</span></div></div>
-                <div class="path-item"><span class="num">04</span><div><strong>阶段验收</strong><span>用 assignments、progress-log、TASKS 恢复全局上下文。</span></div></div>
-              </div>
+        <div class="workflow-board">
+          <article class="panel">
+            <div class="panel-header">
+              <h3>多人弱编码团队的协作控制面</h3>
+              <p>每个人只关心自己的任务文档，AI 读取公共规则，组长逐个集成。</p>
+            </div>
+            <div class="path">
+              <div class="path-item"><span class="num">01</span><div><strong>负责人定边界</strong><span>确定 main、dev、team 分支、验收标准和禁止事项。</span></div></div>
+              <div class="path-item"><span class="num">02</span><div><strong>组长拆任务</strong><span>按官网组、后台组分配模块，避免多人直接改同一片公共区域。</span></div></div>
+              <div class="path-item"><span class="num">03</span><div><strong>组员走个人闭环</strong><span>个人分支实现、验证、提交，只更新自己负责的任务状态。</span></div></div>
+              <div class="path-item"><span class="num">04</span><div><strong>组长逐个集成</strong><span>一个人一合、一验、一记录，冲突时停止并说明语义。</span></div></div>
             </div>
           </article>
-          <article class="panel side">
-            <div class="panel-inner">
-              <h3>团队协作不是替代个人工作流</h3>
-              <p>它是在个人任务闭环外面增加角色、分支、冲突、集成、验收和记忆控制层。</p>
-              <div class="chips">
-                <span class="chip">个人文档</span>
-                <span class="chip">组分支</span>
-                <span class="chip">任务看板</span>
-                <span class="chip">过程记忆</span>
-                <span class="chip">Git 保护</span>
-              </div>
+          <aside class="panel">
+            <div class="panel-header">
+              <h3>团队工作流不是替代个人工作流</h3>
+              <p>它是在个人任务闭环外增加角色、分支、冲突、集成、验收和记忆控制层。</p>
             </div>
-          </article>
+            <div class="side-list">
+              <span class="chip">个人文档</span>
+              <span class="chip">组长集成</span>
+              <span class="chip">公共文档治理</span>
+              <span class="chip">共享 server 边界</span>
+              <span class="chip">Git 保护</span>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
 
     <section id="lifecycle" class="reveal">
       <div class="section-head">
-        <h2>AI 必须执行的生命周期</h2>
-        <p>任何任务都不能从“写代码”开始，也不能用“写完了”结束。生命周期让 AI 工作可追踪。</p>
+        <h2>AI 执行生命周期</h2>
+        <p>任务不能从“写代码”开始，也不能用“写完了”结束。生命周期让 AI 工作可追踪。</p>
       </div>
       <div class="lifecycle">
         <div class="life"><strong>task_start</strong><span>确认任务、身份、分支、风险和上下文。</span></div>
@@ -858,7 +770,7 @@
 
     <section id="evidence" class="reveal">
       <div class="section-head">
-        <h2>验收证据从 L0 到 L8</h2>
+        <h2>验收证据 L0 到 L8</h2>
         <p>涉及哪一层，就验证哪一层。页面能打开不是完成，代码写完也不是完成。</p>
       </div>
       <div class="evidence">
@@ -876,60 +788,55 @@
 
     <section id="roles" class="reveal">
       <div class="section-head">
-        <h2>团队角色怎么协作</h2>
+        <h2>团队角色协作边界</h2>
         <p>角色边界越清晰，AI 越不容易越界。每个角色只承担自己应该承担的责任。</p>
       </div>
       <div class="roles">
-        <div class="role-card"><h3>项目负责人</h3><ul><li>定目标和边界</li><li>最终验收</li><li>决定是否合入 main</li><li>沉淀共享经验</li></ul></div>
-        <div class="role-card"><h3>组长</h3><ul><li>拆组内任务</li><li>收个人分支</li><li>处理冲突</li><li>更新组进度</li></ul></div>
-        <div class="role-card"><h3>组员</h3><ul><li>读取个人文档</li><li>只做个人任务</li><li>运行验证</li><li>提交个人分支</li></ul></div>
-        <div class="role-card"><h3>AI</h3><ul><li>读取规则</li><li>执行生命周期</li><li>提供验收证据</li><li>更新必要文档</li></ul></div>
+        <article class="role-card"><h3>项目负责人</h3><ul><li>定目标和边界</li><li>最终验收</li><li>决定是否合入 main</li><li>沉淀共享经验</li></ul></article>
+        <article class="role-card"><h3>组长</h3><ul><li>拆组内任务</li><li>收个人分支</li><li>处理冲突</li><li>更新组进度</li></ul></article>
+        <article class="role-card"><h3>组员</h3><ul><li>读取个人文档</li><li>只做个人任务</li><li>运行验证</li><li>提交个人分支</li></ul></article>
+        <article class="role-card"><h3>AI</h3><ul><li>读取规则</li><li>执行生命周期</li><li>提供验收证据</li><li>更新必要文档</li></ul></article>
       </div>
     </section>
 
     <section id="memory" class="reveal">
       <div class="section-head">
-        <h2>记忆不能留在聊天里</h2>
+        <h2>项目记忆不能留在聊天里</h2>
         <p>仓库记录执行过程，项目 Wiki 记录稳定事实，共享层记录跨项目可复用方法。</p>
       </div>
       <div class="memory-map">
-        <div class="memory repo">
+        <article class="memory">
           <h3>仓库</h3>
           <p>README、AGENTS、CLAUDE、TASKS、TESTING、assignments、progress-log。</p>
-          <div class="chips"><span class="chip">当前事实</span><span class="chip">任务状态</span><span class="chip">验证证据</span></div>
-        </div>
-        <div class="memory project">
+          <span class="chip">当前事实</span><span class="chip">任务状态</span><span class="chip">验证证据</span>
+        </article>
+        <article class="memory">
           <h3>项目 Wiki</h3>
           <p>稳定决策、架构解释、风险、里程碑、项目运行记忆。</p>
-          <div class="chips"><span class="chip">长期事实</span><span class="chip">项目复盘</span><span class="chip">风险记录</span></div>
-        </div>
-        <div class="memory shared">
+          <span class="chip">长期事实</span><span class="chip">项目复盘</span><span class="chip">风险记录</span>
+        </article>
+        <article class="memory">
           <h3>共享层</h3>
           <p>跨项目可复用的模式、提示词、架构协议和工作流模板。</p>
-          <div class="chips"><span class="chip">可复用模式</span><span class="chip">协议</span><span class="chip">模板</span></div>
-        </div>
+          <span class="chip">可复用模式</span><span class="chip">协议</span><span class="chip">模板</span>
+        </article>
       </div>
     </section>
 
     <footer>
-      <p>这张图来自 30_shared/patterns、30_shared/architectures、30_shared/prompts。主路径是可视化理解，详细规则由源码仓库文档继续承载。</p>
+      <p>主路径是可视化理解，详细规则由源码仓库文档继续承载。页面不会把读者跳回 Markdown 长文。</p>
     </footer>
   </main>
 
   <script>
-    const root = document.documentElement;
-    window.addEventListener("pointermove", (event) => {
-      root.style.setProperty("--mouse-x", `${event.clientX}px`);
-      root.style.setProperty("--mouse-y", `${event.clientY}px`);
-    }, { passive: true });
+    const modeButtons = document.querySelectorAll(".mode-button");
+    const stages = document.querySelectorAll(".workflow-stage");
 
-    const buttons = document.querySelectorAll("[data-mode]");
-    const stages = document.querySelectorAll("[data-stage]");
-    buttons.forEach((button) => {
+    modeButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        const mode = button.getAttribute("data-mode");
-        buttons.forEach((item) => item.classList.toggle("active", item === button));
-        stages.forEach((stage) => stage.classList.toggle("active", stage.getAttribute("data-stage") === mode));
+        const mode = button.dataset.mode;
+        modeButtons.forEach((item) => item.classList.toggle("active", item === button));
+        stages.forEach((stage) => stage.classList.toggle("active", stage.dataset.stage === mode));
       });
     });
 
@@ -937,9 +844,10 @@
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("show");
+          observer.unobserve(entry.target);
         }
       });
-    }, { threshold: .16 });
+    }, { threshold: .12 });
 
     document.querySelectorAll(".reveal").forEach((item) => observer.observe(item));
   </script>
