@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
-import unittest
 from pathlib import Path
 
 
@@ -11,13 +11,24 @@ def workflow_escape(value: str) -> str:
 
 
 repo_root = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(repo_root))
-suite = unittest.defaultTestLoader.discover(str(repo_root / "tests"))
-result = unittest.TextTestRunner(verbosity=2).run(suite)
+process = subprocess.Popen(
+    [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
+    cwd=repo_root,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    encoding="utf-8",
+    errors="replace",
+)
+output: list[str] = []
+assert process.stdout is not None
+for line in process.stdout:
+    print(line, end="", flush=True)
+    output.append(line)
+return_code = process.wait()
 
-if not result.wasSuccessful() and os.environ.get("GITHUB_ACTIONS") == "true":
-    for test, traceback in [*result.failures, *result.errors]:
-        detail = workflow_escape(f"{test}\n{traceback}"[:12000])
-        print(f"::error title=Unit test failure::{detail}")
+if return_code and os.environ.get("GITHUB_ACTIONS") == "true":
+    detail = workflow_escape("".join(output)[-12000:])
+    print(f"::error title=Unit test failure::{detail}")
 
-raise SystemExit(0 if result.wasSuccessful() else 1)
+raise SystemExit(return_code)
