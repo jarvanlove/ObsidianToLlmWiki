@@ -28,3 +28,21 @@ jobs:
       - if: runner.os != 'Windows'
         shell: bash
         run: bash ./00_system/scripts/otw.sh --help
+
+  installer-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./install.ps1 -PrivateRoot "$env:RUNNER_TEMP/obsidiantowiki-private" -Provider agents
+      - if: runner.os != 'Windows'
+        shell: bash
+        run: bash ./install.sh --private-root "$RUNNER_TEMP/obsidiantowiki-private" --provider agents

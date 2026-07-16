@@ -4,6 +4,8 @@
 
 ObsidianToWiki is a local markdown-first wiki scaffold plus automation scripts.
 
+The product boundary spans four cooperating local components: the public runtime, the private Markdown vault, one global Manager Skill per supported provider environment, and one ignored/versioned bridge per attached project. The Skill and project adapters are routing layers; they do not own knowledge or workflow logic.
+
 | Layer | Directories | Owns |
 |---|---|---|
 | Source layer | `01_inbox/`, project `sources/`, project `source-notes/` | raw material, clips, temporary intake |
@@ -43,6 +45,9 @@ Daily project work is exposed through the project cockpit:
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
 | `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
+| `runtime_manager.py` | Orchestrate one-command setup and Git-safe whole-product updates |
+| `private_vault.py` | Seed private-only entry files and initialize a missing private vault |
+| `project_scaffold.py` | Safely upgrade core bridges for every registered project independently from optional adapters |
 | `doctor.py` | Diagnose Python dependencies, FTS5, wrappers, private policy, vault schema, and project context without modifying data |
 | `vault_compat.py` | Report and apply metadata-only vault schema migrations |
 | `project_adapter.py` | Upgrade opt-in project adapters only when managed hashes prove a file is safe to update |
@@ -62,6 +67,17 @@ Daily project work is exposed through the project cockpit:
 - `00_system/templates/` defines wiki page schemas, not project repo control files.
 - `30_shared/` holds reusable prompts, patterns, tools, and architecture notes.
 
+## Version Boundaries
+
+- `runtime_release.json` declares the public runtime, private scaffold, and core project scaffold releases.
+- `vault_schema.json` versions knowledge-vault metadata migrations.
+- `private_scaffold_state.json` records hashes for manifest-managed private files.
+- `.obsidiantowiki/project-scaffold-state.json` records an attached project's managed lifecycle baseline.
+- `project_adapter_schema.json` versions optional hooks/subagents/Skills separately from the core bridge.
+- `shared_assets.json` versions reusable private shared assets independently.
+
+Normal update order is preflight -> matching-baseline capture -> Git fast-forward -> dependencies/Skill -> private seed/sync -> vault/shared migrations -> core project bridges -> already-installed optional adapters -> indexes/doctor -> receipt.
+
 ## Invariants
 
 - Markdown remains source of truth.
@@ -71,7 +87,11 @@ Daily project work is exposed through the project cockpit:
 - Private root indexes, logs, project registry, knowledge pages, and retrieval cache are protected from scaffold sync.
 - `wiki.private.json` exclusions are enforced by ObsidianToWiki indexing and ingestion; this policy is not an OS sandbox for unrelated agent tools.
 - Real machine paths live in ignored `wiki.context.json` or user config, never in public/project scaffold bridge text.
+- `wiki.context.json` records both canonical public `runtime_root` and private `wiki_root`; copied private scripts are compatibility assets, not the primary runtime.
 - Vault migrations update a metadata ledger only. Shared/project managed files use recorded hashes; local edits produce candidates instead of overwrite.
+- Public updates are clean-worktree, upstream-known, fast-forward-only operations. They never stash, reset, or force overwrite.
+- Private root entry files and knowledge are seed-only/protected. Managed scaffold files update only from a recorded unchanged hash; otherwise a candidate and backup are required.
+- Core project scaffold upgrades run for every registered project. Optional adapters remain opt-in and update only when already installed.
 - Project Skills decide when to retrieve; the optional MCP server only exposes the existing retrieval contract.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.

@@ -2,11 +2,17 @@ param(
     [string]$Task = ""
 )
 
-$scaffoldRoot = $env:OBSIDIANTOWIKI_SCAFFOLD_ROOT
+$context = Get-Content "wiki.context.json" -Raw | ConvertFrom-Json
+$scaffoldRoot = $context.runtime_root
 if ([string]::IsNullOrWhiteSpace($scaffoldRoot)) {
-    Write-Error "Set OBSIDIANTOWIKI_SCAFFOLD_ROOT to your ObsidianToWiki public scaffold root before using this adapter."
+    $scaffoldRoot = $env:OBSIDIANTOWIKI_SCAFFOLD_ROOT
+}
+if ([string]::IsNullOrWhiteSpace($scaffoldRoot)) {
+    Write-Error "wiki.context.json does not contain runtime_root; update the ObsidianToWiki project bridge."
     exit 1
 }
 
 $scriptPath = Join-Path $scaffoldRoot "00_system\scripts\project_session.py"
-python $scriptPath start --repo-root . --task $Task
+$python = Join-Path $scaffoldRoot ".venv\Scripts\python.exe"
+if (-not (Test-Path $python)) { $python = "python" }
+& $python $scriptPath start --repo-root . --task $Task

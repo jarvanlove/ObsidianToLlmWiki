@@ -149,7 +149,7 @@ docs/ai-workflows/adapters.md
 docs/ai-workflows/subagents/
 ```
 
-adapter 通过 `OBSIDIANTOWIKI_SCAFFOLD_ROOT` 找到公开 scaffold，不写死个人 wiki 路径，不直接同步 private vault。
+adapter 优先从忽略提交的 `wiki.context.json` 读取 `runtime_root` 和 `wiki_root`；旧适配器才使用 `OBSIDIANTOWIKI_SCAFFOLD_ROOT` 作为兼容回退。adapter 不写死个人路径，也不直接同步 private vault。
 
 ## 最小执行版
 

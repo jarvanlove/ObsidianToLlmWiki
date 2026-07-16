@@ -1,20 +1,21 @@
 # Private Sync Safety
 
-`sync_private_vault.py` copies only paths declared in `00_system/registry/private_sync_manifest.json`.
+`sync_private_vault.py` only considers paths declared in `00_system/registry/private_sync_manifest.json`. Normal users reach it through `otw update`; direct use is an advanced repair interface.
 
-Protected private runtime state includes:
+Hard-protected state includes private `AGENTS.md` / `CLAUDE.md`, root indexes and logs, privacy policy, project registry, vault/scaffold receipts, all personal and project knowledge, shared architectures/patterns/tools/indexes, outputs, and caches.
 
-- `Home.md`, `index.md`, and `log.md`
-- `00_system/registry/projects.json`
-- `01_inbox/`, `10_personal/`, `20_projects/`, and `40_outputs/`
-- shared architectures, patterns, tools, and indexes under `30_shared/`
-- `00_system/.cache/` and SQLite files
+Managed files use a recorded SHA-256 baseline:
 
-Identical files are reported as `skip`. Existing managed scaffold files may be updated; private runtime files cannot be selected even with `--path`. Only `30_shared/prompts/` is scaffold-managed inside the shared layer.
+- destination equals source: `skip`
+- destination equals recorded baseline: `update`
+- destination is missing: `create`
+- destination differs without a safe baseline: preserve it, stage `<path>.new` under `40_outputs/upgrade-candidates/private-scaffold/`, and back up the original under `40_outputs/update-backups/<timestamp>/`
+
+Before a Git update, the runtime records baselines only for files that are byte-identical on both sides. It never adopts a differing private file as managed.
+
+Advanced diagnostics:
 
 ```powershell
-python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
-python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --path 00_system/scripts/search_wiki.py
+.\00_system\scripts\otw.ps1 update --check
+python .\00_system\scripts\sync_private_vault.py --source-root . --private-root <private-wiki-root> --dry-run --format json
 ```
-
-Always review a real-vault dry-run after changing the sync manifest.

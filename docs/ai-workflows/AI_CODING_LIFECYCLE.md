@@ -11,11 +11,7 @@ Before editing:
 3. Read relevant project wiki pages.
 4. State task boundary, risk level, expected touched files, and verification plan.
 
-Checklist:
-
-```powershell
-python .\00_system\scripts\project_session.py start --repo-root .
-```
+The agent invokes the lifecycle runtime internally; users only state their goal.
 
 ## Close
 
@@ -27,8 +23,4 @@ Before reporting completion:
 4. Check whether other control files or `docs/adr/` should change.
 5. File back only durable conclusions to the wiki.
 
-Checklist:
-
-```powershell
-python .\00_system\scripts\project_session.py close --repo-root . --verification "<commands and result>"
-```
+The agent records and resolves the close receipt internally before reporting completion.

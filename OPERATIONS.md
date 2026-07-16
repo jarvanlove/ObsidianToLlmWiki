@@ -3,8 +3,10 @@
 ## Routine Operations
 
 - Normal agent entry: `otw.py`; users should continue speaking naturally instead of memorizing commands.
+- First setup: root `install.ps1` or `install.sh`; this is the only required manual bootstrap.
+- Product update: user says `更新 ObsidianToWiki`; `otw update --check` is report-only and `otw update` applies the complete safe workflow.
 - Environment diagnosis: `doctor.py --strict` after install/upgrade.
-- Runtime install: `install.ps1` on Windows or `install.sh` on macOS/Linux; installs an isolated `.venv` and safely installs/updates the global manager Skill.
+- Runtime install: creates an isolated `.venv`, initializes the private vault, installs/updates the global Manager Skill, migrates state, and verifies the installation.
 - Attach project: `attach_project.py` / `.ps1`.
   Optional AI adapters are installed only with `--install-ai-adapters` or `-安装AI适配器`.
 - Ingest source: `ingest_source.py` / `.ps1`.
@@ -17,7 +19,7 @@
 - Governance: `lint_wiki.py` / `.ps1`.
 - Rebuild indexes: `rebuild_indexes.py` / `.ps1`.
 - Sync private vault: `sync_private_vault.py` / `.ps1`.
-  Sync is manifest-managed and content-aware. Use `--dry-run --format json` before applying and `--path` for a precise repair. Protected runtime paths cannot be selected.
+  This is an advanced repair interface. Sync is manifest- and hash-managed; conflicts preserve the destination, stage `.new`, and create a timestamped backup.
 - Retrieval evaluation: `evaluate_retrieval.py --cases 00_system/registry/retrieval_eval_cases.json`.
 - Optional agent MCP: install `00_system/requirements-mcp.txt`, then run `mcp_retrieval_server.py` over stdio or the attached project's `scripts/ai/wiki-mcp.py` launcher.
 - Legacy provenance: run `migrate_provenance.py` without `--apply` first. A `partial` result requires original-source review before page refs can be completed.
@@ -29,6 +31,9 @@
 | Symptom | Check | Likely fix |
 |---|---|---|
 | Project attach points to wrong vault | `wiki.context.json`, user-level defaults, sibling vault path | Correct context/default and rerun attach |
+| Product update stops before pull | public `git status`, origin/upstream, fast-forward report | Commit or intentionally remove local runtime changes; reconcile divergence manually; never bypass with reset |
+| Private scaffold conflict is staged | `40_outputs/upgrade-candidates/private-scaffold/` and update backup | Compare local file with `.new`, merge intentionally, then record a new safe baseline on the next update |
+| Registered project root no longer exists | update receipt project reports | Move/update the local project registration or reattach from the new machine path; other projects continue updating |
 | Index missing new page | `rebuild_indexes.ps1` output | Rebuild indexes and inspect frontmatter |
 | Retrieval misses a recent Markdown edit | JSON `retrieval.refresh`, index file under `00_system/.cache/` | Rerun search with refresh or run `build_retrieval_index.py --full`; deleting the cache is safe |
 | Private sync proposes a protected runtime file | JSON sync actions and `private_sync_manifest.json` | Stop; do not force-copy. Fix the manifest/protected globs and rerun dry-run |
@@ -46,6 +51,7 @@
 - Public repo should not contain private raw sources, credentials, or private project notes.
 - Private vault may contain sensitive data; treat sync operations as high attention.
 - Do not run destructive file operations across public/private roots without verifying target paths.
+- Never treat the private vault as a Git-backed rollback dependency; update backups and hash receipts are required even when the vault is not a repository.
 - Retrieval databases are local derived cache and must not be committed or synced between public and private vaults.
 - A private policy protects ObsidianToWiki access only; use external-tool/workspace permissions for broader model isolation.
 

@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 import argparse
-import filecmp
+import hashlib
 import json
+import os
 import shutil
+import tempfile
+from datetime import datetime
 from pathlib import Path
 
-from wiki_lib import VAULT_ROOT
 
-MANIFEST_PATH = VAULT_ROOT / "00_system" / "registry" / "private_sync_manifest.json"
+SCRIPT_DIR = Path(__file__).resolve().parent
+SOURCE_ROOT = SCRIPT_DIR.parent.parent
+STATE_REL_PATH = Path("00_system/registry/private_scaffold_state.json")
+CANDIDATE_REL_ROOT = Path("40_outputs/upgrade-candidates/private-scaffold")
+BACKUP_REL_ROOT = Path("40_outputs/update-backups")
+TEXT_EXTENSIONS = {".md", ".py", ".ps1", ".sh", ".json", ".txt", ".yml", ".yaml", ".html"}
 DEFAULT_MANIFEST = {
     "categories": {
         "root": [
-            "AGENTS.md",
-            "CLAUDE.md",
             "README.md",
             "README-zh.md",
             "快速开始.md",
@@ -23,12 +28,16 @@ DEFAULT_MANIFEST = {
         ],
         "system": [
             "00_system/registry/page_schemas.json",
+            "00_system/registry/ingestion_quality.json",
             "00_system/registry/private_sync_manifest.json",
             "00_system/registry/project_adapter_schema.json",
+            "00_system/registry/project_scaffold_schema.json",
             "00_system/registry/retrieval_aliases.json",
             "00_system/registry/retrieval_eval_cases.json",
+            "00_system/registry/runtime_release.json",
             "00_system/registry/shared_assets.json",
             "00_system/registry/vault_schema.json",
+            "00_system/requirements.txt",
             "00_system/requirements-mcp.txt",
             "00_system/scripts",
             "00_system/templates",
@@ -45,10 +54,14 @@ DEFAULT_MANIFEST = {
         "**/*.sqlite3-wal",
     ],
     "protected_globs": [
+        "AGENTS.md",
+        "CLAUDE.md",
         "Home.md",
         "index.md",
         "log.md",
         "wiki.private.json",
+        STATE_REL_PATH.as_posix(),
+        "00_system/registry/runtime_update_receipt.json",
         "00_system/registry/projects.json",
         "00_system/registry/vault_state.json",
         "00_system/.cache/**",
@@ -65,63 +78,58 @@ DEFAULT_MANIFEST = {
 }
 
 
-def default_private_root() -> Path:
-    return VAULT_ROOT.parent / f"{VAULT_ROOT.name}-private"
+def default_private_root(source_root: Path = SOURCE_ROOT) -> Path:
+    return source_root.parent / f"{source_root.name}-private"
 
 
-def ensure_parent(path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def load_manifest() -> dict[str, object]:
-    if not MANIFEST_PATH.exists():
-        return DEFAULT_MANIFEST
+def baseline_equivalent(source: Path, destination: Path) -> bool:
+    if source.read_bytes() == destination.read_bytes():
+        return True
+    if source.suffix.lower() not in TEXT_EXTENSIONS:
+        return False
     try:
-        payload = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        source_text = source.read_text(encoding="utf-8").replace("\r\n", "\n")
+        destination_text = destination.read_text(encoding="utf-8").replace("\r\n", "\n")
+    except UnicodeDecodeError:
+        return False
+    return source_text == destination_text
+
+
+def write_atomic(path: Path, content: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+        os.replace(temp_name, path)
+    finally:
+        temporary = Path(temp_name)
+        if temporary.exists():
+            temporary.unlink()
+
+
+def load_json_object(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return DEFAULT_MANIFEST
-    if not isinstance(payload, dict):
-        return DEFAULT_MANIFEST
-    return payload
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
-def should_ignore(path: Path, ignore_globs: list[str]) -> bool:
+def load_manifest(source_root: Path) -> dict[str, object]:
+    payload = load_json_object(source_root / "00_system" / "registry" / "private_sync_manifest.json")
+    return payload or DEFAULT_MANIFEST
+
+
+def should_ignore(path: Path, globs: list[str]) -> bool:
     normalized = path.as_posix()
-    return any(path.match(pattern) or Path(normalized).match(pattern) for pattern in ignore_globs)
-
-
-def copy_file(src: Path, dst: Path, *, rel_path: str, dry_run: bool) -> dict[str, str]:
-    if dst.exists() and filecmp.cmp(src, dst, shallow=False):
-        action = "skip"
-    else:
-        action = "update" if dst.exists() else "create"
-    if not dry_run and action != "skip":
-        ensure_parent(dst)
-        shutil.copy2(src, dst)
-    return {"action": action, "path": rel_path}
-
-
-def sync_tree(
-    src_root: Path,
-    dst_root: Path,
-    *,
-    dry_run: bool,
-    ignore_globs: list[str],
-    protected_globs: list[str],
-) -> list[dict[str, str]]:
-    actions: list[dict[str, str]] = []
-    if not src_root.exists():
-        return actions
-    for src in src_root.rglob("*"):
-        if src.is_dir():
-            continue
-        vault_rel = src.relative_to(VAULT_ROOT)
-        if should_ignore(vault_rel, ignore_globs) or should_ignore(vault_rel, protected_globs):
-            continue
-        rel = src.relative_to(src_root)
-        dst = dst_root / rel
-        actions.append(copy_file(src, dst, rel_path=vault_rel.as_posix(), dry_run=dry_run))
-    return actions
+    return any(path.match(pattern) or Path(normalized).match(pattern) for pattern in globs)
 
 
 def normalized_relative_path(raw_path: str) -> Path:
@@ -133,120 +141,243 @@ def normalized_relative_path(raw_path: str) -> Path:
 
 
 def is_managed_path(path: Path, managed_roots: list[Path]) -> bool:
-    for root in managed_roots:
-        if path == root or root in path.parents:
-            return True
-    return False
+    return any(path == root or root in path.parents for root in managed_roots)
 
 
-def summary_for(actions: list[dict[str, str]]) -> dict[str, int]:
+def selected_managed_roots(
+    manifest: dict[str, object], only: list[str] | None, requested_paths: list[str] | None
+) -> tuple[list[Path], list[str], list[str]]:
+    categories = manifest.get("categories") if isinstance(manifest.get("categories"), dict) else {}
+    all_roots: list[Path] = []
+    for values in categories.values():
+        if isinstance(values, list):
+            all_roots.extend(normalized_relative_path(str(value)) for value in values)
+    protected = [str(value) for value in manifest.get("protected_globs", []) if str(value).strip()]
+    if requested_paths:
+        selected: list[Path] = []
+        for value in requested_paths:
+            path = normalized_relative_path(value)
+            if should_ignore(path, protected):
+                raise ValueError(f"protected path: {path.as_posix()}")
+            if not is_managed_path(path, all_roots):
+                raise ValueError(f"path is outside managed scaffold: {path.as_posix()}")
+            selected.append(path)
+        return selected, [], protected
+
+    selected_categories = only or list(categories.keys())
+    selected = []
+    for category in selected_categories:
+        values = categories.get(category, [])
+        if isinstance(values, list):
+            selected.extend(normalized_relative_path(str(value)) for value in values)
+    return selected, selected_categories, protected
+
+
+def iter_source_files(
+    source_root: Path,
+    roots: list[Path],
+    ignore_globs: list[str],
+    protected_globs: list[str],
+) -> list[tuple[Path, Path]]:
+    files: dict[str, tuple[Path, Path]] = {}
+    for root in roots:
+        source = source_root / root
+        candidates = [source] if source.is_file() else source.rglob("*") if source.is_dir() else []
+        for candidate in candidates:
+            if not candidate.is_file():
+                continue
+            relative = candidate.relative_to(source_root)
+            if should_ignore(relative, ignore_globs) or should_ignore(relative, protected_globs):
+                continue
+            files[relative.as_posix()] = (candidate, relative)
+    return [files[key] for key in sorted(files)]
+
+
+def load_state(private_root: Path) -> dict[str, object]:
+    state = load_json_object(private_root / STATE_REL_PATH)
+    if not isinstance(state.get("managed_hashes"), dict):
+        state["managed_hashes"] = {}
+    return state
+
+
+def save_state(private_root: Path, state: dict[str, object]) -> None:
+    payload = {
+        "schema_version": 1,
+        "private_scaffold_version": 1,
+        "updated_at": datetime.now().replace(microsecond=0).isoformat(),
+        "managed_hashes": state.get("managed_hashes", {}),
+    }
+    write_atomic(private_root / STATE_REL_PATH, (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+
+
+def record_matching_baseline(
+    source_root: Path,
+    private_root: Path,
+    files: list[tuple[Path, Path]],
+    *,
+    dry_run: bool,
+) -> list[dict[str, str]]:
+    state = load_state(private_root)
+    hashes = state["managed_hashes"]
+    assert isinstance(hashes, dict)
+    actions: list[dict[str, str]] = []
+    for source, relative in files:
+        destination = private_root / relative
+        if not destination.exists() or not baseline_equivalent(source, destination):
+            continue
+        digest = file_sha256(destination)
+        hashes[relative.as_posix()] = digest
+        actions.append({"action": "baseline_recorded", "path": relative.as_posix()})
+    if not dry_run:
+        save_state(private_root, state)
+    return actions
+
+
+def sync_file(
+    source: Path,
+    destination: Path,
+    relative: Path,
+    private_root: Path,
+    baseline_hash: str,
+    *,
+    dry_run: bool,
+    backup_stamp: str,
+) -> tuple[dict[str, str], str | None]:
+    source_hash = file_sha256(source)
+    rel_text = relative.as_posix()
+    if not destination.exists():
+        action = {"action": "create", "path": rel_text}
+        if not dry_run:
+            write_atomic(destination, source.read_bytes())
+        return action, source_hash
+
+    destination_hash = file_sha256(destination)
+    if destination_hash == source_hash:
+        return {"action": "skip", "path": rel_text}, source_hash
+    if baseline_hash and destination_hash == baseline_hash:
+        if not dry_run:
+            write_atomic(destination, source.read_bytes())
+        return {"action": "update", "path": rel_text}, source_hash
+
+    candidate = private_root / CANDIDATE_REL_ROOT / Path(rel_text + ".new")
+    backup = private_root / BACKUP_REL_ROOT / backup_stamp / relative
+    if not dry_run:
+        write_atomic(candidate, source.read_bytes())
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(destination, backup)
     return {
+        "action": "conflict_staged",
+        "path": rel_text,
+        "candidate": candidate.relative_to(private_root).as_posix(),
+        "backup": backup.relative_to(private_root).as_posix(),
+    }, None
+
+
+def sync_private_vault(
+    source_root: Path,
+    private_root: Path,
+    *,
+    dry_run: bool = False,
+    only: list[str] | None = None,
+    requested_paths: list[str] | None = None,
+    initialize: bool = False,
+    record_baseline: bool = False,
+) -> dict[str, object]:
+    source_root = source_root.expanduser().resolve()
+    private_root = private_root.expanduser().resolve()
+    if not source_root.exists():
+        raise ValueError(f"public runtime does not exist: {source_root}")
+    if not private_root.exists():
+        if not initialize or dry_run:
+            raise ValueError(f"private vault does not exist: {private_root}")
+        private_root.mkdir(parents=True)
+
+    manifest = load_manifest(source_root)
+    roots, selected_categories, protected = selected_managed_roots(manifest, only, requested_paths)
+    ignore = [str(value) for value in manifest.get("ignore_globs", []) if str(value).strip()]
+    files = iter_source_files(source_root, roots, ignore, protected)
+    if record_baseline:
+        actions = record_matching_baseline(source_root, private_root, files, dry_run=dry_run)
+    else:
+        state = load_state(private_root)
+        hashes = state["managed_hashes"]
+        assert isinstance(hashes, dict)
+        backup_stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        actions = []
+        for source, relative in files:
+            action, managed_hash = sync_file(
+                source,
+                private_root / relative,
+                relative,
+                private_root,
+                str(hashes.get(relative.as_posix()) or ""),
+                dry_run=dry_run,
+                backup_stamp=backup_stamp,
+            )
+            actions.append(action)
+            if managed_hash:
+                hashes[relative.as_posix()] = managed_hash
+        if not dry_run:
+            save_state(private_root, state)
+
+    summary = {
         "created": sum(1 for item in actions if item["action"] == "create"),
         "updated": sum(1 for item in actions if item["action"] == "update"),
         "skipped": sum(1 for item in actions if item["action"] == "skip"),
+        "conflict_staged": sum(1 for item in actions if item["action"] == "conflict_staged"),
+        "baseline_recorded": sum(1 for item in actions if item["action"] == "baseline_recorded"),
+    }
+    return {
+        "source_root": str(source_root),
+        "private_root": str(private_root),
+        "dry_run": dry_run,
+        "categories": selected_categories,
+        "requested_paths": requested_paths or [],
+        "record_baseline": record_baseline,
+        "summary": summary,
+        "actions": actions,
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="把公开脚手架的系统层同步到私有 vault。")
-    parser.add_argument("--private-root", default=str(default_private_root()), help="私有 vault 根目录")
-    parser.add_argument("--dry-run", action="store_true", help="只显示将要同步的内容，不实际写入")
-    parser.add_argument("--only", action="append", choices=["root", "system", "docs", "prompts"], help="只同步指定类别，可重复传入")
-    parser.add_argument("--path", action="append", help="只同步清单管理范围内的指定相对路径，可重复传入")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="输出格式")
+    parser = argparse.ArgumentParser(description="Safely synchronize the public scaffold into a private vault.")
+    parser.add_argument("--source-root", default=str(SOURCE_ROOT), help="Public ObsidianToWiki runtime root.")
+    parser.add_argument("--private-root", default="", help="Private vault root.")
+    parser.add_argument("--initialize", action="store_true", help="Create the private root when it does not exist.")
+    parser.add_argument("--record-baseline", action="store_true", help="Record hashes only for files already identical on both sides.")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--only", action="append", choices=["root", "system", "docs", "prompts"])
+    parser.add_argument("--path", action="append")
+    parser.add_argument("--format", choices=["text", "json"], default="text")
     args = parser.parse_args()
-
     if args.only and args.path:
         parser.error("--only and --path cannot be used together")
 
-    private_root = Path(args.private_root).expanduser().resolve()
-    if not private_root.exists():
-        raise SystemExit(f"私有 vault 不存在: {private_root}")
+    source_root = Path(args.source_root)
+    private_root = Path(args.private_root) if args.private_root else default_private_root(source_root)
+    try:
+        payload = sync_private_vault(
+            source_root,
+            private_root,
+            dry_run=args.dry_run,
+            only=args.only,
+            requested_paths=args.path,
+            initialize=args.initialize,
+            record_baseline=args.record_baseline,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
-    manifest = load_manifest()
-    categories = manifest.get("categories", {}) if isinstance(manifest.get("categories"), dict) else {}
-    ignore_globs = [str(item) for item in manifest.get("ignore_globs", []) if str(item).strip()]
-    protected_globs = [str(item) for item in manifest.get("protected_globs", []) if str(item).strip()]
-    selected_categories = args.only or list(categories.keys())
-
-    all_managed_roots: list[Path] = []
-    for rel_paths in categories.values():
-        if not isinstance(rel_paths, list):
-            continue
-        for rel in rel_paths:
-            try:
-                all_managed_roots.append(normalized_relative_path(str(rel)))
-            except ValueError:
-                continue
-
-    selected_paths: list[Path] = []
-    if args.path:
-        for raw_path in args.path:
-            try:
-                rel_path = normalized_relative_path(raw_path)
-            except ValueError as exc:
-                raise SystemExit(str(exc)) from exc
-            if should_ignore(rel_path, protected_globs):
-                raise SystemExit(f"protected path: {rel_path.as_posix()}")
-            if not is_managed_path(rel_path, all_managed_roots):
-                raise SystemExit(f"path is outside managed scaffold: {rel_path.as_posix()}")
-            selected_paths.append(rel_path)
-    else:
-        for category in selected_categories:
-            rel_paths = categories.get(category, [])
-            if not isinstance(rel_paths, list):
-                continue
-            for rel in rel_paths:
-                try:
-                    selected_paths.append(normalized_relative_path(str(rel)))
-                except ValueError as exc:
-                    raise SystemExit(str(exc)) from exc
-
-    actions: list[dict[str, str]] = []
-    seen: set[str] = set()
-    for rel_path in selected_paths:
-        rel_key = rel_path.as_posix()
-        if rel_key in seen:
-            continue
-        seen.add(rel_key)
-        if should_ignore(rel_path, protected_globs):
-            continue
-        src = VAULT_ROOT / rel_path
-        dst = private_root / rel_path
-        if not src.exists():
-            continue
-        if src.is_file():
-            if not should_ignore(rel_path, ignore_globs):
-                actions.append(copy_file(src, dst, rel_path=rel_key, dry_run=args.dry_run))
-        else:
-            actions.extend(
-                sync_tree(
-                    src,
-                    dst,
-                    dry_run=args.dry_run,
-                    ignore_globs=ignore_globs,
-                    protected_globs=protected_globs,
-                )
-            )
-
-    payload = {
-        "private_root": str(private_root),
-        "dry_run": args.dry_run,
-        "categories": [] if args.path else selected_categories,
-        "requested_paths": args.path or [],
-        "summary": summary_for(actions),
-        "actions": actions,
-    }
     if args.format == "json":
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-
-    print(f"private_root={private_root}")
-    print(f"categories={','.join(selected_categories) if not args.path else '-'}")
-    for action in actions:
-        print(f"{action['action']}: {action['path']}")
+    print(f"source_root={payload['source_root']}")
+    print(f"private_root={payload['private_root']}")
+    for action in payload["actions"]:
+        suffix = f" -> {action['candidate']}" if action.get("candidate") else ""
+        print(f"{action['action']}: {action['path']}{suffix}")
     summary = payload["summary"]
-    print(f"created={summary['created']} updated={summary['updated']} skipped={summary['skipped']}")
+    print(" ".join(f"{key}={summary[key]}" for key in ("created", "updated", "skipped", "conflict_staged")))
 
 
 if __name__ == "__main__":

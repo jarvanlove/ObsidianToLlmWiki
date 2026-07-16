@@ -23,15 +23,9 @@ Hooks and subagents should support those moments; they should not become a separ
 - Adapters stay low-noise: remind, check, and propose candidates only when the lifecycle moment requires it.
 - Hooks and subagents should be enabled only after the manual lifecycle works for this project.
 
-## Required Environment
+## Runtime Discovery
 
-Set this environment variable to the public ObsidianToWiki scaffold root:
-
-```powershell
-$env:OBSIDIANTOWIKI_SCAFFOLD_ROOT = "<obsidiantowiki-public-root>"
-```
-
-Do not store private wiki paths in adapter scripts.
+Adapters read `runtime_root` from the ignored local `wiki.context.json`. Existing adapters may use `OBSIDIANTOWIKI_SCAFFOLD_ROOT` only as a compatibility fallback. Do not store private wiki paths in adapter scripts.
 
 ## Commands
 

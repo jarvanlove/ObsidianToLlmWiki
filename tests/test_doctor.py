@@ -27,7 +27,17 @@ class DoctorTests(unittest.TestCase):
                 encoding="utf-8",
             )
             result = subprocess.run(
-                [sys.executable, str(SCRIPT), "--wiki-root", str(vault), "--strict", "--format", "json"],
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--repo-root",
+                    str(vault),
+                    "--wiki-root",
+                    str(vault),
+                    "--strict",
+                    "--format",
+                    "json",
+                ],
                 cwd=REPO_ROOT,
                 check=False,
                 capture_output=True,

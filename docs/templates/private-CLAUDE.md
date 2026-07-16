@@ -1,24 +1,20 @@
-# Private Vault CLAUDE.md Template
+# CLAUDE.md
 
-This file belongs at the root of `ObsidianToWiki-private`.
+This workspace is the user's private ObsidianToWiki vault and durable knowledge store.
 
-It tells Claude Code how to start inside the private vault.
+- vault_root: `{{PRIVATE_VAULT_ROOT}}`
+- runtime_root: `{{PUBLIC_RUNTIME_ROOT}}`
+- personal_index: `10_personal/索引.md`
+- project_index: `20_projects/索引.md`
+- shared_index: `30_shared/索引.md`
+- output_index: `40_outputs/索引.md`
 
-```yaml
-vault_root: <private-vault-root>
-scaffold_root: <public-scaffold-root>
-current_project: <project-slug-or-empty>
-default_project_index: 20_projects/索引.md
-default_personal_index: 10_personal/索引.md
-default_shared_index: 30_shared/索引.md
-default_output_index: 40_outputs/索引.md
-```
+## Working Rules
 
-## Rules
-
-- Treat this private vault as the source of truth for personal and project knowledge.
-- Read `README-zh.md` and `使用手册.md` before making structural changes.
-- Open `index.md` and the relevant project `索引.md` before writing.
-- Keep durable project conclusions in the private vault.
-- Promote reusable knowledge into `30_shared/`.
-- Keep raw sources immutable in `01_inbox/raw/`.
+- This is the Claude Code / compatible-tools entrypoint for the private vault. Do not treat `AGENTS.md` as its parent.
+- Read `wiki.private.json` before accessing content and honor all AI access exclusions.
+- Read `index.md` and the relevant layer or project index before durable writes.
+- Keep raw sources immutable under `01_inbox/raw/`.
+- Store personal knowledge in `10_personal/`, project memory in `20_projects/`, reusable knowledge in `30_shared/`, and generated analysis in `40_outputs/`.
+- Never replace private knowledge with public scaffold content during an update.
+- Use the public runtime at `runtime_root`; copied private scripts are compatibility assets, not the canonical executable.

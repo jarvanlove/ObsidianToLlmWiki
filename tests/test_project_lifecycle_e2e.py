@@ -52,6 +52,9 @@ class ProjectLifecycleE2ETests(unittest.TestCase):
             for path in (
                 vault / "00_system" / "scripts" / "otw.py",
                 vault / "00_system" / "registry" / "vault_schema.json",
+                vault / "00_system" / "registry" / "private_scaffold_state.json",
+                vault / "AGENTS.md",
+                vault / "wiki.private.json",
                 vault / context["project_index"],
                 vault / context["project_memory"],
             ):

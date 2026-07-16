@@ -373,94 +373,46 @@ ObsidianToWiki/
 
 ## 安装与使用
 
-从 GitHub 下载后，建议按这套顺序开始。
+产品仍由“公开运行时 + 私有库 + 全局 Manager Skill + 项目本地桥”组成。首次使用需要下载公开仓库，但只执行一次根安装器；安装器会创建仓库内 `.venv`、安装依赖、创建或发现私有库、写入隐私策略、同步托管脚手架、迁移 Schema、安装所选 Provider 的 Manager Skill，并执行严格诊断。
 
-首次安装可直接运行 `install.ps1`（Windows）或 `install.sh`（macOS/Linux）。安装器会创建仓库内 `.venv`、安装核心依赖、安装/安全升级一次性的全局管理 Skill，并运行 `doctor`；用户日常仍只说自然语言。
+Windows：
 
-### 第一步：准备两层仓库
+```powershell
+.\install.ps1
+```
 
-你需要两部分：
+macOS / Linux：
 
-- `ObsidianToWiki`
-  当前公开仓库，负责规则、模板、脚本、文档
-- `ObsidianToWiki-private`
-  你的私有知识库，负责真实项目、个人知识和原始资料
+```bash
+chmod +x install.sh
+./install.sh
+```
 
-### 第二步：初始化私有库
+两个安装器刻意放在仓库根目录：它们是用户下载后唯一需要看到的启动入口；`00_system/scripts/` 保存系统内部命令，不应成为新用户的导航起点。
 
-把脚手架层内容同步到私有库，让私有库具备：
+默认私有库位于公开仓库同级目录，名称为 `<公开仓库名>-private`。需要自定义时使用 `-PrivateRoot`（PowerShell）或 `--private-root`（shell）；Provider 可选 `agents`、`claude`、`all`。普通用户不需要手工创建私有目录，也不需要依次执行同步、迁移和 doctor。
 
-- 入口页
-- 规则页
-- 提示页
-- 脚本
-- 模板
-- 最小目录结构
+安装后只用自然语言：
 
-当前版本已经支持把首次成功发现的私有 wiki 根目录写入用户级配置，后续新项目接入会优先复用这条记录。
-
-### 第三步：完成第一次真实使用
-
-第一次只做两件事：
-
-1. 接入一个真实项目
-2. 摄入一份真实资料
-
-### 第四步：以后都按自然语言使用
-
-最常用的自然语言说法：
-
-- `开始工作`
-- `继续`
-- `收工`
-- `帮我把当前项目接入 wiki`
-- `把这份资料收进当前项目`
-- `把这份资料收进个人知识库`
+- `开始工作`：项目未接入时自动接入，已接入时恢复上下文
+- `继续`：检查任务、diff 和 wiki 绑定后继续
+- `收工`：验证、更新控制文件并处理回写候选
+- `把这份资料收进当前项目` / `把这份资料收进个人知识库`
 - `基于当前项目 wiki 回答这个问题`
-- `边开发边沉淀`
-- `把这次结论记下来`
-- `把这个经验提升成共享知识`
 
 ### 已有用户升级
 
-已有用户升级时，不需要重建私有库，也不需要把每个项目手工拆掉重接。
+直接对已安装 Manager Skill 的 Agent 说：
 
-推荐顺序：
-
-1. 在公开脚手架里 `git pull`
-2. 运行安装器，更新依赖和全局管理 Skill
-3. 先 dry-run，再把 manifest 管理的脚手架同步到 private wiki
-4. 让 Agent 执行一次安全升级和严格 doctor；已接入项目不需要重新接入
-
-Windows:
-
-```powershell
-cd <obsidiantowiki-public-root>
-git pull origin main
-.\install.ps1
-python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
-python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root>
-python .\00_system\scripts\otw.py upgrade --wiki-root <private-wiki-root> --apply --all-projects
-python .\00_system\scripts\otw.py doctor --wiki-root <private-wiki-root> --strict
+```text
+更新 ObsidianToWiki
 ```
 
-macOS / Linux:
+系统会自动执行 Git fast-forward 预检、更新前基线记录、依赖更新、Skill 安全升级、私有脚手架同步、Vault 迁移、全部已登记项目核心桥升级、已安装可选适配器升级、索引重建和严格 doctor。已有项目不需要重新接入。
 
-```bash
-cd <obsidiantowiki-public-root>
-git pull origin main
-./install.sh
-./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root> --dry-run --format json
-./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
-./00_system/scripts/otw.sh upgrade --wiki-root <private-wiki-root> --apply --all-projects
-./00_system/scripts/otw.sh doctor --wiki-root <private-wiki-root> --strict
-```
+自动更新遇到公开仓库未提交改动、Git 分叉或未知上游时会停止，不会 stash、reset 或强制覆盖。私有托管文件只有在哈希证明用户未修改时才更新；否则原文件保留，新版本进入 `40_outputs/upgrade-candidates/private-scaffold/`，原文件同时写入带时间戳的更新备份。
 
-同步器只更新 manifest 管理的 scaffold 文件。私有根索引、日志、项目注册表、个人/项目/共享知识、输出和检索缓存属于硬保护范围；共享层只有 `30_shared/prompts` 由脚手架管理。升级前可先加 `--dry-run --format json` 检查；只修一个文件时使用 `--path <wiki-relative-path>`。
-
-不要混用不同操作系统的项目绑定路径。Windows 接入会在 `wiki.context.json` 记录 `C:\...`，macOS / Linux 接入应记录 `/Users/...` 或 `~/...` 可访问路径；换系统后对项目刷新接入一次即可。
-
-这些脚本命令是可执行路径，不是用户每天要背的操作。日常项目里仍然优先只说：`开始工作`、`继续`、`收工`。
+高级用户的等价入口是 `00_system/scripts/otw.ps1 update` 或 `00_system/scripts/otw.sh update`；`update --check` 只检查，不应用。内部脚本是诊断和开发接口，不是日常使用步骤。
 
 ## 项目怎么使用这套系统
 

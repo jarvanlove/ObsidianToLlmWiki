@@ -19,6 +19,7 @@ Do not contribute personal knowledge, private sources, or generated local usage 
 3. Prefer updating templates and docs over adding one-off examples.
 4. Ensure new docs use Obsidian wikilinks where internal references matter.
 5. If you change scripts, keep behavior consistent across Windows and macOS/Linux wrappers.
+6. If setup, update, attach, or sync behavior changes, update the runtime release/project scaffold manifests and the complete user-facing documentation contract.
 
 ## Content Rules
 
@@ -32,6 +33,7 @@ Do not contribute personal knowledge, private sources, or generated local usage 
 - Rebuild indexes
 - Run wiki lint
 - Check README and manual for path portability
+- Run setup/update/project-scaffold/private-sync regression tests
 - Verify new pages are linked into the vault graph
 
 ## Pull Request Guidance

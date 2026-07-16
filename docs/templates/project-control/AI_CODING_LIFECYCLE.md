@@ -24,11 +24,7 @@ Before editing:
 4. Classify the request as a normal task, requirement change, bug fix, release check, or operations incident.
 5. State task boundary, risk level, expected touched files, and verification plan.
 
-Optional checklist command from the ObsidianToWiki scaffold:
-
-```powershell
-python <obsidiantowiki-root>\00_system\scripts\handle_nl_request.py --request "开始工作" --repo-root .
-```
+The agent invokes the lifecycle runtime internally. Do not ask the user to locate the runtime or run a checklist script.
 
 ## Close A Task
 
@@ -40,11 +36,7 @@ Before reporting completion:
 4. Check whether `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECURITY.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, `CHANGELOG.md`, or `docs/adr/` should change.
 5. File back only durable conclusions to the wiki.
 
-Optional checklist command:
-
-```powershell
-python <obsidiantowiki-root>\00_system\scripts\handle_nl_request.py --request "收工" --repo-root . --conclusion "<commands and result>"
-```
+The agent records and resolves the close receipt internally before reporting completion.
 
 ## Update Rules
 

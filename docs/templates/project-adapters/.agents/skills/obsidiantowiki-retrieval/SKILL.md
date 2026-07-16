@@ -14,4 +14,4 @@ Use this skill when the task depends on facts that may already exist in the atta
 5. Ground the answer in returned paths, headings, snippets, and `source_refs`. Do not invent missing provenance.
 6. Query again with narrower terms only when the first context pack is insufficient.
 
-The wrapper calls the private wiki retrieval runtime. Do not duplicate search logic in this skill and do not edit the derived SQLite index.
+The wrapper calls the canonical public runtime from `wiki.context.json` and points it at the private vault. Do not duplicate search logic in this skill and do not edit the derived SQLite index.

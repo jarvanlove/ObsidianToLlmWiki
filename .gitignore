@@ -3,6 +3,7 @@
 wiki.context.json
 wiki.private.json
 .obsidiantowiki/
+.venv/
 .trash/
 __pycache__/
 00_system/.cache/

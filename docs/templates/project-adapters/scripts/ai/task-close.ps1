@@ -3,9 +3,13 @@ param(
     [string]$Output = ""
 )
 
-$scaffoldRoot = $env:OBSIDIANTOWIKI_SCAFFOLD_ROOT
+$context = Get-Content "wiki.context.json" -Raw | ConvertFrom-Json
+$scaffoldRoot = $context.runtime_root
 if ([string]::IsNullOrWhiteSpace($scaffoldRoot)) {
-    Write-Error "Set OBSIDIANTOWIKI_SCAFFOLD_ROOT to your ObsidianToWiki public scaffold root before using this adapter."
+    $scaffoldRoot = $env:OBSIDIANTOWIKI_SCAFFOLD_ROOT
+}
+if ([string]::IsNullOrWhiteSpace($scaffoldRoot)) {
+    Write-Error "wiki.context.json does not contain runtime_root; update the ObsidianToWiki project bridge."
     exit 1
 }
 
@@ -15,4 +19,6 @@ if (-not [string]::IsNullOrWhiteSpace($Output)) {
     $argsList += @("--format", "markdown", "--output", $Output)
 }
 
-python $scriptPath @argsList
+$python = Join-Path $scaffoldRoot ".venv\Scripts\python.exe"
+if (-not (Test-Path $python)) { $python = "python" }
+& $python $scriptPath @argsList

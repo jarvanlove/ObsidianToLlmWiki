@@ -91,6 +91,8 @@ class PrivateSyncCliTests(unittest.TestCase):
             [
                 sys.executable,
                 str(SYNC_SCRIPT),
+                "--source-root",
+                str(self.public),
                 "--private-root",
                 str(self.private),
                 "--format",
@@ -105,12 +107,16 @@ class PrivateSyncCliTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def test_default_sync_updates_only_manifest_managed_files(self) -> None:
+    def test_default_sync_creates_missing_files_and_stages_unproven_conflicts(self) -> None:
         result = self.run_sync()
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
 
-        self.assertEqual((self.private / "README.md").read_text(encoding="utf-8"), "new readme\n")
+        self.assertEqual((self.private / "README.md").read_text(encoding="utf-8"), "old readme\n")
+        self.assertEqual(
+            (self.private / "40_outputs/upgrade-candidates/private-scaffold/README.md.new").read_text(encoding="utf-8"),
+            "new readme\n",
+        )
         self.assertTrue((self.private / "00_system" / "scripts" / "tool.py").exists())
         self.assertEqual((self.private / "Home.md").read_text(encoding="utf-8"), "private home\n")
         self.assertEqual((self.private / "index.md").read_text(encoding="utf-8"), "private index\n")
@@ -129,7 +135,8 @@ class PrivateSyncCliTests(unittest.TestCase):
             "public prompt\n",
         )
         self.assertGreater(payload["summary"]["created"], 0)
-        self.assertGreater(payload["summary"]["updated"], 0)
+        self.assertEqual(payload["summary"]["updated"], 0)
+        self.assertEqual(payload["summary"]["conflict_staged"], 1)
 
     def test_second_sync_reports_identical_files_as_skipped(self) -> None:
         first = self.run_sync()
@@ -142,12 +149,65 @@ class PrivateSyncCliTests(unittest.TestCase):
         self.assertEqual(payload["summary"]["created"], 0)
         self.assertEqual(payload["summary"]["updated"], 0)
         self.assertGreater(payload["summary"]["skipped"], 0)
+        self.assertEqual(payload["summary"]["conflict_staged"], 1)
+
+    def test_recorded_unchanged_baseline_allows_a_safe_update(self) -> None:
+        (self.public / "README.md").write_text("old readme\n", encoding="utf-8")
+        baseline = self.run_sync("--record-baseline", "--path", "README.md")
+        self.assertEqual(baseline.returncode, 0, baseline.stderr)
+        self.assertEqual(json.loads(baseline.stdout)["summary"]["baseline_recorded"], 1)
+
+        (self.public / "README.md").write_text("new readme\n", encoding="utf-8")
+        updated = self.run_sync("--path", "README.md")
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        self.assertEqual(json.loads(updated.stdout)["summary"]["updated"], 1)
+        self.assertEqual((self.private / "README.md").read_text(encoding="utf-8"), "new readme\n")
+
+    def test_baseline_accepts_only_line_ending_differences_for_text_files(self) -> None:
+        script = self.public / "00_system/scripts/tool.py"
+        script.write_text("print('old')\n", encoding="utf-8", newline="\n")
+        private_script = self.private / "00_system/scripts/tool.py"
+        private_script.parent.mkdir(parents=True, exist_ok=True)
+        private_script.write_text("print('old')\r\n", encoding="utf-8", newline="")
+        baseline = self.run_sync("--record-baseline", "--path", "00_system/scripts/tool.py")
+        self.assertEqual(baseline.returncode, 0, baseline.stderr)
+        self.assertEqual(json.loads(baseline.stdout)["summary"]["baseline_recorded"], 1)
+
+        script.write_text("print('new')\n", encoding="utf-8", newline="\n")
+        updated = self.run_sync("--path", "00_system/scripts/tool.py")
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        self.assertEqual(json.loads(updated.stdout)["summary"]["updated"], 1)
+
+    def test_initialize_creates_a_missing_private_root(self) -> None:
+        missing = Path(self.temp_dir.name) / "new-private"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(SYNC_SCRIPT),
+                "--source-root",
+                str(self.public),
+                "--private-root",
+                str(missing),
+                "--initialize",
+                "--format",
+                "json",
+            ],
+            cwd=REPO_ROOT,
+            env=self.env,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((missing / "README.md").exists())
+        self.assertTrue((missing / "00_system/registry/private_scaffold_state.json").exists())
 
     def test_path_scope_is_precise_and_protected_paths_are_rejected(self) -> None:
         precise = self.run_sync("--path", "README.md")
         self.assertEqual(precise.returncode, 0, precise.stderr)
         self.assertFalse((self.private / "00_system" / "scripts" / "tool.py").exists())
-        self.assertEqual((self.private / "README.md").read_text(encoding="utf-8"), "new readme\n")
+        self.assertEqual((self.private / "README.md").read_text(encoding="utf-8"), "old readme\n")
 
         protected = self.run_sync("--path", "00_system/registry/projects.json")
         self.assertNotEqual(protected.returncode, 0)

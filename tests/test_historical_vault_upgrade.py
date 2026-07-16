@@ -59,6 +59,7 @@ class HistoricalVaultUpgradeTests(unittest.TestCase):
         self.legacy_page = page
 
         manifest = json.loads((REPO_ROOT / "00_system" / "registry" / "shared_assets.json").read_text(encoding="utf-8"))
+        self.shared_release = int(manifest["release_version"])
         self.shared_rel = Path(manifest["assets"][0]["path"])
         self.shared_page = self.vault / self.shared_rel
         self.shared_page.parent.mkdir(parents=True, exist_ok=True)
@@ -96,7 +97,7 @@ class HistoricalVaultUpgradeTests(unittest.TestCase):
         self.assertEqual(staged.returncode, 0, staged.stderr)
         staged_payload = json.loads(staged.stdout)
         self.assertGreaterEqual(staged_payload["summary"]["conflicts"], 1)
-        candidate = self.vault / "40_outputs" / "upgrade-candidates" / "shared" / "v1" / Path(
+        candidate = self.vault / "40_outputs" / "upgrade-candidates" / "shared" / f"v{self.shared_release}" / Path(
             f"{self.shared_rel.as_posix()}.new"
         )
         self.assertTrue(candidate.exists())

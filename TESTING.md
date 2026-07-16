@@ -13,6 +13,7 @@ PowerShell wrappers:
 .\00_system\scripts\build_retrieval_index.ps1
 python -m unittest tests.test_retrieval_core -v
 python -m unittest discover -s tests -v
+python -m unittest tests.test_runtime_setup tests.test_runtime_update tests.test_project_scaffold_upgrade -v
 python .\00_system\scripts\evaluate_retrieval.py --cases .\00_system\registry\retrieval_eval_cases.json
 python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
 python .\00_system\scripts\doctor.py --wiki-root <private-wiki-root> --strict
@@ -32,6 +33,7 @@ macOS / Linux wrappers:
 ./00_system/scripts/build_retrieval_index.sh
 python3 -m unittest tests.test_retrieval_core -v
 python3 -m unittest discover -s tests -v
+python3 -m unittest tests.test_runtime_setup tests.test_runtime_update tests.test_project_scaffold_upgrade -v
 python3 ./00_system/scripts/evaluate_retrieval.py --cases ./00_system/registry/retrieval_eval_cases.json
 python3 ./00_system/scripts/doctor.py --wiki-root <private-wiki-root> --strict
 python3 ./00_system/scripts/source_quality.py --source <source-file> --format json
@@ -66,6 +68,7 @@ python .\00_system\scripts\build_retrieval_index.py
 | Wiki governance semantics | run `tests.test_wiki_governance`; verify sibling/nearest link resolution, fenced-code exclusion, generated/archive boundaries, reviewed-date freshness, domain validation, and product-guide schema exemptions |
 | Compatibility/migration | run vault, adapter, shared-asset, and historical-upgrade tests; verify old Markdown hashes, idempotency, and `.new` conflict candidates |
 | Global manager/runtime | run manager install and lifecycle E2E tests; verify natural-language attach, local path isolation, opt-in adapters, close receipt, and resolution |
+| Setup/update lifecycle | run runtime setup/update, private-vault setup, private-sync, and project-scaffold tests; verify nonexistent vault creation, provider isolation, dirty Git rejection, fast-forward detection, baseline-safe updates, conflict backup, and no project reattachment |
 | Cross-platform release | GitHub Actions must pass Python 3.10/3.12 on Windows, macOS, and Linux; local platform wrapper smoke test must pass |
 | Source section promotion | promote one disposable section note with `promote_source_section.py`; verify formal page, source section backlink, `source_refs`, `promoted_to`, and section status |
 | Retrieval core | run `python -m unittest tests.test_retrieval_core -v`; verify incremental update/delete refresh, project/type filters, source refs, JSON schema, and context budget |
@@ -80,6 +83,7 @@ python .\00_system\scripts\build_retrieval_index.py
 - Confirm Claude Code instructions do not require reading `AGENTS.md`.
 - Confirm public scaffold assets do not include private raw material or secrets.
 - Confirm private project memory is updated for durable conclusions.
+- Confirm README, quick start, manual, Skill template, installers, manifests, control templates, architecture, operations, deployment, security, changelog, and tests describe the same setup/update contract.
 
 ## Completion Rule
 

@@ -72,6 +72,14 @@ def classify_request(text: str) -> str:
     lowered = text.strip().lower()
     compact = lowered.replace(" ", "")
 
+    if "obsidiantowiki" in compact and any(token in compact for token in ("安装并初始化", "初始化", "安装")):
+        return "setup_runtime"
+    if "obsidiantowiki" in compact and any(token in compact for token in ("更新", "升级")) and any(
+        token in compact for token in ("不要应用", "只检查", "检查是否", "检查更新")
+    ):
+        return "check_update_runtime"
+    if "obsidiantowiki" in compact and any(token in compact for token in ("更新", "升级")):
+        return "update_runtime"
     if any(token in compact for token in ("开始工作", "开始当前项目", "请按当前项目规则工作")) or compact in {"开工"}:
         return "start_work"
     if compact in {"继续"} or any(token in compact for token in ("继续做当前项目", "继续当前项目")):
@@ -116,6 +124,15 @@ def handle_attach_project(repo_root: Path, request: str, tags: str, wiki_root_ar
         args.extend(["--wiki-root", wiki_root_arg.strip()])
     run_python("attach_project.py", args)
     run_project_session(repo_root, "check", ["--strict"])
+
+
+def handle_runtime(command: str, wiki_root_arg: str, *, check_only: bool = False) -> None:
+    args = [command, "--source-root", str(SCRIPT_DIR.parent.parent)]
+    if wiki_root_arg.strip():
+        args.extend(["--private-root", wiki_root_arg.strip()])
+    if check_only:
+        args.append("--check")
+    run_python("runtime_manager.py", args)
 
 
 def handle_start_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str) -> None:
@@ -245,6 +262,15 @@ def main() -> None:
     request_kind = classify_request(args.request)
     tags = ",".join(normalize_tags(args.tags))
 
+    if request_kind == "setup_runtime":
+        handle_runtime("setup", args.wiki_root)
+        return
+    if request_kind == "update_runtime":
+        handle_runtime("update", args.wiki_root)
+        return
+    if request_kind == "check_update_runtime":
+        handle_runtime("update", args.wiki_root, check_only=True)
+        return
     if request_kind == "attach_project":
         handle_attach_project(repo_root, args.request, tags, args.wiki_root)
         return

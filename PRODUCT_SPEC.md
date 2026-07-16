@@ -12,6 +12,8 @@
 Must have:
 
 - Public scaffold repository plus private vault operating model.
+- One-command first setup that creates the private vault, installs an isolated runtime and provider Skills, migrates state, and verifies the result.
+- One natural-language update that safely advances the public runtime, private scaffold, Skills, and every registered project bridge without reattachment.
 - Project attachment through `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md`.
 - Source ingestion for text, documents, code, and registered media sources.
 - Structured source ingestion for long documents with source notes, document maps, section notes, and provenance references.
@@ -28,6 +30,7 @@ Must have:
 - Project cockpit workflow that lets users operate daily work through only three phrases: `开始工作`, `继续`, and `收工`.
 - Provider-neutral global manager Skill and `otw.py` runtime so agents, rather than users, invoke lifecycle scripts.
 - Versioned vault, project-adapter, and shared-asset compatibility with hash-safe upgrades and staged conflicts.
+- Separate runtime, private-scaffold, core project-scaffold, and optional adapter versions.
 - Local `wiki.private.json` AI-access exclusions that remove protected paths from ObsidianToWiki indexing and ingestion without deleting the user's files.
 - Extraction quality gates for PDF, DOCX, PPTX, and text sources, including unit coverage, OCR detection, chapter mapping, page references, and bounded excerpts.
 
@@ -40,6 +43,13 @@ Explicitly not doing unless added to `TASKS.md`:
 - Storing private project knowledge in the public scaffold repository.
 
 ## Core User Flows
+
+### Install or update the product
+
+- Entry: user runs one root installer once, then later says `更新 ObsidianToWiki`.
+- Steps: create managed Python environment -> initialize/discover private vault -> install Skills -> migrate/sync -> upgrade registered project bridges -> verify -> write receipt.
+- Success: no manual private directory construction, script chain, or project reattachment is required.
+- Failure states: dirty/diverged public Git, invalid private policy/state, customized managed file requiring a staged candidate.
 
 ### Attach a project
 
@@ -86,6 +96,9 @@ Explicitly not doing unless added to `TASKS.md`:
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
 - A blocked extraction must preserve the original and source note but must not create weak document derivatives.
 - Vault and scaffold upgrades must preserve modified private/project files and stage `.new` conflict candidates.
+- Public Git updates must be fast-forward only and must stop on uncommitted changes; no automatic stash, reset, or force overwrite is allowed.
+- Private root entry files are seed-only assets. Existing customized entries are preserved; an exact legacy public-project entry may be migrated to the private template.
+- Core project bridges upgrade independently from optional hooks/subagents: managed entry blocks and ignored local context may update, missing control files may be created, and modified lifecycle files must stage candidates.
 - Section-level source notes must expose reviewable quality fields: theme, concepts, facts, process, bounded excerpt, follow-up questions, and promotion candidates.
 - Source promotion candidates must be review reports, not automatic formal knowledge pages; each candidate must include source section, source refs, target layer, rationale, and next action.
 - Source section promotion must be explicit per section; promoted pages must preserve source section backlinks and source refs, and the source section must record `promoted_to`.
@@ -110,3 +123,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-07-16 | Completed Retrieval Integration P1 | Make retrieval safe to distribute and directly consumable by coding agents | Protected private sync, evaluation gates, topic aliases, Skills/MCP adapters, and provenance migration |
 | 2026-07-16 | Added Compatibility and Manager Runtime P2 | Let existing users upgrade safely and operate through natural language | Version ledgers, hash-safe candidates, global Skill, doctor, and unified runtime |
 | 2026-07-16 | Added Ingestion Quality Gate P2 | Prevent long or unreadable documents from producing weak knowledge pages | Coverage/OCR checks, chapter-aware maps, exact references, and golden-corpus tests |
+| 2026-07-16 | Added product setup and safe update lifecycle | Remove manual onboarding and per-project reattachment while preserving local customization | One-command setup, natural-language update, versioned project bridges, hash-safe private sync, and update receipts |

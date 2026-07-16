@@ -116,6 +116,36 @@ def validate_vault_state(wiki_root: Path) -> tuple[str, str]:
     return "pass", f"vault schema version {current} is current"
 
 
+def validate_runtime_release() -> tuple[str, str]:
+    release_path = SOURCE_ROOT / "00_system" / "registry" / "runtime_release.json"
+    try:
+        payload = load_json_object(release_path)
+        version = str(payload.get("runtime_version") or "").strip()
+        project_version = int(payload["project_scaffold_version"])
+        private_version = int(payload["private_scaffold_version"])
+        if payload.get("schema_version") != 1 or not version:
+            raise ValueError("schema_version=1 and runtime_version are required")
+    except (OSError, json.JSONDecodeError, ValueError, KeyError) as exc:
+        return "fail", f"invalid runtime release manifest: {exc}"
+    return "pass", f"runtime={version} private_scaffold={private_version} project_scaffold={project_version}"
+
+
+def validate_private_scaffold_state(wiki_root: Path) -> tuple[str, str] | None:
+    state_path = wiki_root / "00_system" / "registry" / "private_scaffold_state.json"
+    if not state_path.exists():
+        return None
+    try:
+        current = int(load_json_object(state_path)["private_scaffold_version"])
+        target = int(load_json_object(SOURCE_ROOT / "00_system/registry/runtime_release.json")["private_scaffold_version"])
+    except (OSError, json.JSONDecodeError, ValueError, KeyError) as exc:
+        return "fail", f"invalid private scaffold state: {exc}"
+    if current > target:
+        return "fail", f"private scaffold {current} is newer than runtime target {target}"
+    if current < target:
+        return "warn", f"private scaffold {current} requires update to {target}"
+    return "pass", f"private scaffold version {current} is current"
+
+
 def run_checks(repo_root: Path, explicit_wiki_root: str) -> list[dict[str, str]]:
     results: list[dict[str, str]] = []
     python_ok = sys.version_info >= (3, 10)
@@ -141,6 +171,8 @@ def run_checks(repo_root: Path, explicit_wiki_root: str) -> list[dict[str, str]]
     core_files = [SOURCE_ROOT / "PRODUCT_SPEC.md", SOURCE_ROOT / "00_system" / "registry" / "vault_schema.json"]
     missing_core = [path.relative_to(SOURCE_ROOT).as_posix() for path in core_files if not path.exists()]
     results.append(check("runtime", "fail" if missing_core else "pass", f"missing: {', '.join(missing_core)}" if missing_core else str(SOURCE_ROOT)))
+    release_status, release_detail = validate_runtime_release()
+    results.append(check("runtime_release", release_status, release_detail))
 
     missing_wrappers = [
         f"{base}{suffix}"
@@ -165,6 +197,9 @@ def run_checks(repo_root: Path, explicit_wiki_root: str) -> list[dict[str, str]]
     results.append(check("privacy_policy", policy_status, policy_detail))
     state_status, state_detail = validate_vault_state(wiki_root)
     results.append(check("vault_schema", state_status, state_detail))
+    private_scaffold = validate_private_scaffold_state(wiki_root)
+    if private_scaffold is not None:
+        results.append(check("private_scaffold", private_scaffold[0], private_scaffold[1]))
 
     context_path = repo_root / "wiki.context.json"
     if not context_path.exists():
@@ -174,6 +209,13 @@ def run_checks(repo_root: Path, explicit_wiki_root: str) -> list[dict[str, str]]
             context = load_json_object(context_path)
             valid = bool(str(context.get("project_slug") or "").strip() and str(context.get("wiki_root") or "").strip())
             results.append(check("project_context", "pass" if valid else "fail", str(context_path)))
+            if valid:
+                target = int(load_json_object(SOURCE_ROOT / "00_system/registry/runtime_release.json")["project_scaffold_version"])
+                current = int(context.get("project_scaffold_version") or 0)
+                runtime_root = Path(str(context.get("runtime_root") or "")).expanduser()
+                project_status = "pass" if current == target and runtime_root.resolve() == SOURCE_ROOT else "warn"
+                detail = f"version={current}/{target} runtime_root={runtime_root or '<missing>'}"
+                results.append(check("project_scaffold", project_status, detail))
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             results.append(check("project_context", "fail", f"invalid wiki.context.json: {exc}"))
     return results

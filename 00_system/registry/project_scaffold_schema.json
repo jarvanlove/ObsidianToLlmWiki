@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "current_project_scaffold_version": 1,
+  "managed_files": {
+    "AGENTS.md": {
+      "legacy_hashes": [
+        "a1058b602d9af9378fb314dfb20f572913b31e6f2a1143fd2dad6cdbf9bb9b4c"
+      ]
+    },
+    "CLAUDE.md": {
+      "legacy_hashes": [
+        "ccec114dff185480697ca87b2abb3b51603959d43f77ed19fccb1bab89b901aa"
+      ]
+    },
+    "docs/ai-workflows/AI_CODING_LIFECYCLE.md": {
+      "legacy_hashes": [
+        "be98fa1ae678cb11111d821fe27da065b8eb74bf4c08a83f03981d1ee5f01f02"
+      ]
+    }
+  }
+}

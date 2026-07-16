@@ -1,23 +1,20 @@
-# 私有库 AGENTS 模板
+# AGENTS.md
 
-这个文件放在 `ObsidianToWiki-private` 根目录。
+This workspace is the user's private ObsidianToWiki vault and durable knowledge store.
 
-它的作用很简单：告诉 Codex 这里是你的真实知识库。
+- vault_root: `{{PRIVATE_VAULT_ROOT}}`
+- runtime_root: `{{PUBLIC_RUNTIME_ROOT}}`
+- personal_index: `10_personal/索引.md`
+- project_index: `20_projects/索引.md`
+- shared_index: `30_shared/索引.md`
+- output_index: `40_outputs/索引.md`
 
-```yaml
-vault_root: <private-vault-root>
-scaffold_root: <public-scaffold-root>
-current_project:
-default_project_index: 20_projects/索引.md
-default_personal_index: 10_personal/索引.md
-default_shared_index: 30_shared/索引.md
-default_output_index: 40_outputs/索引.md
-```
+## Working Rules
 
-## 规则
-
-- 把这个私有库当作个人和项目知识的真实存储层
-- 改结构前先读 `README-zh.md` 和 `使用手册.md`
-- 写内容前先看 `index.md` 和相关项目 `索引.md`
-- 原始资料保持在 `01_inbox/raw/` 中不直接改写
-- 可复用内容提升到 `30_shared/`
+- This is the Codex entrypoint for the private vault. Do not treat `CLAUDE.md` as its parent.
+- Read `wiki.private.json` before accessing content and honor all AI access exclusions.
+- Read `index.md` and the relevant layer or project index before durable writes.
+- Keep raw sources immutable under `01_inbox/raw/`.
+- Store personal knowledge in `10_personal/`, project memory in `20_projects/`, reusable knowledge in `30_shared/`, and generated analysis in `40_outputs/`.
+- Never replace private knowledge with public scaffold content during an update.
+- Use the public runtime at `runtime_root`; copied private scripts are compatibility assets, not the canonical executable.

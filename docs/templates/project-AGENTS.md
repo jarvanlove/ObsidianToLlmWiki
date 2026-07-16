@@ -6,8 +6,10 @@
 
 ```yaml
 wiki_root: <private-wiki-root>
+runtime_root: <obsidiantowiki-public-root>
 project_repo_root: <current-project-repo-root>
 project_slug: <project-slug>
+project_scaffold_version: <managed-version>
 project_index: 20_projects/active/<project-slug>/索引.md
 project_overview: 20_projects/active/<project-slug>/概览.md
 project_architecture: 20_projects/active/<project-slug>/架构.md
@@ -25,6 +27,7 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - 这是 Codex 项目入口；不要要求 Codex 先读 `CLAUDE.md`
 - 把 wiki 当作项目记忆层
 - 优先读取 `wiki.context.json`
+- 从 `wiki.context.json` 使用公开 `runtime_root`，不要把私有库中的兼容脚本当作主运行时
 - 用户日常只需要说 `开始工作`、`继续`、`收工`；文件读取、检查、回写由 agent 内部完成
 - 动手前先打开对应项目页面
 - 本地实现任务直接读取 `PRODUCT_SPEC.md`、`ARCHITECTURE.md`、`TASKS.md`、`TESTING.md`、`DEPLOYMENT.md`、`OPERATIONS.md`、`SECURITY.md`

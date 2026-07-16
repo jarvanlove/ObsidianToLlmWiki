@@ -11,7 +11,8 @@ Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, k
 
 - Public runtime root: `{{source_root}}`
 - Unified entrypoint: `{{source_root}}/00_system/scripts/otw.py`
-- Run it with the active Python interpreter. Resolve the current project repository before invoking it.
+- Stable wrappers: `{{source_root}}/00_system/scripts/otw.ps1` and `{{source_root}}/00_system/scripts/otw.sh`.
+- Use the platform wrapper so the managed `{{source_root}}/.venv` interpreter is preferred. Resolve the current project repository before invoking it.
 
 ## User Experience
 
@@ -25,9 +26,11 @@ Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, k
 - `继续`: run `otw.py continue --repo-root <project>`.
 - `收工`: run `otw.py close --repo-root <project> --verification <evidence>`, execute or reject every receipt candidate, then resolve all candidates before reporting completion.
 - Attach current project: run `otw.py attach --repo-root <project>`.
+- Install and initialize once: run `otw.py setup`; provide a private root only when automatic sibling discovery is not desired.
+- Update ObsidianToWiki: run `otw.py update`. Use `otw.py update --check` for a report-only check.
 - Retrieve wiki context: run `otw.py search <query> --repo-root <project> --format context`.
 - Ingest a source: run `otw.py ingest <source> --scope personal|project --repo-root <project>`.
-- Before or after a runtime update: run `otw.py doctor`, then `otw.py upgrade`; use `--apply` only for an explicit upgrade request.
+- Use `otw.py upgrade --apply` only for an explicit local compatibility repair; normal product updates go through `otw.py update`.
 
 ## Boundaries
 

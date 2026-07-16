@@ -27,12 +27,17 @@
 | OTW-INGEST-006 | Harden long-document chapter maps and reingestion | P0 | TOC pages are grouped, body/code lines do not become headings, split chapters retain continuation labels, and obsolete generated sections are removed safely | Done |
 | OTW-GOV-001 | Distinguish current health from historical and generated content | P0 | Schema, dead-link, orphan, and stale checks resolve local links correctly, ignore generated/archive evidence where appropriate, and retain a truthful review queue | Done |
 | OTW-XPLAT-001 | Add reproducible install, doctor, and three-platform CI | P1 | Python 3.10/3.12 test matrix covers Windows, macOS, Linux; local doctor validates runtime prerequisites | Done |
+| OTW-UX-001 | Add one-command product setup | P0 | Root installer creates managed Python, initializes a missing private vault, installs selected provider Skills, migrates/indexes, and passes strict doctor | Done |
+| OTW-UX-002 | Add safe whole-product update | P0 | Natural-language update enforces clean fast-forward Git, hash-safe private sync, all-project core bridge upgrades, installed-adapter upgrades, and a receipt | Done |
+| OTW-UX-003 | Version core project bridges separately from optional adapters | P0 | Existing projects update managed entry blocks/context/missing controls without reattachment; customized lifecycle files stage candidates | Done |
+| OTW-UX-004 | Align onboarding and maintenance documentation | P1 | README/manual/quick start/templates/operations/deployment/security/testing describe one setup and natural-language update contract | Done |
 
 ## Next
 
 - Observe session-receipt candidate quality in real coding sessions and tune recommendations without weakening explicit resolution.
 - Test optional hook/subagent adapters in one real project; keep them opt-in even when the base manager Skill is installed globally.
 - Observe Skill/MCP retrieval behavior in real Codex, Claude Code, and Cursor sessions before recommending automatic invocation more broadly.
+- Observe first-release `.new` conflict volume for existing users without a historical private baseline and refine migration evidence without weakening preservation.
 - Upgrade `partial` source-derived pages to `complete` only by rebuilding document maps/section notes and verifying page references against originals.
 
 ## Blocked
@@ -52,3 +57,4 @@
 - 2026-07-16: Added the first local Retrieval Core with incremental SQLite FTS5 indexing, stable JSON output, chunk localization, and context packs.
 - 2026-07-16: Added protected/idempotent private sync, fixed retrieval evaluation gates, provider-neutral Skills/MCP adapters, conservative provenance migration, and local topic-alias hybrid recall.
 - 2026-07-16: Added safe compatibility ledgers, global manager runtime, privacy exclusions, close receipts, cross-platform install/doctor/CI, and source extraction quality gates.
+- 2026-07-16: Added one-command setup, natural-language whole-product update, private seed migration, hash-safe private backups/candidates, and versioned all-project core bridge upgrades.

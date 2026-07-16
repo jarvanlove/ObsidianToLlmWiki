@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from project_adapter import apply_adapter_upgrade
+from private_vault import initialize_private_vault
 from wiki_lib import (
     SCRIPT_DIR,
     detect_wiki_root,
@@ -40,8 +41,10 @@ WIKI_RUNTIME_PATHS = (
     "00_system/registry/page_schemas.json",
     "00_system/registry/private_sync_manifest.json",
     "00_system/registry/project_adapter_schema.json",
+    "00_system/registry/project_scaffold_schema.json",
     "00_system/registry/retrieval_aliases.json",
     "00_system/registry/retrieval_eval_cases.json",
+    "00_system/registry/runtime_release.json",
     "00_system/registry/shared_assets.json",
     "00_system/registry/vault_schema.json",
     "00_system/requirements.txt",
@@ -54,7 +57,6 @@ PROJECT_SUPPORT_DIRS = (
     "docs/runbooks",
     "docs/growth",
     "docs/ai-workflows",
-    "scripts/ai",
     "scripts/verify",
     "scripts/deploy",
     "scripts/db",
@@ -98,8 +100,10 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
         "Read `wiki.context.json` first if it exists. Use the paths below as the human-readable bridge into the wiki.",
         "",
         "- wiki_root: `<read-from-wiki.context.json>`",
+        "- runtime_root: `<read-from-wiki.context.json>`",
         "- project_repo_root: `<current-project-root>`",
         f"- project_slug: `{project_slug}`",
+        "- project_scaffold_version: `<read-from-wiki.context.json>`",
     ]
     for key, value in file_map.items():
         lines.append(f"- {key}: `{value}`")
@@ -109,6 +113,7 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
             "## Working Rules",
             "",
             "- Treat the wiki as the durable project memory layer.",
+            "- Execute ObsidianToWiki through the public runtime_root from local context; private copied scripts are compatibility assets.",
             "- Read the project index and core pages before making durable changes.",
             "- Write reusable conclusions back into the wiki.",
             "- Reuse shared patterns when similar problems have already been solved elsewhere.",
@@ -146,6 +151,8 @@ def upsert_marked_block(path: Path, block: str) -> str:
     if start != -1 and end != -1 and end > start:
         end += len(MANAGED_BLOCK_END)
         updated = existing[:start].rstrip() + "\n\n" + block.rstrip() + "\n" + existing[end:].lstrip()
+        if existing == updated:
+            return "current"
         write_text(path, updated)
         return "updated"
 
@@ -157,8 +164,10 @@ def upsert_marked_block(path: Path, block: str) -> str:
 def render_context(repo_root: Path, wiki_root: Path, project_slug: str) -> str:
     payload = {
         "wiki_root": str(wiki_root),
+        "runtime_root": str(SCRIPT_DIR.parent.parent),
         "project_repo_root": str(repo_root),
         "project_slug": project_slug,
+        "project_scaffold_version": 1,
         **project_file_map(project_slug),
         "shared_index": "30_shared/索引.md",
     }
@@ -476,7 +485,16 @@ def main() -> None:
         wiki_root = detect_wiki_root(repo_root=repo_root, explicit_root=args.wiki_root.strip())
     except FileNotFoundError as exc:
         raise SystemExit(str(exc))
-    runtime_results = ensure_wiki_runtime_files(wiki_root)
+    private_state = wiki_root / "00_system" / "registry" / "private_scaffold_state.json"
+    if private_state.exists():
+        runtime_results = ensure_wiki_runtime_files(wiki_root)
+    else:
+        setup_report = initialize_private_vault(SCRIPT_DIR.parent.parent, wiki_root)
+        sync_summary = setup_report["sync"]["summary"]
+        runtime_results = [
+            "private_vault: initialized "
+            f"created={sync_summary['created']} updated={sync_summary['updated']} conflicts={sync_summary['conflict_staged']}"
+        ]
 
     project_name = args.project.strip()
     project_slug = slugify(project_name)
@@ -516,6 +534,10 @@ def main() -> None:
             repo_root / "CLAUDE.md",
             render_managed_block("CLAUDE.md", repo_root, wiki_root, project_slug),
         )
+        from project_scaffold import apply_project_scaffold
+
+        scaffold_report = apply_project_scaffold(repo_root, SCRIPT_DIR.parent.parent)
+        control_results["project_scaffold"] = str(scaffold_report.get("status") or "unknown")
 
     upsert_registry_entry(
         project_slug=project_slug,

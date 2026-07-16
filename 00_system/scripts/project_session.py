@@ -21,7 +21,7 @@ CONTROL_FILES = (
     "CHANGELOG.md",
 )
 
-REQUIRED_SUPPORT_DIRECTORIES = ("docs/adr", "docs/ai-workflows", "scripts/ai")
+REQUIRED_SUPPORT_DIRECTORIES = ("docs/adr", "docs/ai-workflows")
 
 WIKI_CORE_KEYS = (
     "project_index",

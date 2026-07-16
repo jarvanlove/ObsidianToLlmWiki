@@ -68,6 +68,11 @@ def run_upgrade(args: argparse.Namespace) -> None:
         for candidate in dict.fromkeys(repo_roots):
             if not candidate.exists():
                 continue
+            run_script(
+                "project_scaffold.py",
+                ["--repo-root", str(candidate), "--source-root", str(SOURCE_ROOT)],
+                env=env,
+            )
             adapter = inspect_adapter(candidate)
             if adapter["status"] != "not_installed":
                 run_script("project_adapter.py", ["apply", "--repo-root", str(candidate)], env=env)
@@ -126,6 +131,17 @@ def main() -> None:
     doctor.add_argument("--strict", action="store_true")
     doctor.add_argument("--format", choices=["text", "json"], default="text")
 
+    setup = subparsers.add_parser("setup", help="Initialize the private vault and install the manager Skill once.")
+    setup.add_argument("--private-root", default="")
+    setup.add_argument("--provider", choices=["agents", "claude", "all"], default="all")
+    setup.add_argument("--format", choices=["text", "json"], default="text")
+
+    update = subparsers.add_parser("update", help="Safely update runtime, private scaffold, Skills, and attached projects.")
+    update.add_argument("--private-root", default="")
+    update.add_argument("--provider", choices=["agents", "claude", "all"], default="all")
+    update.add_argument("--check", action="store_true")
+    update.add_argument("--format", choices=["text", "json"], default="text")
+
     args = parser.parse_args()
     if args.command == "ask":
         run_natural_language(args, args.request)
@@ -170,6 +186,13 @@ def main() -> None:
         if args.strict:
             values.append("--strict")
         run_script("doctor.py", values)
+    elif args.command in {"setup", "update"}:
+        values = [args.command, "--source-root", str(SOURCE_ROOT), "--provider", args.provider, "--format", args.format]
+        if args.private_root:
+            values.extend(["--private-root", args.private_root])
+        if args.command == "update" and args.check:
+            values.append("--check")
+        run_script("runtime_manager.py", values)
 
 
 if __name__ == "__main__":

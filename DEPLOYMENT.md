@@ -2,7 +2,7 @@
 
 ## Delivery Model
 
-ObsidianToWiki is not deployed as a server. It is distributed as a local scaffold repository and synced into a private vault.
+ObsidianToWiki is not deployed as a server. It is distributed as a local public runtime, initialized into a private vault, and connected to local projects through ignored context files.
 
 Primary delivery paths:
 
@@ -12,29 +12,23 @@ Primary delivery paths:
 
 ## Update Flow
 
-1. Modify scaffold assets in the public repo.
-2. Run local checks from `TESTING.md`.
-3. Run the global Skill installer and `doctor.py` in report mode.
-4. Dry-run and then apply manifest-managed private sync.
-5. Run `otw.py upgrade --apply --all-projects`; migrations are metadata-only and conflicts are staged.
-6. Run private vault lint/index rebuild and strict doctor.
-7. Update private project memory for durable conclusions.
+1. Maintainer changes public runtime and version manifests.
+2. Run local checks from `TESTING.md`, then commit and push the public repository.
+3. Users say `更新 ObsidianToWiki`; advanced users run the unified `otw update` wrapper.
+4. Update preflight requires a clean public worktree, configured origin/upstream, and fast-forward history.
+5. Record matching private baselines before pull, update dependencies and Skills, safely sync private managed files, run migrations, upgrade registered project bridges and installed optional adapters, rebuild indexes, then run strict doctor.
+6. Write `00_system/registry/runtime_update_receipt.json` with old/new commits and component results.
 
 ## Sync
 
-Use existing sync scripts. Before running sync, inspect changed paths so private-only content is not overwritten unintentionally.
-
-```powershell
-.\00_system\scripts\sync_private_vault.ps1
-```
-
-Sync and upgrade are separate operations: sync distributes public runtime files; upgrade records vault state and reconciles versioned shared/project assets by hash.
+The update orchestrator owns normal sync. Direct sync is an advanced repair interface. Manifest scope and protected globs define eligible paths; recorded hashes decide whether an existing managed file can be replaced.
 
 ## Rollback
 
-- Revert public scaffold files.
-- If sync already ran, restore affected private vault scaffold files from git or backup.
-- Re-run lint/index rebuild after rollback.
+- Restore the public runtime to the previous receipt commit with an explicit maintainer-approved Git operation.
+- Restore private scaffold files from `40_outputs/update-backups/<timestamp>/`; private knowledge is never a managed rollback target.
+- Restore project candidates manually only after comparing local customization with staged `.new` files.
+- Re-run migrations only in supported direction, then rebuild indexes and run strict doctor.
 
 ## Release Notes
 

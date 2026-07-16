@@ -346,94 +346,34 @@ ObsidianToWiki/
 
 ## Installation And Usage
 
-After downloading from GitHub, use the system in this order.
-
-For first-time setup, run `install.ps1` on Windows or `install.sh` on macOS/Linux. The installer creates a repository-local `.venv`, installs core dependencies, safely installs or upgrades the global manager Skill, and runs `doctor`. Users still operate through natural language afterward.
-
-### 1. Prepare two repositories
-
-You need:
-
-- `ObsidianToWiki`
-  the public scaffold with rules, templates, scripts, and documentation
-- `ObsidianToWiki-private`
-  the private vault with real project knowledge, personal knowledge, and raw sources
-
-### 2. Initialize the private vault
-
-Sync scaffold-layer content into the private vault so it has:
-
-- entry pages
-- rule pages
-- prompts
-- scripts
-- templates
-- a minimal directory structure
-
-The current version can persist the first successfully discovered private wiki root into a user-level config so later project attaches can reuse it.
-
-### 3. Do the first real usage
-
-At first, do only two things:
-
-1. attach one real project
-2. ingest one real source
-
-### 4. Use natural language from then on
-
-Typical requests:
-
-- "start work"
-- "continue"
-- "close work"
-- "attach the current project to the wiki"
-- "ingest this into the current project"
-- "ingest this into personal knowledge"
-- "answer based on the current project's wiki"
-- "keep filing knowledge back while you work"
-- "save this conclusion into the wiki"
-- "promote this into shared knowledge"
-
-### Existing User Upgrade
-
-Existing users do not need to rebuild their private vault or detach projects.
-
-Recommended order:
-
-1. Pull the latest public scaffold.
-2. Run the installer to update dependencies and the global manager Skill.
-3. Dry-run, then apply manifest-managed private-vault sync.
-4. Ask the agent to run one hash-safe upgrade and strict doctor. Existing projects do not need to be reattached.
+The product consists of a public runtime, a private vault, a global Manager Skill, and a small local bridge in each attached project. A new user clones the public repository and runs one root installer. The installer creates `.venv`, installs dependencies, creates or discovers the private vault, seeds private entry files and policy, synchronizes managed assets, migrates schemas, installs the selected provider Skill, and runs strict diagnostics.
 
 Windows:
 
 ```powershell
-cd <obsidiantowiki-public-root>
-git pull origin main
-./install.ps1
-python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
-python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root>
-python .\00_system\scripts\otw.py upgrade --wiki-root <private-wiki-root> --apply --all-projects
-python .\00_system\scripts\otw.py doctor --wiki-root <private-wiki-root> --strict
+.\install.ps1
 ```
 
 macOS / Linux:
 
 ```bash
-cd <obsidiantowiki-public-root>
-git pull origin main
+chmod +x install.sh
 ./install.sh
-./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root> --dry-run --format json
-./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
-./00_system/scripts/otw.sh upgrade --wiki-root <private-wiki-root> --apply --all-projects
-./00_system/scripts/otw.sh doctor --wiki-root <private-wiki-root> --strict
 ```
 
-The sync tool only updates manifest-managed scaffold files. Root indexes, logs, the project registry, personal/project/shared knowledge, outputs, and retrieval caches are protected; only `30_shared/prompts` is scaffold-managed inside the shared layer. Use `--dry-run --format json` before an upgrade and `--path <wiki-relative-path>` for a precise repair.
+The two installers intentionally live at repository root because they are the only bootstrap entrypoints a new user should need to find. `00_system/scripts/` contains internal operations rather than onboarding steps.
 
-Do not mix project binding paths across operating systems. A project attached on Windows records `C:\...` paths in `wiki.context.json`; macOS / Linux should record paths that are reachable from that environment, such as `/Users/...`. Refresh the project attach once after moving across operating systems.
+The default private vault is a sibling named `<public-repository-name>-private`. Use `-PrivateRoot` on PowerShell or `--private-root` on shell to choose another location. Providers are `agents`, `claude`, or `all`.
 
-The commands are the executable path for agents and advanced users. Daily project work should still start with "start work", "continue", and "close work".
+After installation, normal use is natural language: "start work", "continue", "close work", "attach this project to the wiki", "ingest this source", or "answer from this project's wiki". The agent owns script execution and checks.
+
+### Existing User Upgrade
+
+Tell an agent with the Manager Skill: "update ObsidianToWiki". The update workflow performs Git fast-forward preflight, records pre-update baselines, updates dependencies and Skills, safely synchronizes the private scaffold, migrates the vault, upgrades every registered core project bridge, upgrades only optional adapters already installed, rebuilds indexes, and runs strict doctor. Existing projects are not reattached.
+
+Updates stop on a dirty public repository, diverged history, or missing upstream. They never stash, reset, or force overwrite. A private managed file is updated only when its recorded hash proves it is unchanged; otherwise the original remains, the new file is staged under `40_outputs/upgrade-candidates/private-scaffold/`, and a timestamped backup is written.
+
+Advanced equivalents are `00_system/scripts/otw.ps1 update` and `00_system/scripts/otw.sh update`; add `--check` for report-only behavior. Internal scripts remain diagnostics and development interfaces, not onboarding steps.
 
 ## How Projects Use The System
 

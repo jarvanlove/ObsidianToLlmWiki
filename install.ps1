@@ -1,6 +1,7 @@
 param(
     [switch]$WithMcp,
-    [ValidateSet("agents", "claude", "all")][string]$Provider = "all"
+    [ValidateSet("agents", "claude", "all")][string]$Provider = "all",
+    [string]$PrivateRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,5 +13,8 @@ $Python = "$Root\.venv\Scripts\python.exe"
 if ($WithMcp) {
     & $Python -m pip install -r "$Root\00_system\requirements-mcp.txt"
 }
-& $Python "$Root\00_system\scripts\install_manager_skill.py" --provider $Provider
-& $Python "$Root\00_system\scripts\doctor.py"
+$SetupArgs = @("$Root\00_system\scripts\otw.py", "setup", "--provider", $Provider)
+if (-not [string]::IsNullOrWhiteSpace($PrivateRoot)) {
+    $SetupArgs += @("--private-root", $PrivateRoot)
+}
+& $Python @SetupArgs

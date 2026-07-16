@@ -19,14 +19,17 @@ def main() -> None:
     except json.JSONDecodeError as exc:
         raise SystemExit(f"invalid wiki.context.json: {exc}") from exc
     wiki_root = Path(str(context.get("wiki_root") or "")).expanduser().resolve()
-    server_script = wiki_root / "00_system" / "scripts" / "mcp_retrieval_server.py"
+    runtime_root = Path(str(context.get("runtime_root") or wiki_root)).expanduser().resolve()
+    server_script = runtime_root / "00_system" / "scripts" / "mcp_retrieval_server.py"
     if not server_script.exists():
-        raise SystemExit(f"private wiki MCP runtime is missing: {server_script}")
+        raise SystemExit(f"ObsidianToWiki MCP runtime is missing: {server_script}")
 
     env = os.environ.copy()
     env["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
     env["PYTHONIOENCODING"] = "utf-8"
-    completed = subprocess.run([sys.executable, str(server_script)], env=env, check=False)
+    managed_python = runtime_root / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    interpreter = managed_python if managed_python.exists() else Path(sys.executable)
+    completed = subprocess.run([str(interpreter), str(server_script)], env=env, check=False)
     raise SystemExit(completed.returncode)
 
 

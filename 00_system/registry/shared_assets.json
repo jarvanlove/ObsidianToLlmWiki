@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "release_version": 1,
+  "release_version": 2,
   "assets": [
-    {"path": "30_shared/architectures/AI-coding生命周期控制协议.md", "version": 1},
+    {"path": "30_shared/architectures/AI-coding生命周期控制协议.md", "version": 2},
     {"path": "30_shared/architectures/AI模块测试验收证据协议.md", "version": 1},
     {"path": "30_shared/architectures/AI项目级约束文件结构.md", "version": 1},
     {"path": "30_shared/architectures/资料摄入质量协议.md", "version": 1},

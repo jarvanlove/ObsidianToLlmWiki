@@ -1,14 +1,19 @@
+
+
+<!-- OBSIDIANTOWIKI:PROJECT_CONTROL_START -->
+
 # AGENTS.md
 
 This workspace is attached to an ObsidianToWiki project memory.
+This file is the Codex entrypoint for this project.
 
-Read local `wiki.context.json` first if it exists. That file is intentionally ignored by git and should contain the user's real local paths.
+Read `wiki.context.json` first if it exists. Use the paths below as the human-readable bridge into the wiki.
 
-Use the placeholders below as the public, human-readable bridge shape. Do not commit machine-specific absolute paths here.
-
-- wiki_root: `<private-wiki-root>`
-- project_repo_root: `<obsidiantowiki-public-root>`
+- wiki_root: `<read-from-wiki.context.json>`
+- runtime_root: `<read-from-wiki.context.json>`
+- project_repo_root: `<current-project-root>`
 - project_slug: `obsidiantowiki`
+- project_scaffold_version: `<read-from-wiki.context.json>`
 - project_index: `20_projects/active/obsidiantowiki/索引.md`
 - project_overview: `20_projects/active/obsidiantowiki/概览.md`
 - project_architecture: `20_projects/active/obsidiantowiki/架构.md`
@@ -23,11 +28,26 @@ Use the placeholders below as the public, human-readable bridge shape. Do not co
 ## Working Rules
 
 - Treat the wiki as the durable project memory layer.
+- Execute ObsidianToWiki through the public runtime_root from local context; private copied scripts are compatibility assets.
 - Read the project index and core pages before making durable changes.
 - Write reusable conclusions back into the wiki.
 - Reuse shared patterns when similar problems have already been solved elsewhere.
-- This is the Codex entrypoint. Do not treat `CLAUDE.md` as Codex's parent instruction file.
-- Daily project workflow should use `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.
-- For local implementation tasks, Codex reads project control files directly: `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, and `SECURITY.md`.
+- Do not treat `CLAUDE.md` as Codex's parent instruction file.
+- Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.
+- Run AI coding tasks through the project lifecycle: task_start -> task_plan -> task_implement -> task_verify -> task_close -> memory_file_back.
+- Before closing a task, update relevant project control files and only file back durable conclusions to the wiki.
+- For local implementation tasks, read project control files directly when they exist:
+  - `PRODUCT_SPEC.md`
+  - `ARCHITECTURE.md`
+  - `TASKS.md`
+  - `TESTING.md`
+  - `SECURITY.md`
+  - `DEPLOYMENT.md`
+  - `OPERATIONS.md`
+  - `CHANGELOG.md`
+
+<!-- OBSIDIANTOWIKI:PROJECT_CONTROL_END -->
+## Repository-Specific Rules
+
 - Keep public scaffold changes in this repository and durable project memory in the private wiki project pages.
-- When changing project attach/bootstrap behavior, update `docs/templates/project-AGENTS.md` and `docs/templates/project-CLAUDE.md` if the protocol changes.
+- When changing project attach, bootstrap, setup, or update behavior, update both project entry templates and the relevant product documentation.

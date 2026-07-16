@@ -34,6 +34,11 @@ All notable changes to this repository should be documented in this file.
 - Reproducible dependencies, cross-platform installers, doctor diagnostics, and Windows/macOS/Linux CI
 - PDF/DOCX/PPTX/text extraction quality gates, CJK PDF normalization, OCR detection, chapter-aware maps, and golden-corpus tests
 - Wiki governance regression tests for local link resolution, generated/archive boundaries, freshness semantics, and schema exceptions
+- One-command private-vault setup through the root Windows/macOS/Linux installers
+- Machine-readable runtime and core project-scaffold release manifests
+- Natural-language whole-product update with clean fast-forward Git preflight and update receipts
+- Hash-baselined private scaffold sync with staged candidates and timestamped backups
+- Safe all-project core bridge upgrades independent from optional hooks/subagents
 
 ### Changed
 
@@ -51,7 +56,12 @@ All notable changes to this repository should be documented in this file.
 - Long-document ingestion groups cover/TOC pages, rejects body facts and code comments as chapter headings, labels continued chapters, and removes only obsolete generated sections during reingestion
 - Wiki lint resolves sibling and nearest project links, ignores links inside fenced code, and separates current maintained pages from generated reports, source sections, and historical archives
 - Retrieval downranks generated document maps and section notes so curated knowledge remains the default answer surface while source evidence stays searchable
+- `wiki.context.json` now records canonical public `runtime_root` and core project-scaffold version
+- Manager and optional project adapters prefer the repository-managed `.venv`
+- Existing projects no longer require `scripts/ai` unless optional adapters are explicitly installed
+- Onboarding and update documentation now presents one installer followed by natural-language operation
 
 ### Removed
 
 - Local test artifacts and machine-specific cache outputs
+- The tracked empty `scripts/ai` placeholder from the default project scaffold
