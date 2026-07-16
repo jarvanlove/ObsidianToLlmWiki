@@ -28,7 +28,7 @@ for line in process.stdout:
 return_code = process.wait()
 
 if return_code and os.environ.get("GITHUB_ACTIONS") == "true":
-    detail = workflow_escape("".join(output)[-12000:])
+    detail = workflow_escape("".join(output)[-3500:])
     print(f"::error title=Unit test failure::{detail}")
 
 raise SystemExit(return_code)
