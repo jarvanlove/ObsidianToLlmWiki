@@ -21,6 +21,11 @@ All notable changes to this repository should be documented in this file.
 - Explicit source section promotion into project, personal, shared, or output pages
 - Local SQLite FTS5 retrieval cache with incremental freshness checks
 - Stable retrieval JSON contract and bounded agent context-pack output
+- Protected, idempotent private scaffold sync with precise managed-path support
+- Fixed retrieval evaluation gates with MRR and separate semantic probes
+- Project Agent Skills and read-only MCP stdio retrieval tools
+- Conservative legacy provenance audit/migration and `source_notes` retrieval output
+- Inspectable topic-alias hybrid recall; current evaluation does not justify vector infrastructure
 - Retrieval core regression tests for filters, provenance, update, deletion, and context budgets
 
 ### Changed

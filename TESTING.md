@@ -12,6 +12,9 @@ PowerShell wrappers:
 .\00_system\scripts\version_status.ps1
 .\00_system\scripts\build_retrieval_index.ps1
 python -m unittest tests.test_retrieval_core -v
+python -m unittest discover -s tests -v
+python .\00_system\scripts\evaluate_retrieval.py --cases .\00_system\registry\retrieval_eval_cases.json
+python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
 ```
 
 macOS / Linux wrappers:
@@ -25,6 +28,8 @@ macOS / Linux wrappers:
 ./00_system/scripts/project_session.sh check --repo-root . --strict
 ./00_system/scripts/build_retrieval_index.sh
 python3 -m unittest tests.test_retrieval_core -v
+python3 -m unittest discover -s tests -v
+python3 ./00_system/scripts/evaluate_retrieval.py --cases ./00_system/registry/retrieval_eval_cases.json
 ```
 
 Python scripts can also be run directly when needed:
@@ -54,6 +59,10 @@ python .\00_system\scripts\build_retrieval_index.py
 | Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, section quality headings, excerpt limits, routing candidates, promotion candidate report, and schema |
 | Source section promotion | promote one disposable section note with `promote_source_section.py`; verify formal page, source section backlink, `source_refs`, `promoted_to`, and section status |
 | Retrieval core | run `python -m unittest tests.test_retrieval_core -v`; verify incremental update/delete refresh, project/type filters, source refs, JSON schema, and context budget |
+| Retrieval quality gate | run `evaluate_retrieval.py`; require gate pass rate `1.0`, MRR at least `0.8`, and review semantic probe recommendation |
+| Private sync safety | run `tests.test_private_sync`; verify protected files never appear in real-vault dry-run actions |
+| Agent adapters | run `tests.test_agent_retrieval_adapter`; verify MCP initialize, tools/list, structured search, and bounded context calls |
+| Provenance migration | run `tests.test_provenance_migration`; verify audit-only default, explicit evidence extraction, no fake page refs, and idempotency |
 
 ## Manual Checks
 

@@ -423,6 +423,8 @@ git pull origin main
 ./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
 ```
 
+同步器只更新 manifest 管理的 scaffold 文件。私有根索引、日志、项目注册表、个人/项目/共享知识、输出和检索缓存属于硬保护范围；共享层只有 `30_shared/prompts` 由脚手架管理。升级前可先加 `--dry-run --format json` 检查；只修一个文件时使用 `--path <wiki-relative-path>`。
+
 不要混用不同操作系统的项目绑定路径。Windows 接入会在 `wiki.context.json` 记录 `C:\...`，macOS / Linux 接入应记录 `/Users/...` 或 `~/...` 可访问路径；换系统后对项目刷新接入一次即可。
 
 这些脚本命令是可执行路径，不是用户每天要背的操作。日常项目里仍然优先只说：`开始工作`、`继续`、`收工`。
@@ -481,6 +483,15 @@ Agent 会自动判断项目是否已接入；未接入就接入并严格检查�
 - `来源.md`
 
 如果你明确说要沉淀到个人层，系统会优先写入 `10_personal/`，同时保留来源项目线索，而不是默认只回到项目层。
+
+### Skill 和 MCP 怎么配置
+
+- Skill 属于项目执行约束：需要时通过 `--install-ai-adapters` 安装到每个项目，分别进入 `.agents/skills/` 和 `.claude/skills/`。
+- MCP 属于工具能力：通常在 Codex、Claude Code、Cursor 等每个工具中配置一次即可，运行时会从当前项目的 `wiki.context.json` 或用户级 wiki 配置发现私有库。
+- 不使用 MCP 也可以工作；Agent Skill 会调用项目里的 `scripts/ai/wiki-search.py` 薄包装。
+- MCP 只暴露只读 `search_wiki` 和 `get_wiki_context`，不会自动修改知识页。
+
+详细边界见 `docs/agent-retrieval.md`。
 
 ## 多模态支持
 
@@ -606,6 +617,12 @@ Agent 会自动判断项目是否已接入；未接入就接入并严格检查�
   搜索 wiki；查询前增量刷新本地检索缓存，保留页面权重和关系摘要，并支持 text、JSON 和 context pack 输出
 - `build_retrieval_index.py`
   显式增量构建或完全重建可删除的 SQLite FTS5 检索缓存
+- `evaluate_retrieval.py`
+  用固定用例检查路径、章节、出处、通过率、MRR 和同义表达探针
+- `mcp_retrieval_server.py`
+  通过只读 MCP stdio 工具向 Codex、Claude Code、Cursor 等暴露结构化检索和 context pack
+- `migrate_provenance.py`
+  审计旧知识页并只迁移正文里已经明确存在的来源链接和页码
 - `file_back_query.py`
   把问答或分析沉淀为正式页面
 - `handle_nl_request.py`
@@ -620,7 +637,7 @@ Agent 会自动判断项目是否已接入；未接入就接入并严格检查�
 - `sync_personal_relations.py`
   同步个人知识页的关系字段
 - `sync_private_vault.py`
-  把公开脚手架同步到私有库
+  只把 manifest 管理的公开脚手架同步到私有库，并阻止覆盖私有运行状态
 
 ### 治理类
 
@@ -675,7 +692,7 @@ Agent 会自动判断项目是否已接入；未接入就接入并严格检查�
 - `version_closure_report.py`
   生成收官报告
 
-如果你只想记最重要的 5 个，就记：
+如果你只想记最重要的 6 个，就记：
 
 - `attach_project.py`
 - `project_session.py`
@@ -737,14 +754,19 @@ P2 第一版现在的方向是保守自动化：
 - 稳定 JSON 检索契约
 - 返回最佳命中章节和有限长度片段
 - 面向 Agent 的有限预算 context pack
+- 查询词覆盖率优先排序和中文短词章节定位
+- 可审计的本地主题别名混合召回
+- 固定检索评测门禁与 MRR / 语义探针
+- 项目级 Agent Skill 和可选只读 MCP stdio 工具
+- `source_notes` / `source_refs` 出处输出与旧页保守迁移
 
 当前阶段暂时不做：
 
-- 主题召回
 - 向量检索
 - 语义重排
 - 后台文件监听
-- Skills / MCP 检索适配层
+
+当前固定评测结果为：门禁通过率 `1.0`、MRR `1.00`、同义表达探针通过率 `1.0`，因此暂不引入 embedding 或向量数据库。
 
 ## 方法论来源
 

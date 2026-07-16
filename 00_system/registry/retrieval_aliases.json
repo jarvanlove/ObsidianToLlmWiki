@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "work-lifecycle",
+      "aliases": [
+        "一天开始",
+        "开始工作",
+        "任务启动",
+        "一天结束",
+        "结束任务",
+        "收工",
+        "项目记忆",
+        "运行记忆",
+        "project.memory"
+      ]
+    },
+    {
+      "id": "bounded-agent-context",
+      "aliases": [
+        "有限长度知识包",
+        "有限预算上下文",
+        "上下文预算",
+        "知识包",
+        "上下文包",
+        "context pack",
+        "token budget"
+      ]
+    },
+    {
+      "id": "long-document-quality",
+      "aliases": [
+        "一百页资料",
+        "长文档",
+        "长 PDF",
+        "空洞摘要",
+        "空泛摘要",
+        "文档地图",
+        "章节笔记"
+      ]
+    },
+    {
+      "id": "source-provenance",
+      "aliases": [
+        "出处元数据",
+        "来源引用",
+        "页码引用",
+        "source_refs",
+        "source_notes"
+      ]
+    }
+  ]
+}

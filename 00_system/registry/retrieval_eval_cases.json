@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "retrieval-contract",
+      "query": "SQLite FTS5 context pack",
+      "expected_paths": [
+        "README-zh.md",
+        "README.md",
+        "20_projects/active/obsidiantowiki/project.memory.md",
+        "20_projects/active/obsidiantowiki/任务.md",
+        "20_projects/active/obsidiantowiki/架构.md"
+      ],
+      "max_rank": 1
+    },
+    {
+      "id": "source-ingestion-quality",
+      "query": "PDF 保留章节结构 页码引用 文档地图",
+      "expected_paths": ["30_shared/architectures/资料摄入质量协议.md"],
+      "max_rank": 1,
+      "filters": {
+        "type": "架构"
+      }
+    },
+    {
+      "id": "agent-adapter-placement",
+      "query": "hooks subagents 安装策略",
+      "expected_paths": ["30_shared/architectures/AI-coding生命周期控制协议.md"],
+      "expected_headings": ["hooks / subagents 位置", "适配层安装策略"],
+      "max_rank": 1
+    },
+    {
+      "id": "project-attach-contract",
+      "query": "项目接入 wiki.context.json AGENTS CLAUDE",
+      "expected_paths": [
+        "30_shared/architectures/AI-coding生命周期控制协议.md",
+        "README-zh.md",
+        "使用手册.md"
+      ],
+      "max_rank": 3
+    },
+    {
+      "id": "natural-language-lifecycle",
+      "query": "开始工作 继续 收工",
+      "expected_paths": [
+        "30_shared/architectures/AI-coding生命周期控制协议.md",
+        "30_shared/patterns/独立开发者AI项目实操工作流.md",
+        "README-zh.md",
+        "使用手册.md"
+      ],
+      "max_rank": 3
+    },
+    {
+      "id": "semantic-long-document",
+      "query": "怎样避免一百页资料被压缩成一篇空洞摘要",
+      "expected_paths": ["30_shared/architectures/资料摄入质量协议.md"],
+      "max_rank": 3,
+      "semantic_probe": true,
+      "gating": false
+    },
+    {
+      "id": "semantic-bounded-agent-context",
+      "query": "让编程智能体获得有限长度并且带出处的知识包",
+      "expected_paths": ["README-zh.md", "README.md"],
+      "max_rank": 3,
+      "semantic_probe": true,
+      "gating": false
+    },
+    {
+      "id": "semantic-lifecycle-memory",
+      "query": "一天开始和结束时 AI 应该自动维护哪些项目记忆",
+      "expected_paths": [
+        "30_shared/architectures/AI-coding生命周期控制协议.md",
+        "30_shared/patterns/独立开发者AI项目实操工作流.md"
+      ],
+      "max_rank": 3,
+      "semantic_probe": true,
+      "gating": false
+    }
+  ]
+}

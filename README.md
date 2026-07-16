@@ -402,6 +402,8 @@ git pull origin main
 ./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
 ```
 
+The sync tool only updates manifest-managed scaffold files. Root indexes, logs, the project registry, personal/project/shared knowledge, outputs, and retrieval caches are protected; only `30_shared/prompts` is scaffold-managed inside the shared layer. Use `--dry-run --format json` before an upgrade and `--path <wiki-relative-path>` for a precise repair.
+
 Do not mix project binding paths across operating systems. A project attached on Windows records `C:\...` paths in `wiki.context.json`; macOS / Linux should record paths that are reachable from that environment, such as `/Users/...`. Refresh the project attach once after moving across operating systems.
 
 The commands are the executable path for agents and advanced users. Daily project work should still start with "start work", "continue", and "close work".
@@ -460,6 +462,15 @@ The main write-back targets are usually:
 - `来源.md`
 
 If you explicitly route a conclusion to the personal layer, the system should write it into `10_personal/` while keeping a backlink to the originating project instead of forcing everything back into the project layer.
+
+### Skill and MCP configuration
+
+- Skills belong to the project execution layer. Install them per project with `--install-ai-adapters`; templates are placed under `.agents/skills/` and `.claude/skills/`.
+- MCP belongs to the AI tool capability layer. Configure it once per Codex, Claude Code, Cursor, or compatible tool when the tool launches it from the active project.
+- Without MCP, the Skill uses the provider-neutral `scripts/ai/wiki-search.py` wrapper.
+- MCP exposes only read-only `search_wiki` and `get_wiki_context` tools.
+
+See `docs/agent-retrieval.md` for the boundary and setup details.
 
 ## Multimodal Support
 
@@ -580,6 +591,12 @@ If you want to understand which scripts matter most, start with these.
   refreshes the local retrieval cache, preserves page weighting and relation summaries, and returns text, JSON, or bounded context packs
 - `build_retrieval_index.py`
   incrementally builds or fully refreshes the disposable SQLite FTS5 retrieval cache
+- `evaluate_retrieval.py`
+  gates path, heading, provenance, pass rate, MRR, and separate synonym probes
+- `mcp_retrieval_server.py`
+  exposes structured search and bounded context as read-only MCP stdio tools
+- `migrate_provenance.py`
+  audits legacy knowledge pages and migrates only explicit source links and page references
 - `file_back_query.py`
   files an answer or analysis back into the wiki
 - `handle_nl_request.py`
@@ -594,7 +611,7 @@ If you want to understand which scripts matter most, start with these.
 - `sync_personal_relations.py`
   syncs personal-page relation fields
 - `sync_private_vault.py`
-  syncs the public scaffold into the private vault
+  syncs only manifest-managed public scaffold files and protects private runtime state
 
 ### Governance
 
@@ -649,7 +666,7 @@ This stage also adds:
 - `version_closure_report.py`
   generates a closure report
 
-If you only remember five scripts, remember these:
+If you only remember six scripts, remember these:
 
 - `attach_project.py`
 - `project_session.py`
@@ -711,14 +728,19 @@ What is already added:
 - stable JSON result contract
 - best matching heading and bounded snippet localization
 - bounded context packs for agents
+- query-coverage ranking and Chinese short-term chunk localization
+- inspectable local topic-alias hybrid recall
+- fixed retrieval gates with MRR and semantic probes
+- project Agent Skills and optional read-only MCP stdio tools
+- `source_notes` / `source_refs` output plus conservative legacy migration
 
 What this stage still does not do:
 
-- topic recall
 - vector retrieval
 - semantic reranking
 - background file watching
-- Skills / MCP retrieval adapters
+
+The current fixed evaluation reports a `1.0` gate pass rate, `1.00` MRR, and `1.0` semantic-probe pass rate, so embeddings and vector infrastructure are not justified yet.
 
 ## Methodology
 

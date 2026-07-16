@@ -3,23 +3,27 @@
     "root": [
       "AGENTS.md",
       "CLAUDE.md",
-      "Home.md",
       "README.md",
       "README-zh.md",
       "快速开始.md",
-      "index.md",
       "标准自然语言话术清单.md",
       "使用手册.md",
       "会话启动页.md"
     ],
     "system": [
-      "00_system"
+      "00_system/registry/page_schemas.json",
+      "00_system/registry/private_sync_manifest.json",
+      "00_system/registry/retrieval_aliases.json",
+      "00_system/registry/retrieval_eval_cases.json",
+      "00_system/requirements-mcp.txt",
+      "00_system/scripts",
+      "00_system/templates"
     ],
     "docs": [
       "docs"
     ],
     "prompts": [
-      "30_shared"
+      "30_shared/prompts"
     ]
   },
   "ignore_globs": [
@@ -29,5 +33,21 @@
     "**/*.sqlite3",
     "**/*.sqlite3-shm",
     "**/*.sqlite3-wal"
+  ],
+  "protected_globs": [
+    "Home.md",
+    "index.md",
+    "log.md",
+    "00_system/registry/projects.json",
+    "00_system/.cache/**",
+    "01_inbox/**",
+    "10_personal/**",
+    "20_projects/**",
+    "30_shared/architectures/**",
+    "30_shared/patterns/**",
+    "30_shared/tools/**",
+    "30_shared/索引.md",
+    "30_shared/关系索引.md",
+    "40_outputs/**"
   ]
 }

@@ -19,8 +19,9 @@ Must have:
 - Personal knowledge distillation and shared knowledge promotion.
 - Search and answer file-back.
 - Local rebuildable retrieval index with automatic freshness checks, stable JSON results, and bounded context packs for agent consumption.
+- Fixed retrieval evaluation gates, inspectable topic-alias expansion, and optional read-only Skills/MCP adapters.
 - Governance/linting and index rebuild.
-- Private vault sync.
+- Private vault sync that cannot overwrite root indexes, logs, project registry, private knowledge, or derived caches.
 - AI project control workflow assets for production-grade AI-assisted development.
 - AI coding lifecycle protocol for task start, verification, close, control-file updates, and wiki file-back candidates.
 - Optional hook/subagent adapter templates that call the lifecycle protocol without becoming a separate source of truth.
@@ -81,6 +82,8 @@ Explicitly not doing unless added to `TASKS.md`:
 - Source promotion candidates must be review reports, not automatic formal knowledge pages; each candidate must include source section, source refs, target layer, rationale, and next action.
 - Source section promotion must be explicit per section; promoted pages must preserve source section backlinks and source refs, and the source section must record `promoted_to`.
 - Retrieval indexes must remain disposable derived data: Markdown is the source of truth, manual edits are visible after incremental refresh, and JSON/context results preserve page paths and source references.
+- Retrieval changes must pass fixed path, heading, provenance, pass-rate, and MRR gates before release; semantic infrastructure is justified by failed semantic probes, not trend pressure.
+- Legacy provenance migration may only write source notes and page references already explicit in the page; uncertain pages remain `partial` or unchanged.
 
 ## Change Log
 
@@ -96,3 +99,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-11 | Added source promotion candidate workflow | Prevent section notes from becoming a dead end | Candidate report lists source refs, targets, rationale, and next actions |
 | 2026-06-11 | Added explicit source section promotion | Turn selected section notes into formal knowledge pages without bulk auto-writing | Promoted pages preserve backlinks and source refs |
 | 2026-07-16 | Added local Retrieval Core P0 | Give agents a stable, fresh, provider-neutral knowledge retrieval contract | SQLite FTS5 derived index, JSON output, chunk localization, and bounded context packs |
+| 2026-07-16 | Completed Retrieval Integration P1 | Make retrieval safe to distribute and directly consumable by coding agents | Protected private sync, evaluation gates, topic aliases, Skills/MCP adapters, and provenance migration |

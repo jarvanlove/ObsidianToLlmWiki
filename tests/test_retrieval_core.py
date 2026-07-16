@@ -22,25 +22,33 @@ def page(
     domain: str,
     project: str = "",
     tags: list[str] | None = None,
+    source_note: str = "",
+    source_notes: list[str] | None = None,
     source_refs: list[str] | None = None,
     body: str,
 ) -> str:
     tags = tags or []
+    source_notes = source_notes or []
     source_refs = source_refs or []
     project_line = f"project: {project}\n" if project else ""
+    source_note_line = f"source_note: {source_note}\n" if source_note else ""
     tag_lines = "\n".join(f"  - {tag}" for tag in tags) or "  []"
     source_ref_lines = "\n".join(f"  - {ref}" for ref in source_refs) or "  []"
+    source_note_lines = "\n".join(f"  - {note}" for note in source_notes) or "  []"
     return (
         "---\n"
         f"title: {title}\n"
         f"type: {page_type}\n"
         f"domain: {domain}\n"
         f"{project_line}"
+        f"{source_note_line}"
         "status: 活跃\n"
         "updated: 2026-07-16\n"
         f"summary: {title} 的摘要。\n"
         "tags:\n"
         f"{tag_lines}\n"
+        "source_notes:\n"
+        f"{source_note_lines}\n"
         "source_refs:\n"
         f"{source_ref_lines}\n"
         "---\n\n"
@@ -69,6 +77,7 @@ class RetrievalCoreCliTests(unittest.TestCase):
                 domain="项目",
                 project="demo",
                 tags=["backend", "cache"],
+                source_notes=["01_inbox/clips/cache-guide"],
                 source_refs=["p.4", "p.5"],
                 body="## Redis 取舍\n\n当前项目选择 Redis 保存短期缓存，并保留数据库作为事实源。",
             ),
@@ -81,6 +90,7 @@ class RetrievalCoreCliTests(unittest.TestCase):
                 domain="项目",
                 project="other",
                 tags=["cache"],
+                source_note="01_inbox/sources/other-cache",
                 body="## Redis\n\n其他项目也使用 Redis。",
             ),
             encoding="utf-8",
@@ -136,9 +146,18 @@ class RetrievalCoreCliTests(unittest.TestCase):
         self.assertEqual(payload["count"], 1)
         self.assertEqual(payload["results"][0]["path"], "20_projects/active/demo/决策.md")
         self.assertEqual(payload["results"][0]["project"], "demo")
+        self.assertEqual(payload["results"][0]["source_notes"], ["01_inbox/clips/cache-guide"])
         self.assertEqual(payload["results"][0]["source_refs"], ["p.4", "p.5"])
         self.assertEqual(payload["results"][0]["heading"], "Redis 取舍")
         self.assertIn("Redis", payload["results"][0]["snippet"])
+
+    def test_json_search_normalizes_singular_source_note(self) -> None:
+        result = self.run_search("其他项目", "--project", "other", "--format", "json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["results"][0]["source_notes"], ["01_inbox/sources/other-cache"])
 
     def test_search_refreshes_modified_and_deleted_pages(self) -> None:
         initial = self.run_search("事件溯源", "--format", "json")
@@ -182,6 +201,7 @@ class RetrievalCoreCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("# OTW Context Pack", result.stdout)
         self.assertIn("20_projects/active/demo/决策.md", result.stdout)
+        self.assertIn("01_inbox/clips/cache-guide", result.stdout)
         self.assertIn("p.4", result.stdout)
         self.assertIn("Redis 取舍", result.stdout)
         self.assertLess(len(result.stdout), 1200)
@@ -206,6 +226,66 @@ class RetrievalCoreCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(payload["results"][0]["heading"], "核心架构")
+
+    def test_ranking_prefers_broad_query_coverage_over_one_high_weight_term(self) -> None:
+        (self.vault / "30_shared" / "patterns" / "单词高权重.md").write_text(
+            page(
+                "Context 协议",
+                page_type="架构",
+                domain="共享",
+                body="## Context\n\n这里只讨论 context。",
+            ),
+            encoding="utf-8",
+        )
+        (self.vault / "30_shared" / "patterns" / "完整答案.md").write_text(
+            page(
+                "检索输出",
+                page_type="分析",
+                domain="共享",
+                body="## Agent 输出\n\nSQLite FTS5 可以生成受限 context pack。",
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_search("SQLite FTS5 context pack", "--format", "json", "--limit", "1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["results"][0]["path"], "30_shared/patterns/完整答案.md")
+
+    def test_query_alias_expansion_is_explicit_and_retrieves_synonymous_language(self) -> None:
+        registry = self.vault / "00_system" / "registry"
+        registry.mkdir(parents=True)
+        (registry / "retrieval_aliases.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "groups": [
+                        {
+                            "id": "work-lifecycle",
+                            "aliases": ["一天开始", "开始工作", "一天结束", "收工"],
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        (self.vault / "30_shared" / "patterns" / "生命周期.md").write_text(
+            page(
+                "生命周期",
+                page_type="架构",
+                domain="共享",
+                body="## 收工\n\n收工时更新 project.memory。",
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_search("一天开始后如何结束任务", "--format", "json", "--limit", "1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["query_expansion"]["matched_groups"], ["work-lifecycle"])
+        self.assertIn("收工", payload["terms"])
+        self.assertEqual(payload["results"][0]["path"], "30_shared/patterns/生命周期.md")
 
 
 if __name__ == "__main__":

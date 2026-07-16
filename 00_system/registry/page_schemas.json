@@ -1,6 +1,7 @@
 {
   "default_required": ["title", "type", "domain", "status", "updated", "summary"],
   "personal_relation_fields": ["related_to", "builds_on"],
+  "provenance_fields": ["source_note", "source_notes", "source_refs", "provenance_status", "provenance_checked"],
   "type_rules": {
     "领域": {
       "domain": ["个人", "共享", "项目"]

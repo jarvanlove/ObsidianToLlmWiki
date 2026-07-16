@@ -18,9 +18,47 @@ from retrieval_index import (
 from wiki_lib import VAULT_ROOT, append_log, obsidian_link, parse_date
 
 
+RETRIEVAL_ALIASES_PATH = VAULT_ROOT / "00_system" / "registry" / "retrieval_aliases.json"
+
+
 def tokenize(text: str) -> list[str]:
     lowered = text.lower()
-    return re.findall(r"[\u4e00-\u9fff]+|[a-z0-9]+", lowered)
+    tokens: list[str] = []
+    for segment in re.findall(r"[\u4e00-\u9fff]+|[a-z0-9]+", lowered):
+        candidates = [segment]
+        if re.fullmatch(r"[\u4e00-\u9fff]+", segment) and len(segment) > 2:
+            candidates.extend(segment[index : index + 2] for index in range(len(segment) - 1))
+        for candidate in candidates:
+            if candidate not in tokens:
+                tokens.append(candidate)
+    return tokens
+
+
+def expand_query_terms(query: str) -> tuple[list[str], dict[str, object]]:
+    original_terms = tokenize(query)
+    terms = list(original_terms)
+    matched_groups: list[str] = []
+    try:
+        payload = json.loads(RETRIEVAL_ALIASES_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+    groups = payload.get("groups") if isinstance(payload, dict) else []
+    lowered_query = query.lower()
+    if isinstance(groups, list):
+        for group in groups:
+            if not isinstance(group, dict):
+                continue
+            group_id = str(group.get("id") or "").strip()
+            aliases = [str(item).strip().lower() for item in group.get("aliases", []) if str(item).strip()] if isinstance(group.get("aliases"), list) else []
+            if not group_id or not aliases or not any(alias in lowered_query for alias in aliases):
+                continue
+            matched_groups.append(group_id)
+            for alias in aliases:
+                alias_terms = [alias] if re.fullmatch(r"[\u4e00-\u9fff ]+", alias) else tokenize(alias)
+                for term in alias_terms:
+                    if term not in terms:
+                        terms.append(term)
+    return terms, {"original_terms": original_terms, "matched_groups": matched_groups}
 
 
 def page_type_weight(page: dict[str, object]) -> int:
@@ -65,25 +103,37 @@ def score_page(page: dict[str, object], query_terms: list[str]) -> int:
 
     score = 0
     matched = False
+    matched_terms = 0
     for term in query_terms:
+        term_matched = False
         if term in title:
             score += 20
             matched = True
+            term_matched = True
         if term in rel_path:
             score += 12
             matched = True
+            term_matched = True
         if term in tags:
             score += 8
             matched = True
+            term_matched = True
         if term in summary:
             score += 6
             matched = True
+            term_matched = True
         body_hits = body.count(term)
         if body_hits:
             matched = True
+            term_matched = True
         score += body_hits
+        if term_matched:
+            matched_terms += 1
     if not matched:
         return 0
+    score += matched_terms * 6
+    if len(query_terms) > 1 and matched_terms == len(query_terms):
+        score += 12
     if "索引.md" in rel_path:
         score -= 4
     if rel_path.startswith("00_system/"):
@@ -251,6 +301,10 @@ def result_payload(
     relations: list[str],
 ) -> dict[str, object]:
     frontmatter = page["frontmatter"] if isinstance(page["frontmatter"], dict) else {}
+    source_notes = list_items(frontmatter.get("source_notes"))
+    source_note = str(frontmatter.get("source_note") or "").strip()
+    if source_note and source_note not in source_notes:
+        source_notes.append(source_note)
     return {
         "rank": rank,
         "score": score,
@@ -263,6 +317,7 @@ def result_payload(
         "status": str(frontmatter.get("status") or ""),
         "updated": str(frontmatter.get("updated") or ""),
         "tags": list_items(page.get("tags")),
+        "source_notes": source_notes,
         "source_refs": list_items(frontmatter.get("source_refs")),
         "heading": str(chunk.get("heading") or ""),
         "snippet": build_snippet(str(chunk.get("body") or page["body"]), query_terms),
@@ -308,6 +363,7 @@ def render_context_pack(payload: dict[str, object], token_budget: int) -> str:
     for result in results:
         if not isinstance(result, dict):
             continue
+        source_notes = result.get("source_notes") if isinstance(result.get("source_notes"), list) else []
         source_refs = result.get("source_refs") if isinstance(result.get("source_refs"), list) else []
         metadata_lines = [
             f"## {result['rank']}. {result['title']}",
@@ -317,6 +373,7 @@ def render_context_pack(payload: dict[str, object], token_budget: int) -> str:
             f"- project: `{result['project'] or '-'}`",
             f"- updated: `{result['updated'] or '-'}`",
             f"- score: {result['score']}",
+            f"- source_notes: {', '.join(str(item) for item in source_notes) if source_notes else '-'}",
             f"- source_refs: {', '.join(str(item) for item in source_refs) if source_refs else '-'}",
             f"- heading: {result['heading'] or '-'}",
             "",
@@ -348,7 +405,7 @@ def main() -> None:
     parser.add_argument("--no-refresh", action="store_true", help="查询前不检查 Markdown 新鲜度")
     args = parser.parse_args()
 
-    terms = tokenize(args.query)
+    terms, query_expansion = expand_query_terms(args.query)
     if not terms:
         if args.format == "json":
             print(json.dumps({"schema_version": INDEX_SCHEMA_VERSION, "query": args.query, "count": 0, "results": []}, ensure_ascii=False, indent=2))
@@ -408,6 +465,7 @@ def main() -> None:
         "schema_version": INDEX_SCHEMA_VERSION,
         "query": args.query,
         "terms": terms,
+        "query_expansion": query_expansion,
         "filters": {"project": project_filter, "type": type_filter, "tag": tag_filter},
         "retrieval": {
             "backend": "sqlite-fts5",

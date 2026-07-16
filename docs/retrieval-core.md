@@ -10,7 +10,7 @@ The retrieval core owns deterministic behavior shared by all future agent/API ad
 - project, page type, and tag filters
 - existing page-value weighting
 - best matching heading and bounded snippet
-- page path and `source_refs` provenance
+- page path plus `source_notes` and `source_refs` provenance
 - stable JSON and context-pack output
 
 Agents remain responsible for query interpretation, iterative follow-up searches, reasoning, and final answers.
@@ -43,9 +43,18 @@ python .\00_system\scripts\search_wiki.py "权限设计" --project demo --format
 
 Search refreshes changed and deleted Markdown pages by default. `--no-refresh` is intended only for controlled diagnostics.
 
+## Quality Gate
+
+```powershell
+python .\00_system\scripts\evaluate_retrieval.py --cases .\00_system\registry\retrieval_eval_cases.json
+```
+
+The command gates path, heading, provenance, pass rate, and MRR. Semantic probes are reported separately. Inspectable topic aliases cover measured synonym gaps before heavier infrastructure is considered.
+
 ## Current Limits
 
-- Page scoring remains lexical and compatible with the previous weighting model.
-- FTS5 is currently used for heading/chunk localization, not semantic understanding.
+- Page scoring remains local and combines lexical coverage, existing page weights, and configured topic aliases.
+- FTS5 is used for heading/chunk localization, not embedding-based semantic understanding.
 - Token budgets are local estimates, not provider-specific tokenizer counts.
-- Embeddings, semantic reranking, file watchers, Skills, and MCP exposure are later layers and must preserve this retrieval contract.
+- Project Skills and the optional MCP stdio server consume this contract without redefining retrieval.
+- Embeddings, semantic reranking, and file watchers remain out of scope while semantic probes pass.

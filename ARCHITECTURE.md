@@ -36,11 +36,14 @@ Daily project work is exposed through the project cockpit:
 | `search_wiki.py` | Search wiki with weighting and relation summaries |
 | `retrieval_index.py` | Maintain the disposable SQLite FTS5 retrieval cache and Markdown freshness state |
 | `build_retrieval_index.py` | Explicitly build or fully refresh the local retrieval cache |
+| `evaluate_retrieval.py` | Run fixed path/heading/provenance/MRR retrieval gates and semantic probes |
+| `mcp_retrieval_server.py` | Expose the stable retrieval contract as two read-only MCP stdio tools |
+| `migrate_provenance.py` | Audit and conservatively recover explicit source metadata from legacy knowledge pages |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
 | `lint_wiki.py` | Governance and health checks |
-| `sync_private_vault.py` | Sync public scaffold into private vault |
+| `sync_private_vault.py` | Sync only manifest-managed scaffold files; protect private runtime state |
 | `rebuild_indexes.py` | Rebuild indexes |
 
 ## Template Boundaries
@@ -57,6 +60,9 @@ Daily project work is exposed through the project cockpit:
 - Markdown remains source of truth.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
+- Topic aliases are an inspectable local hybrid-retrieval layer; vector retrieval is added only when evaluation probes prove it is needed.
+- Private root indexes, logs, project registry, knowledge pages, and retrieval cache are protected from scaffold sync.
+- Project Skills decide when to retrieve; the optional MCP server only exposes the existing retrieval contract.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.
 - ObsidianToWiki defines the AI coding lifecycle protocol; attached projects execute it through local control files.

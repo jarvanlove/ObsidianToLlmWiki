@@ -62,3 +62,10 @@ Subagents may produce:
 - wiki file-back candidates
 
 Subagents must not become the only source of truth and must not bypass project control files.
+
+## Retrieval Integration
+
+- The project Skill lives under `.agents/skills/` and `.claude/skills/`.
+- `scripts/ai/wiki-search.py` is the provider-neutral CLI wrapper.
+- `scripts/ai/wiki-mcp.py` launches the optional read-only MCP server.
+- See `docs/ai-workflows/retrieval-adapters.md` for one-time MCP and per-project Skill boundaries.
