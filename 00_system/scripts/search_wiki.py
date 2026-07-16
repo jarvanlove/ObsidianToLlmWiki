@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from contextlib import closing
 from datetime import date
 from pathlib import Path
 
@@ -418,7 +419,7 @@ def main() -> None:
     tag_filter = args.tag.strip().lower()
 
     index_path = resolve_index_path(args.index_path or None)
-    with connect_index(index_path) as connection:
+    with closing(connect_index(index_path)) as connection:
         if args.no_refresh:
             refresh_stats = {
                 "added": 0,

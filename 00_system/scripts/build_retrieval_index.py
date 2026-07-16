@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from contextlib import closing
 
 from retrieval_index import INDEX_SCHEMA_VERSION, connect_index, index_path_label, refresh_index, resolve_index_path
 
@@ -13,7 +14,7 @@ def main() -> None:
     args = parser.parse_args()
 
     index_path = resolve_index_path(args.index_path or None)
-    with connect_index(index_path) as connection:
+    with closing(connect_index(index_path)) as connection:
         stats = refresh_index(connection, force=args.full)
 
     payload = {

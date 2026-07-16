@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from tests.test_support import load_script_module
@@ -91,7 +92,7 @@ class PrivatePolicyCliTests(unittest.TestCase):
         self.assertEqual(payload["deleted"], 1)
         self.assertTrue(self.secret.exists())
 
-        with sqlite3.connect(self.index_path) as connection:
+        with closing(sqlite3.connect(self.index_path)) as connection:
             paths = {row[0] for row in connection.execute("SELECT rel_path FROM pages")}
         self.assertIn("10_personal/visible.md", paths)
         self.assertNotIn("10_personal/secret.md", paths)
