@@ -34,6 +34,8 @@ Daily project work is exposed through the project cockpit:
 | `attach_project.py` | Attach project to private wiki and write bridge files |
 | `ingest_source.py` | Ingest source files and create source notes |
 | `search_wiki.py` | Search wiki with weighting and relation summaries |
+| `retrieval_index.py` | Maintain the disposable SQLite FTS5 retrieval cache and Markdown freshness state |
+| `build_retrieval_index.py` | Explicitly build or fully refresh the local retrieval cache |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
@@ -53,6 +55,8 @@ Daily project work is exposed through the project cockpit:
 ## Invariants
 
 - Markdown remains source of truth.
+- The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
+- Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.
 - ObsidianToWiki defines the AI coding lifecycle protocol; attached projects execute it through local control files.

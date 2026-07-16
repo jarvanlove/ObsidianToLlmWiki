@@ -220,6 +220,8 @@ Promote cross-project reusable content into the shared layer, including patterns
 
 The system not only retrieves knowledge, it can also file useful answers back into the wiki so knowledge does not remain trapped in chat sessions.
 
+Retrieval now incrementally projects Markdown into a local SQLite FTS5 cache. Searches check created, changed, and deleted pages by default and can return human-readable text, stable JSON, or a bounded context pack with paths, headings, and `source_refs`. The cache is disposable and never replaces Markdown as source of truth.
+
 ### 7. Governance and linting
 
 The system continuously checks for issues such as:
@@ -575,7 +577,9 @@ If you want to understand which scripts matter most, start with these.
 ### Retrieval and file-back
 
 - `search_wiki.py`
-  searches the wiki; it now applies page-type weighting, downranks lower-value pages, adds relation summaries, and records zero-result queries
+  refreshes the local retrieval cache, preserves page weighting and relation summaries, and returns text, JSON, or bounded context packs
+- `build_retrieval_index.py`
+  incrementally builds or fully refreshes the disposable SQLite FTS5 retrieval cache
 - `file_back_query.py`
   files an answer or analysis back into the wiki
 - `handle_nl_request.py`
@@ -692,7 +696,7 @@ It is now concretely wired into:
 - personal relation summaries in retrieval results
 - the `sync_personal_relations.py` sync script
 
-## Retrieval Scaling P0
+## Retrieval Scaling P1
 
 The current stage still stays on lightweight retrieval instead of heavier infrastructure.
 
@@ -702,12 +706,19 @@ What is already added:
 - stronger downranking for stale output pages, reflection candidates, and source pages
 - relation summaries for personal and shared pages
 - failure logging for zero-result queries
+- disposable local SQLite FTS5 derived index
+- incremental freshness checks for created, changed, and deleted Markdown pages
+- stable JSON result contract
+- best matching heading and bounded snippet localization
+- bounded context packs for agents
 
 What this stage still does not do:
 
-- chunk retrieval
 - topic recall
 - vector retrieval
+- semantic reranking
+- background file watching
+- Skills / MCP retrieval adapters
 
 ## Methodology
 

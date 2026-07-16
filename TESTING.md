@@ -10,6 +10,8 @@ PowerShell wrappers:
 .\00_system\scripts\promote_source_section.ps1
 .\00_system\scripts\source_promotion_candidates.ps1
 .\00_system\scripts\version_status.ps1
+.\00_system\scripts\build_retrieval_index.ps1
+python -m unittest tests.test_retrieval_core -v
 ```
 
 macOS / Linux wrappers:
@@ -21,6 +23,8 @@ macOS / Linux wrappers:
 ./00_system/scripts/source_promotion_candidates.sh
 ./00_system/scripts/version_status.sh
 ./00_system/scripts/project_session.sh check --repo-root . --strict
+./00_system/scripts/build_retrieval_index.sh
+python3 -m unittest tests.test_retrieval_core -v
 ```
 
 Python scripts can also be run directly when needed:
@@ -31,6 +35,7 @@ python .\00_system\scripts\rebuild_indexes.py
 python .\00_system\scripts\promote_source_section.py
 python .\00_system\scripts\source_promotion_candidates.py
 python .\00_system\scripts\version_status.py
+python .\00_system\scripts\build_retrieval_index.py
 ```
 
 ## Minimum Verification Matrix
@@ -48,6 +53,7 @@ python .\00_system\scripts\version_status.py
 | Schema/template change | `lint_wiki.ps1` and inspect affected generated pages |
 | Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, section quality headings, excerpt limits, routing candidates, promotion candidate report, and schema |
 | Source section promotion | promote one disposable section note with `promote_source_section.py`; verify formal page, source section backlink, `source_refs`, `promoted_to`, and section status |
+| Retrieval core | run `python -m unittest tests.test_retrieval_core -v`; verify incremental update/delete refresh, project/type filters, source refs, JSON schema, and context budget |
 
 ## Manual Checks
 

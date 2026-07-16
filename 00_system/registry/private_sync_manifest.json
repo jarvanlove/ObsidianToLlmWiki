@@ -24,6 +24,10 @@
   },
   "ignore_globs": [
     "**/__pycache__/**",
-    "**/*.pyc"
+    "**/*.pyc",
+    "**/.cache/**",
+    "**/*.sqlite3",
+    "**/*.sqlite3-shm",
+    "**/*.sqlite3-wal"
   ]
 }

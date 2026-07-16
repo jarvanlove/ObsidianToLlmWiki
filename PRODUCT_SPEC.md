@@ -18,6 +18,7 @@ Must have:
 - Project memory pages: overview, architecture, decisions, tasks, sources, relations, risks, timeline, runtime memory.
 - Personal knowledge distillation and shared knowledge promotion.
 - Search and answer file-back.
+- Local rebuildable retrieval index with automatic freshness checks, stable JSON results, and bounded context packs for agent consumption.
 - Governance/linting and index rebuild.
 - Private vault sync.
 - AI project control workflow assets for production-grade AI-assisted development.
@@ -79,6 +80,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Section-level source notes must expose reviewable quality fields: theme, concepts, facts, process, bounded excerpt, follow-up questions, and promotion candidates.
 - Source promotion candidates must be review reports, not automatic formal knowledge pages; each candidate must include source section, source refs, target layer, rationale, and next action.
 - Source section promotion must be explicit per section; promoted pages must preserve source section backlinks and source refs, and the source section must record `promoted_to`.
+- Retrieval indexes must remain disposable derived data: Markdown is the source of truth, manual edits are visible after incremental refresh, and JSON/context results preserve page paths and source references.
 
 ## Change Log
 
@@ -93,3 +95,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-11 | Added structured source section quality checks | Make source ingestion outputs reviewable before promotion | Section notes gain quality fields and lint reports malformed structured ingestion outputs |
 | 2026-06-11 | Added source promotion candidate workflow | Prevent section notes from becoming a dead end | Candidate report lists source refs, targets, rationale, and next actions |
 | 2026-06-11 | Added explicit source section promotion | Turn selected section notes into formal knowledge pages without bulk auto-writing | Promoted pages preserve backlinks and source refs |
+| 2026-07-16 | Added local Retrieval Core P0 | Give agents a stable, fresh, provider-neutral knowledge retrieval contract | SQLite FTS5 derived index, JSON output, chunk localization, and bounded context packs |

@@ -1,11 +1,21 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from datetime import date
 from pathlib import Path
 
-from wiki_lib import append_log, iter_markdown_files, load_page, obsidian_link, parse_date
+from retrieval_index import (
+    INDEX_SCHEMA_VERSION,
+    best_chunk,
+    connect_index,
+    index_path_label,
+    indexed_pages,
+    refresh_index,
+    resolve_index_path,
+)
+from wiki_lib import VAULT_ROOT, append_log, obsidian_link, parse_date
 
 
 def tokenize(text: str) -> list[str]:
@@ -208,8 +218,123 @@ def relation_summary(page: dict[str, object], index_by_slug: dict[str, dict[str,
     return lines
 
 
+def list_items(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if str(item).strip()]
+
+
+def build_snippet(text: str, query_terms: list[str], *, max_chars: int = 360) -> str:
+    normalized = re.sub(r"\s+", " ", text).strip()
+    if len(normalized) <= max_chars:
+        return normalized
+
+    lowered = normalized.lower()
+    positions = [lowered.find(term) for term in query_terms if lowered.find(term) >= 0]
+    match_at = min(positions) if positions else 0
+    start = max(0, match_at - max_chars // 4)
+    end = min(len(normalized), start + max_chars)
+    if end - start < max_chars:
+        start = max(0, end - max_chars)
+    prefix = "..." if start else ""
+    suffix = "..." if end < len(normalized) else ""
+    return f"{prefix}{normalized[start:end].strip()}{suffix}"
+
+
+def result_payload(
+    *,
+    rank: int,
+    score: int,
+    page: dict[str, object],
+    chunk: dict[str, object],
+    query_terms: list[str],
+    relations: list[str],
+) -> dict[str, object]:
+    frontmatter = page["frontmatter"] if isinstance(page["frontmatter"], dict) else {}
+    return {
+        "rank": rank,
+        "score": score,
+        "path": str(page["rel_path"]),
+        "title": str(page["title"]),
+        "summary": str(page["summary"]),
+        "page_type": str(frontmatter.get("type") or ""),
+        "domain": str(frontmatter.get("domain") or ""),
+        "project": str(frontmatter.get("project") or ""),
+        "status": str(frontmatter.get("status") or ""),
+        "updated": str(frontmatter.get("updated") or ""),
+        "tags": list_items(page.get("tags")),
+        "source_refs": list_items(frontmatter.get("source_refs")),
+        "heading": str(chunk.get("heading") or ""),
+        "snippet": build_snippet(str(chunk.get("body") or page["body"]), query_terms),
+        "relations": [line.strip() for line in relations],
+    }
+
+
+def estimate_tokens(text: str) -> int:
+    cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
+    other_count = len(text) - cjk_count
+    return cjk_count + (other_count + 3) // 4
+
+
+def truncate_to_token_budget(text: str, token_budget: int) -> str:
+    if token_budget <= 0:
+        return ""
+    if estimate_tokens(text) <= token_budget:
+        return text
+    output: list[str] = []
+    for char in text:
+        candidate = "".join(output) + char
+        if estimate_tokens(candidate) > max(1, token_budget - 2):
+            break
+        output.append(char)
+    return "".join(output).rstrip() + "..."
+
+
+def render_context_pack(payload: dict[str, object], token_budget: int) -> str:
+    filters = payload["filters"] if isinstance(payload.get("filters"), dict) else {}
+    filter_text = ", ".join(f"{key}={value}" for key, value in filters.items() if value) or "none"
+    lines = [
+        "# OTW Context Pack",
+        "",
+        f"- query: {payload['query']}",
+        f"- filters: {filter_text}",
+        f"- result_count: {payload['count']}",
+        f"- token_budget: {token_budget}",
+        "",
+    ]
+    rendered = "\n".join(lines)
+
+    results = payload["results"] if isinstance(payload.get("results"), list) else []
+    for result in results:
+        if not isinstance(result, dict):
+            continue
+        source_refs = result.get("source_refs") if isinstance(result.get("source_refs"), list) else []
+        metadata_lines = [
+            f"## {result['rank']}. {result['title']}",
+            "",
+            f"- path: `{result['path']}`",
+            f"- type: `{result['page_type']}`",
+            f"- project: `{result['project'] or '-'}`",
+            f"- updated: `{result['updated'] or '-'}`",
+            f"- score: {result['score']}",
+            f"- source_refs: {', '.join(str(item) for item in source_refs) if source_refs else '-'}",
+            f"- heading: {result['heading'] or '-'}",
+            "",
+        ]
+        block_prefix = "\n".join(metadata_lines)
+        remaining = token_budget - estimate_tokens(rendered + "\n" + block_prefix)
+        if remaining <= 8:
+            break
+        snippet = truncate_to_token_budget(str(result.get("snippet") or ""), remaining)
+        rendered += f"\n{block_prefix}> {snippet}\n"
+        if estimate_tokens(rendered) >= token_budget:
+            break
+
+    return rendered.rstrip() + "\n"
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="对知识库 Markdown 页面执行简单词法检索。")
+    parser = argparse.ArgumentParser(description="对知识库 Markdown 页面执行本地可追溯检索。")
     parser.add_argument("query", help="搜索词")
     parser.add_argument("--limit", type=int, default=10, help="返回结果数量")
     parser.add_argument("--project", default="", help="按项目过滤，例如 demo-saas")
@@ -217,36 +342,84 @@ def main() -> None:
     parser.add_argument("--tag", default="", help="按单个标签过滤")
     parser.add_argument("--show-relations", action="store_true", help="对项目相关结果补充关系与运行记忆")
     parser.add_argument("--no-log-failures", action="store_true", help="不记录零结果查询")
+    parser.add_argument("--format", choices=["text", "json", "context"], default="text", help="输出格式")
+    parser.add_argument("--token-budget", type=int, default=4000, help="context 输出的近似 token 上限")
+    parser.add_argument("--index-path", default="", help="可选的 SQLite 索引路径")
+    parser.add_argument("--no-refresh", action="store_true", help="查询前不检查 Markdown 新鲜度")
     args = parser.parse_args()
 
     terms = tokenize(args.query)
     if not terms:
-        print("没有可搜索的关键词。")
+        if args.format == "json":
+            print(json.dumps({"schema_version": INDEX_SCHEMA_VERSION, "query": args.query, "count": 0, "results": []}, ensure_ascii=False, indent=2))
+        else:
+            print("没有可搜索的关键词。")
         return
 
     project_filter = args.project.strip().lower()
     type_filter = args.type.strip().lower()
     tag_filter = args.tag.strip().lower()
 
-    pages = [load_page(path) for path in iter_markdown_files()]
-    index_by_slug = project_index_by_slug(pages)
+    index_path = resolve_index_path(args.index_path or None)
+    with connect_index(index_path) as connection:
+        if args.no_refresh:
+            refresh_stats = {
+                "added": 0,
+                "updated": 0,
+                "deleted": 0,
+                "unchanged": 0,
+                "indexed_pages": int(connection.execute("SELECT COUNT(*) FROM pages").fetchone()[0]),
+            }
+        else:
+            refresh_stats = refresh_index(connection).to_dict()
+        pages = indexed_pages(connection)
+        index_by_slug = project_index_by_slug(pages)
 
-    results = []
-    for page in pages:
-        if not page_matches_filters(
-            page,
-            project_filter=project_filter,
-            type_filter=type_filter,
-            tag_filter=tag_filter,
-        ):
-            continue
-        score = score_page(page, terms)
-        if score > 0:
-            results.append((score, page))
+        results = []
+        for page in pages:
+            if not page_matches_filters(
+                page,
+                project_filter=project_filter,
+                type_filter=type_filter,
+                tag_filter=tag_filter,
+            ):
+                continue
+            score = score_page(page, terms)
+            if score > 0:
+                results.append((score, page))
 
-    sorted_results = sorted(results, key=lambda item: item[0], reverse=True)
-    if not sorted_results:
-        print("没有找到结果。")
+        sorted_results = sorted(results, key=lambda item: (-item[0], str(item[1]["rel_path"])))
+        selected_results = sorted_results[: max(args.limit, 0)]
+        structured_results = []
+        for rank, (score, page) in enumerate(selected_results, start=1):
+            relations = relation_summary(page, index_by_slug) if args.show_relations else []
+            structured_results.append(
+                result_payload(
+                    rank=rank,
+                    score=score,
+                    page=page,
+                    chunk=best_chunk(connection, str(page["rel_path"]), terms),
+                    query_terms=terms,
+                    relations=relations,
+                )
+            )
+
+    payload = {
+        "schema_version": INDEX_SCHEMA_VERSION,
+        "query": args.query,
+        "terms": terms,
+        "filters": {"project": project_filter, "type": type_filter, "tag": tag_filter},
+        "retrieval": {
+            "backend": "sqlite-fts5",
+            "index_path": index_path_label(index_path),
+            "refresh": refresh_stats,
+        },
+        "count": len(structured_results),
+        "total_matches": len(sorted_results),
+        "results": structured_results,
+    }
+
+    if not structured_results:
         if not args.no_log_failures:
             filters = []
             if project_filter:
@@ -257,13 +430,22 @@ def main() -> None:
                 filters.append(f"tag={tag_filter}")
             filter_text = ", ".join(filters) if filters else "none"
             append_log("检索", "查询无结果", f"query={args.query}; filters={filter_text}")
+
+    if args.format == "json":
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    if args.format == "context":
+        print(render_context_pack(payload, max(args.token_budget, 100)), end="")
+        return
+    if not structured_results:
+        print("没有找到结果。")
         return
 
-    for score, page in sorted_results[: args.limit]:
-        print(f"{score:>3}  {obsidian_link(page['path'], str(page['title']))}  {page['summary']}")
-        if args.show_relations:
-            for line in relation_summary(page, index_by_slug):
-                print(line)
+    for result in structured_results:
+        page_path = Path(str(result["path"]))
+        print(f"{int(result['score']):>3}  {obsidian_link(VAULT_ROOT / page_path, str(result['title']))}  {result['summary']}")
+        for line in result["relations"]:
+            print(f"    {line}")
 
 
 if __name__ == "__main__":

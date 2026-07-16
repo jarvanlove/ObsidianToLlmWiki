@@ -19,6 +19,9 @@ All notable changes to this repository should be documented in this file.
 - Structured source section quality fields for theme, concepts, facts, process, bounded excerpts, follow-up questions, and promotion candidates
 - Source promotion candidate reports generated from section notes
 - Explicit source section promotion into project, personal, shared, or output pages
+- Local SQLite FTS5 retrieval cache with incremental freshness checks
+- Stable retrieval JSON contract and bounded agent context-pack output
+- Retrieval core regression tests for filters, provenance, update, deletion, and context budgets
 
 ### Changed
 
@@ -29,6 +32,7 @@ All notable changes to this repository should be documented in this file.
 - Wiki lint now reports malformed structured ingestion outputs, including missing section links, missing source references, and oversized section excerpts
 - Wiki lint now reports generated section notes that still need promotion review after the backlog threshold
 - Promoted source pages preserve source section backlinks and source refs, while the section note records `promoted_to`
+- Wiki search now reads a disposable local index, refreshes changed Markdown before querying, and returns the best matching heading and snippet without replacing Markdown as source of truth
 
 ### Removed
 

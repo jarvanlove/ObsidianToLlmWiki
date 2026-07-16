@@ -13,11 +13,14 @@
 | OTW-INGEST-002 | Add structured ingestion quality fields and lint | P1 | Section notes include theme, concepts, facts, process, bounded excerpts, follow-up questions, promotion candidates, and lint reports missing/oversized structured ingestion outputs | Done |
 | OTW-INGEST-003 | Add source promotion candidate workflow | P1 | Section notes can be scanned into a reviewable promotion candidate report with source refs, targets, rationale, next action, and lint backlog reporting | Done |
 | OTW-INGEST-004 | Add explicit source section promotion | P1 | A selected section note can be promoted to project/personal/shared/output page with source refs, source section backlink, promoted_to status, and no automatic bulk writes | Done |
+| OTW-RETR-001 | Add local Retrieval Core P0 | P1 | Markdown-backed SQLite FTS5 cache refreshes incrementally, filters remain compatible, JSON results preserve provenance, and bounded context packs are available to agents | Done |
 
 ## Next
 
 - Observe whether `project_session.py start/close` is enough in real AI coding sessions before adding hooks or subagents.
 - Test optional hook/subagent adapters in one real project before enabling them as a recommended workflow.
+- Add provider-neutral Skills/MCP adapters on top of the retrieval JSON contract.
+- Build retrieval evaluation fixtures before adding semantic reranking or embeddings.
 
 ## Blocked
 
@@ -33,3 +36,4 @@
 - 2026-06-11: Added structured source section quality fields and lint reporting.
 - 2026-06-11: Added source promotion candidate reports from section notes.
 - 2026-06-11: Added explicit source section promotion to formal knowledge pages.
+- 2026-07-16: Added the first local Retrieval Core with incremental SQLite FTS5 indexing, stable JSON output, chunk localization, and context packs.
