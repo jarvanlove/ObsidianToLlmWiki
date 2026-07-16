@@ -57,10 +57,11 @@ class PrivateVaultSetupTests(unittest.TestCase):
                 "00_system/registry/private_scaffold_state.json",
             ):
                 self.assertTrue((private / relative).exists(), relative)
-            self.assertIn(private.as_posix(), (private / "AGENTS.md").read_text(encoding="utf-8"))
+            canonical_private = Path(payload["private_root"])
+            self.assertIn(canonical_private.as_posix(), (private / "AGENTS.md").read_text(encoding="utf-8"))
             self.assertEqual(payload["sync"]["summary"]["conflict_staged"], 0)
             config = json.loads((home / ".obsidiantowiki.json").read_text(encoding="utf-8"))
-            self.assertEqual(Path(config["default_wiki_root"]), private.resolve())
+            self.assertTrue(os.path.samefile(config["default_wiki_root"], private))
 
     def test_setup_migrates_exact_legacy_public_entry_but_preserves_custom_entry(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
