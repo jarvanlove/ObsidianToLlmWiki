@@ -1,3 +1,5 @@
+This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and adapted into a local Obsidian-first scaffold.
+
 # ObsidianToWiki
 
 Obsidian-first LLM-maintained knowledge system for durable personal knowledge and project memory.
@@ -11,6 +13,19 @@ This is not just a note template repository and not just a set of search scripts
 - Users interact through natural language while scripts, indexing, sync, and maintenance stay inside the system
 - For daily project work, remember only three cockpit phrases first: "start work", "continue", and "close work"
 - It is meant for long-term use, not for leaving knowledge trapped in chat windows or scattered folders
+
+## Is This Project Now A Skill?
+
+Not by itself. The complete product has four cooperating parts:
+
+1. this public repository provides the runtime, scaffold, validation, retrieval, ingestion, and upgrade tools
+2. your private vault stores personal knowledge and durable project memory
+3. the global `obsidiantowiki-manager` Skill translates natural-language requests into the correct operations
+4. each attached project keeps a small local bridge so the agent can find the right private project memory
+
+Install the Manager Skill once for each AI tool environment that should operate the wiki. Attach each project once. A normal ObsidianToWiki upgrade does not require rebuilding the private vault or attaching existing projects again. Project hooks and subagents are optional adapters, not a prerequisite for daily use.
+
+Daily use remains natural language. In an attached project, say "start work", "continue", or "close work"; for knowledge work, ask the agent to ingest, find, compare, or write back material. The agent is responsible for invoking scripts and strict checks internally.
 
 ## Who This Is For
 
@@ -754,7 +769,3 @@ What this stage still does not do:
 - background file watching
 
 The current fixed evaluation reports a `1.0` gate pass rate, `1.00` MRR, and `1.0` semantic-probe pass rate, so embeddings and vector infrastructure are not justified yet.
-
-## Methodology
-
-This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and adapted into a local Obsidian-first scaffold.
