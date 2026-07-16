@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "ai_access": {
+    "excluded_paths": [
+      ".env",
+      "01_inbox/raw/private"
+    ],
+    "excluded_globs": [
+      "**/*.secret.*"
+    ]
+  }
+}

@@ -2,6 +2,8 @@
 
 The project Skill and MCP server are thin consumers of the same retrieval contract.
 
+This project retrieval Skill is separate from the once-per-provider global `obsidiantowiki-manager` Skill. The manager handles natural-language product routing; the project Skill is an optional, project-local retrieval adapter.
+
 - Install project adapters with `attach_project.py --install-ai-adapters`.
 - The project Skill decides when durable wiki context is needed.
 - `scripts/ai/wiki-search.py` reads `wiki.context.json` and calls the private runtime.

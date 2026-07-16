@@ -27,6 +27,12 @@ All notable changes to this repository should be documented in this file.
 - Conservative legacy provenance audit/migration and `source_notes` retrieval output
 - Inspectable topic-alias hybrid recall; current evaluation does not justify vector infrastructure
 - Retrieval core regression tests for filters, provenance, update, deletion, and context budgets
+- Unified `otw.py` agent runtime and safely upgradeable global manager Skill
+- Vault schema ledger, shared-asset baselines, project-adapter versions, and historical compatibility tests
+- `wiki.private.json` AI-access exclusions for retrieval and ingestion
+- Session close receipts with explicit candidate resolution
+- Reproducible dependencies, cross-platform installers, doctor diagnostics, and Windows/macOS/Linux CI
+- PDF/DOCX/PPTX/text extraction quality gates, CJK PDF normalization, OCR detection, chapter-aware maps, and golden-corpus tests
 
 ### Changed
 
@@ -38,6 +44,9 @@ All notable changes to this repository should be documented in this file.
 - Wiki lint now reports generated section notes that still need promotion review after the backlog threshold
 - Promoted source pages preserve source section backlinks and source refs, while the section note records `promoted_to`
 - Wiki search now reads a disposable local index, refreshes changed Markdown before querying, and returns the best matching heading and snippet without replacing Markdown as source of truth
+- Project bridge text no longer embeds machine paths; ignored local context/config files own real paths
+- First-time attach now bootstraps the complete missing wiki runtime and locally excludes context/receipt state from Git
+- Structured ingestion creates the document map before section notes and blocks weak derivatives when extraction quality fails
 
 ### Removed
 

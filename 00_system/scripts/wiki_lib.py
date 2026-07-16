@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from fnmatch import fnmatchcase
 from datetime import date, datetime
 from pathlib import Path
 from typing import Iterable
@@ -13,6 +14,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_VAULT_ROOT = SCRIPT_DIR.parent.parent
 VAULT_ROOT = Path(os.environ.get("OBSIDIAN_WIKI_ROOT", str(DEFAULT_VAULT_ROOT))).resolve()
 LOG_PATH = VAULT_ROOT / "log.md"
+PRIVATE_POLICY_PATH = VAULT_ROOT / "wiki.private.json"
 USER_WIKI_CONFIG_CANDIDATES = (
     Path.home() / ".obsidiantowiki.json",
     Path.home() / ".config" / "obsidiantowiki" / "config.json",
@@ -27,6 +29,93 @@ EXCLUDED_PARTS = {
 EXCLUDED_PATH_SNIPPETS = (
     "00_system/templates/",
 )
+
+
+class PrivatePolicyError(RuntimeError):
+    pass
+
+
+def _policy_string_list(value: object, field: str) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+        raise PrivatePolicyError(f"wiki.private.json field {field} must be a string list")
+    normalized: list[str] = []
+    for item in value:
+        candidate = item.strip().replace("\\", "/")
+        while candidate.startswith("./"):
+            candidate = candidate[2:]
+        candidate = candidate.lstrip("/")
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if path.is_absolute() or ".." in path.parts:
+            raise PrivatePolicyError(f"wiki.private.json field {field} contains an invalid path: {item}")
+        if candidate not in normalized:
+            normalized.append(candidate)
+    return normalized
+
+
+def load_private_policy(vault_root: Path = VAULT_ROOT) -> dict[str, object]:
+    policy_path = vault_root / "wiki.private.json"
+    if not policy_path.exists():
+        return {"schema_version": 1, "ai_access": {"excluded_paths": [], "excluded_globs": []}}
+    try:
+        payload = json.loads(policy_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PrivatePolicyError(f"cannot read wiki.private.json: {exc}") from exc
+    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+        raise PrivatePolicyError("wiki.private.json requires schema_version=1")
+    ai_access = payload.get("ai_access")
+    if not isinstance(ai_access, dict):
+        raise PrivatePolicyError("wiki.private.json requires an ai_access object")
+    return {
+        "schema_version": 1,
+        "ai_access": {
+            "excluded_paths": _policy_string_list(ai_access.get("excluded_paths"), "ai_access.excluded_paths"),
+            "excluded_globs": _policy_string_list(ai_access.get("excluded_globs"), "ai_access.excluded_globs"),
+        },
+    }
+
+
+def vault_relative_path(path: Path | str, vault_root: Path = VAULT_ROOT) -> str | None:
+    candidate = Path(path)
+    resolved = candidate.resolve() if candidate.is_absolute() else (vault_root / candidate).resolve()
+    try:
+        return resolved.relative_to(vault_root.resolve()).as_posix()
+    except ValueError:
+        return None
+
+
+def ai_access_exclusion_reason(
+    path: Path | str,
+    *,
+    vault_root: Path = VAULT_ROOT,
+    policy: dict[str, object] | None = None,
+) -> str:
+    rel_path = vault_relative_path(path, vault_root)
+    if rel_path is None:
+        return ""
+    loaded = policy or load_private_policy(vault_root)
+    ai_access = loaded.get("ai_access") if isinstance(loaded.get("ai_access"), dict) else {}
+    lowered = rel_path.lower()
+    for excluded in ai_access.get("excluded_paths", []):
+        excluded_path = str(excluded).lower().rstrip("/")
+        if lowered == excluded_path or lowered.startswith(excluded_path + "/"):
+            return f"excluded path: {rel_path}"
+    for pattern in ai_access.get("excluded_globs", []):
+        if fnmatchcase(lowered, str(pattern).lower()):
+            return f"excluded glob {pattern}: {rel_path}"
+    return ""
+
+
+def is_ai_access_excluded(
+    path: Path | str,
+    *,
+    vault_root: Path = VAULT_ROOT,
+    policy: dict[str, object] | None = None,
+) -> bool:
+    return bool(ai_access_exclusion_reason(path, vault_root=vault_root, policy=policy))
 
 
 def today_iso() -> str:
@@ -232,11 +321,14 @@ def render_template(template_path: Path, variables: dict[str, str]) -> str:
 
 
 def iter_markdown_files() -> Iterable[Path]:
+    policy = load_private_policy()
     for path in VAULT_ROOT.rglob("*.md"):
         rel_path = path.relative_to(VAULT_ROOT).as_posix()
         if any(part in EXCLUDED_PARTS for part in path.parts):
             continue
         if any(snippet in rel_path for snippet in EXCLUDED_PATH_SNIPPETS):
+            continue
+        if is_ai_access_excluded(path, policy=policy):
             continue
         yield path
 

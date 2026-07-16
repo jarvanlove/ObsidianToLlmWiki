@@ -42,6 +42,12 @@ Daily project work is exposed through the project cockpit:
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
+| `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
+| `doctor.py` | Diagnose Python dependencies, FTS5, wrappers, private policy, vault schema, and project context without modifying data |
+| `vault_compat.py` | Report and apply metadata-only vault schema migrations |
+| `project_adapter.py` | Upgrade opt-in project adapters only when managed hashes prove a file is safe to update |
+| `shared_assets.py` | Record shared-asset baselines, apply safe updates, and stage conflicts |
+| `source_quality.py` | Audit extraction coverage, OCR need, text corruption, and structured-unit quality without printing source content |
 | `lint_wiki.py` | Governance and health checks |
 | `sync_private_vault.py` | Sync only manifest-managed scaffold files; protect private runtime state |
 | `rebuild_indexes.py` | Rebuild indexes |
@@ -52,6 +58,7 @@ Daily project work is exposed through the project cockpit:
 - `docs/templates/project-CLAUDE.md` defines Claude Code / compatible tool bridge behavior.
 - `docs/templates/project-control/` defines project control file templates used during project attach.
 - `docs/templates/project-adapters/` defines optional hook/subagent adapter templates; these are only installed with an explicit attach flag.
+- `docs/templates/global-skills/obsidiantowiki-manager/` defines the once-per-provider natural-language manager Skill.
 - `00_system/templates/` defines wiki page schemas, not project repo control files.
 - `30_shared/` holds reusable prompts, patterns, tools, and architecture notes.
 
@@ -62,6 +69,9 @@ Daily project work is exposed through the project cockpit:
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
 - Topic aliases are an inspectable local hybrid-retrieval layer; vector retrieval is added only when evaluation probes prove it is needed.
 - Private root indexes, logs, project registry, knowledge pages, and retrieval cache are protected from scaffold sync.
+- `wiki.private.json` exclusions are enforced by ObsidianToWiki indexing and ingestion; this policy is not an OS sandbox for unrelated agent tools.
+- Real machine paths live in ignored `wiki.context.json` or user config, never in public/project scaffold bridge text.
+- Vault migrations update a metadata ledger only. Shared/project managed files use recorded hashes; local edits produce candidates instead of overwrite.
 - Project Skills decide when to retrieve; the optional MCP server only exposes the existing retrieval contract.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.
@@ -69,6 +79,8 @@ Daily project work is exposed through the project cockpit:
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Natural-language project attach must be followed by a strict project session check before reporting success.
 - User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
+- A close workflow is not complete while `.obsidiantowiki/session-receipt.json` contains pending candidates.
+- Source ingestion runs an extraction gate before derivatives; blocked sources cannot produce document maps or section notes.
 - Script changes must preserve existing user content unless explicitly migrating it.
 - High-risk learning candidates require review before promotion.
 - Multimodal direction remains in-session parsing plus wiki file-back unless a future task changes it.

@@ -8,13 +8,20 @@
       "快速开始.md",
       "标准自然语言话术清单.md",
       "使用手册.md",
-      "会话启动页.md"
+      "会话启动页.md",
+      "install.ps1",
+      "install.sh"
     ],
     "system": [
       "00_system/registry/page_schemas.json",
+      "00_system/registry/ingestion_quality.json",
       "00_system/registry/private_sync_manifest.json",
+      "00_system/registry/project_adapter_schema.json",
       "00_system/registry/retrieval_aliases.json",
       "00_system/registry/retrieval_eval_cases.json",
+      "00_system/registry/shared_assets.json",
+      "00_system/registry/vault_schema.json",
+      "00_system/requirements.txt",
       "00_system/requirements-mcp.txt",
       "00_system/scripts",
       "00_system/templates"
@@ -38,7 +45,9 @@
     "Home.md",
     "index.md",
     "log.md",
+    "wiki.private.json",
     "00_system/registry/projects.json",
+    "00_system/registry/vault_state.json",
     "00_system/.cache/**",
     "01_inbox/**",
     "10_personal/**",

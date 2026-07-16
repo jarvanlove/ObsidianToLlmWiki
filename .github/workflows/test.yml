@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install -r 00_system/requirements.txt -r 00_system/requirements-mcp.txt
+      - run: python -m unittest discover -s tests -v
+      - run: python 00_system/scripts/doctor.py --format json
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./00_system/scripts/otw.ps1 --help
+      - if: runner.os != 'Windows'
+        shell: bash
+        run: bash ./00_system/scripts/otw.sh --help

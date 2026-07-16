@@ -147,8 +147,8 @@ Wiki 记录可复用结论和长期记忆。
 你的全局文件已经有：
 
 ```text
-C:\Users\jarvan_iv\.codex\AGENTS.md
-C:\Users\jarvan_iv\.claude\CLAUDE.md
+<user-home>/.codex/AGENTS.md
+<user-home>/.claude/CLAUDE.md
 ```
 
 它们解决“所有项目都必须遵守的原则”，但不能解决某个具体项目的上下文。

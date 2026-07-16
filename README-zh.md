@@ -190,6 +190,14 @@ ObsidianToWiki 解决的是两个常见问题：
 - 完整提取文本：保存到 `01_inbox/scratch/extracted/`
 - 资料沉淀候选报告：从章节笔记列出待进入项目、个人、共享或输出层的候选
 
+生成派生页前会先执行抽取质量门禁：
+
+- `pass`：覆盖率和文本质量达标，生成文档地图和章节笔记
+- `review`：仍生成可追溯结构，但明确标记需要人工复核
+- `blocked`：只保存原件和来源记录，不生成弱章节；扫描 PDF 会标记 `needs_ocr`
+
+PDF 会保留页码引用、按章节/页范围索引，并规范化常见中文字符间异常空格。章节摘录包含截断提示在内不超过 1200 字符，正式知识页仍需逐节显式提升。
+
 当前可直接纳入系统的常见文件类型包括：
 
 - 文本与代码：`md`、`markdown`、`txt`、`py`、`js`、`ts`、`json`、`yaml`、`yml`、`html`、`css`、`java`、`go`、`rs`、`sql`
@@ -352,6 +360,8 @@ ObsidianToWiki/
 
 从 GitHub 下载后，建议按这套顺序开始。
 
+首次安装可直接运行 `install.ps1`（Windows）或 `install.sh`（macOS/Linux）。安装器会创建仓库内 `.venv`、安装核心依赖、安装/安全升级一次性的全局管理 Skill，并运行 `doctor`；用户日常仍只说自然语言。
+
 ### 第一步：准备两层仓库
 
 你需要两部分：
@@ -403,16 +413,20 @@ ObsidianToWiki/
 推荐顺序：
 
 1. 在公开脚手架里 `git pull`
-2. 把新脚手架同步到自己的 `ObsidianToWiki-private`
-3. 打开正在工作的项目，说 `开始工作`
-4. 如果项目入口仍是旧协议，说“按最新版 ObsidianToWiki 刷新当前项目接入并严格检查”
+2. 运行安装器，更新依赖和全局管理 Skill
+3. 先 dry-run，再把 manifest 管理的脚手架同步到 private wiki
+4. 让 Agent 执行一次安全升级和严格 doctor；已接入项目不需要重新接入
 
 Windows:
 
 ```powershell
 cd <obsidiantowiki-public-root>
 git pull origin main
+.\install.ps1
+python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
 python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root>
+python .\00_system\scripts\otw.py upgrade --wiki-root <private-wiki-root> --apply --all-projects
+python .\00_system\scripts\otw.py doctor --wiki-root <private-wiki-root> --strict
 ```
 
 macOS / Linux:
@@ -420,7 +434,11 @@ macOS / Linux:
 ```bash
 cd <obsidiantowiki-public-root>
 git pull origin main
+./install.sh
+./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root> --dry-run --format json
 ./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
+./00_system/scripts/otw.sh upgrade --wiki-root <private-wiki-root> --apply --all-projects
+./00_system/scripts/otw.sh doctor --wiki-root <private-wiki-root> --strict
 ```
 
 同步器只更新 manifest 管理的 scaffold 文件。私有根索引、日志、项目注册表、个人/项目/共享知识、输出和检索缓存属于硬保护范围；共享层只有 `30_shared/prompts` 由脚手架管理。升级前可先加 `--dry-run --format json` 检查；只修一个文件时使用 `--path <wiki-relative-path>`。
@@ -486,9 +504,10 @@ Agent 会自动判断项目是否已接入；未接入就接入并严格检查�
 
 ### Skill 和 MCP 怎么配置
 
-- Skill 属于项目执行约束：需要时通过 `--install-ai-adapters` 安装到每个项目，分别进入 `.agents/skills/` 和 `.claude/skills/`。
+- 全局管理 Skill 每台机器、每个 Agent 配置根目录安装一次；`install.ps1` / `install.sh` 会安全安装或升级。它负责理解自然语言并调用统一 `otw.py` 入口。
+- 项目检索 Skill、hook/subagent 属于可选项目适配器：只有显式 `--install-ai-adapters` 才进入项目 `.agents/skills/`、`.claude/skills/` 和 `scripts/ai/`。普通升级不会把它强制装进所有项目。
 - MCP 属于工具能力：通常在 Codex、Claude Code、Cursor 等每个工具中配置一次即可，运行时会从当前项目的 `wiki.context.json` 或用户级 wiki 配置发现私有库。
-- 不使用 MCP 也可以工作；Agent Skill 会调用项目里的 `scripts/ai/wiki-search.py` 薄包装。
+- 不使用 MCP 或项目适配器也可以工作；全局管理 Skill 会调用公开运行时。
 - MCP 只暴露只读 `search_wiki` 和 `get_wiki_context`，不会自动修改知识页。
 
 详细边界见 `docs/agent-retrieval.md`。

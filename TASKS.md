@@ -19,11 +19,17 @@
 | OTW-RETR-003 | Add provider-neutral Skill/MCP retrieval adapters | P1 | Project Skills call the thin wrapper; MCP exposes structured search and bounded context over stdio without duplicating retrieval logic | Done |
 | OTW-PROV-001 | Audit and migrate legacy provenance metadata | P1 | Only explicit source links/page refs are migrated; uncertain pages remain partial or unchanged; migration is idempotent | Done |
 | OTW-RETR-004 | Add minimal hybrid topic-alias recall | P1 | Alias expansion is local and visible in JSON; all semantic probes pass without vector infrastructure | Done |
+| OTW-COMPAT-001 | Add non-destructive vault and scaffold compatibility | P0 | Historical pages remain byte-identical; shared/project modifications stage conflicts; migrations are idempotent | Done |
+| OTW-MGR-001 | Add unified runtime and global manager Skill | P1 | Users can speak naturally; agent calls one runtime; Skill upgrades preserve customization | Done |
+| OTW-PRIV-001 | Add local AI-access exclusion policy | P0 | Excluded pages leave retrieval, excluded sources cannot be ingested, and files remain available to the user | Done |
+| OTW-LIFE-001 | Close lifecycle with session receipts | P1 | `收工` emits a local receipt and every candidate must be resolved | Done |
+| OTW-INGEST-005 | Add source extraction quality gate | P0 | Empty/scanned sources are blocked, long sources retain map/sections/refs, and OpenClaw 114-page validation covers every page | Done |
+| OTW-XPLAT-001 | Add reproducible install, doctor, and three-platform CI | P1 | Python 3.10/3.12 test matrix covers Windows, macOS, Linux; local doctor validates runtime prerequisites | Done |
 
 ## Next
 
-- Observe whether `project_session.py start/close` is enough in real AI coding sessions before adding hooks or subagents.
-- Test optional hook/subagent adapters in one real project before enabling them as a recommended workflow.
+- Observe session-receipt candidate quality in real coding sessions and tune recommendations without weakening explicit resolution.
+- Test optional hook/subagent adapters in one real project; keep them opt-in even when the base manager Skill is installed globally.
 - Observe Skill/MCP retrieval behavior in real Codex, Claude Code, and Cursor sessions before recommending automatic invocation more broadly.
 - Upgrade `partial` source-derived pages to `complete` only by rebuilding document maps/section notes and verifying page references against originals.
 
@@ -43,3 +49,4 @@
 - 2026-06-11: Added explicit source section promotion to formal knowledge pages.
 - 2026-07-16: Added the first local Retrieval Core with incremental SQLite FTS5 indexing, stable JSON output, chunk localization, and context packs.
 - 2026-07-16: Added protected/idempotent private sync, fixed retrieval evaluation gates, provider-neutral Skills/MCP adapters, conservative provenance migration, and local topic-alias hybrid recall.
+- 2026-07-16: Added safe compatibility ledgers, global manager runtime, privacy exclusions, close receipts, cross-platform install/doctor/CI, and source extraction quality gates.

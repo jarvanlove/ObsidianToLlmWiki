@@ -15,6 +15,9 @@ python -m unittest tests.test_retrieval_core -v
 python -m unittest discover -s tests -v
 python .\00_system\scripts\evaluate_retrieval.py --cases .\00_system\registry\retrieval_eval_cases.json
 python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
+python .\00_system\scripts\doctor.py --wiki-root <private-wiki-root> --strict
+python .\00_system\scripts\source_quality.py --source <source-file> --format json
+python -m unittest discover -s tests -v
 ```
 
 macOS / Linux wrappers:
@@ -30,6 +33,8 @@ macOS / Linux wrappers:
 python3 -m unittest tests.test_retrieval_core -v
 python3 -m unittest discover -s tests -v
 python3 ./00_system/scripts/evaluate_retrieval.py --cases ./00_system/registry/retrieval_eval_cases.json
+python3 ./00_system/scripts/doctor.py --wiki-root <private-wiki-root> --strict
+python3 ./00_system/scripts/source_quality.py --source <source-file> --format json
 ```
 
 Python scripts can also be run directly when needed:
@@ -57,6 +62,10 @@ python .\00_system\scripts\build_retrieval_index.py
 | Private sync behavior | run against known private vault only after checking changed paths |
 | Schema/template change | `lint_wiki.ps1` and inspect affected generated pages |
 | Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, section quality headings, excerpt limits, routing candidates, promotion candidate report, and schema |
+| Source extraction quality | run `tests.test_source_ingestion_quality`; verify pass/review/blocked gates, OCR detection, DOCX fallback, CJK normalization, map-first ordering, complete refs, and exact excerpt limits |
+| Compatibility/migration | run vault, adapter, shared-asset, and historical-upgrade tests; verify old Markdown hashes, idempotency, and `.new` conflict candidates |
+| Global manager/runtime | run manager install and lifecycle E2E tests; verify natural-language attach, local path isolation, opt-in adapters, close receipt, and resolution |
+| Cross-platform release | GitHub Actions must pass Python 3.10/3.12 on Windows, macOS, and Linux; local platform wrapper smoke test must pass |
 | Source section promotion | promote one disposable section note with `promote_source_section.py`; verify formal page, source section backlink, `source_refs`, `promoted_to`, and section status |
 | Retrieval core | run `python -m unittest tests.test_retrieval_core -v`; verify incremental update/delete refresh, project/type filters, source refs, JSON schema, and context budget |
 | Retrieval quality gate | run `evaluate_retrieval.py`; require gate pass rate `1.0`, MRR at least `0.8`, and review semantic probe recommendation |

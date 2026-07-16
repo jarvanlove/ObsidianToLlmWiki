@@ -9,13 +9,16 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from docx import Document
 from pptx import Presentation
 from pypdf import PdfReader
 
 from create_page import ensure_project
+from source_quality import SourceQuality, audit_source, normalize_pdf_text
 from wiki_lib import (
     SCRIPT_DIR,
     VAULT_ROOT,
+    ai_access_exclusion_reason,
     append_log,
     normalize_tags,
     render_template,
@@ -33,7 +36,11 @@ VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".m4v"}
 STRUCTURED_DOCUMENT_MODES = {"text", "docx", "pptx", "pdf"}
 SECTION_EXCERPT_LIMIT_CHARS = 1200
 HEADING_RE = re.compile(
-    r"^(#{1,6}\s+.+|第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|chapter\s+\d+.*|\d+(?:\.\d+){0,4}\s+.+)$",
+    r"^(#{1,6}\s+.+|第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|chapter\s+\d+.*|\d+(?:\.\d+){0,4}\.?\s+.+)$",
+    re.IGNORECASE,
+)
+NUMBERED_DOCUMENT_HEADING_RE = re.compile(
+    r"^(#{1,6}\s+.+|第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|chapter\s+\d+.*|\d{2}\.?\s+.+)$",
     re.IGNORECASE,
 )
 
@@ -168,16 +175,36 @@ def extract_text_from_pptx(path: Path) -> str:
 
 
 def extract_text_from_docx(path: Path) -> str:
-    result = subprocess.run(
-        ["pandoc", str(path), "-t", "markdown"],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
-    if result.returncode != 0:
+    try:
+        result = subprocess.run(
+            ["pandoc", str(path), "-t", "markdown"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except OSError:
+        pass
+
+    try:
+        document = Document(str(path))
+    except Exception:
         return ""
-    return result.stdout.strip()
+    lines: list[str] = []
+    for paragraph in document.paragraphs:
+        text = paragraph.text.strip()
+        if not text:
+            continue
+        style_name = str(getattr(paragraph.style, "name", "") or "")
+        if style_name.startswith("Heading "):
+            level = style_name.removeprefix("Heading ").strip()
+            prefix = "#" * int(level) if level.isdigit() else "##"
+            lines.append(f"{prefix} {text}")
+        else:
+            lines.append(text)
+    return "\n\n".join(lines).strip()
 
 
 def extract_text_from_pdf(path: Path) -> str:
@@ -189,7 +216,7 @@ def extract_text_from_pdf(path: Path) -> str:
     chunks: list[str] = []
     for page_index, page in enumerate(reader.pages, start=1):
         try:
-            text = (page.extract_text() or "").strip()
+            text = normalize_pdf_text(page.extract_text() or "").strip()
         except Exception:
             text = ""
         if text:
@@ -324,6 +351,53 @@ def group_blocks(blocks: list[SourceBlock], *, max_chars: int = 9000, max_refs: 
     return sections
 
 
+def detected_block_heading(block: SourceBlock) -> str:
+    for raw_line in block.text.splitlines()[:10]:
+        line = raw_line.strip()
+        if line and NUMBERED_DOCUMENT_HEADING_RE.match(line):
+            return line.lstrip("#").strip()
+    return ""
+
+
+def group_numbered_blocks(blocks: list[SourceBlock], *, max_chars: int = 9000, max_refs: int = 6) -> list[SourceSection]:
+    if not blocks:
+        return []
+    headings = [detected_block_heading(block) for block in blocks]
+    if not any(headings):
+        return group_blocks(blocks, max_chars=max_chars, max_refs=max_refs)
+
+    sections: list[SourceSection] = []
+    current: list[SourceBlock] = []
+    current_heading = ""
+    current_size = 0
+    for block, heading in zip(blocks, headings):
+        starts_new_heading = bool(heading and current and heading != current_heading)
+        exceeds_limit = bool(current and (current_size + len(block.text) > max_chars or len(current) >= max_refs))
+        if starts_new_heading or exceeds_limit:
+            sections.append(
+                SourceSection(
+                    title=current_heading or build_section_title(current),
+                    refs=[item.ref for item in current],
+                    text="\n\n".join(item.text for item in current).strip(),
+                )
+            )
+            current = []
+            current_size = 0
+        if heading:
+            current_heading = heading
+        current.append(block)
+        current_size += len(block.text)
+    if current:
+        sections.append(
+            SourceSection(
+                title=current_heading or build_section_title(current),
+                refs=[item.ref for item in current],
+                text="\n\n".join(item.text for item in current).strip(),
+            )
+        )
+    return sections
+
+
 def build_section_title(blocks: list[SourceBlock]) -> str:
     if not blocks:
         return "未命名章节"
@@ -339,6 +413,7 @@ def build_source_sections(extracted_text: str, extract_mode: str) -> list[Source
         return []
     if extract_mode in {"pdf", "pptx"}:
         blocks = parse_numbered_blocks(extracted_text, extract_mode)
+        return group_numbered_blocks(blocks)
     else:
         blocks = parse_heading_blocks(extracted_text)
     return group_blocks(blocks)
@@ -468,10 +543,10 @@ def excerpt_from_text(text: str, limit: int = SECTION_EXCERPT_LIMIT_CHARS) -> st
     cleaned = "\n".join(line.rstrip() for line in text.strip().splitlines() if line.strip())
     if not cleaned:
         return "- 未提取到可用正文。"
-    excerpt = cleaned[:limit]
     if len(cleaned) > limit:
-        excerpt += "\n\n> 摘录已截断；完整提取文本见 scratch/extracted。"
-    return excerpt
+        notice = "\n\n> 摘录已截断；完整提取文本见 scratch/extracted。"
+        return cleaned[: max(limit - len(notice), 0)] + notice
+    return cleaned
 
 
 def routing_report_for(domain: str, project_slug: str) -> str:
@@ -512,6 +587,7 @@ def create_document_derivatives(
     extracted_text: str,
     note_path: Path,
     note_dir: Path,
+    quality: SourceQuality | None,
 ) -> list[Path]:
     sections = build_source_sections(extracted_text, extract_mode)
     if not sections:
@@ -525,12 +601,50 @@ def create_document_derivatives(
     map_rel = map_path.relative_to(VAULT_ROOT).as_posix()
     source_note_link = wiki_link_from_rel(note_rel, "来源笔记")
     document_map_link = wiki_link_from_rel(map_rel, "文档地图")
-    section_paths: list[Path] = []
+    section_paths = [section_dir / f"{index:02d}-{slugify(section.title)}.md" for index, section in enumerate(sections, start=1)]
 
-    for index, section in enumerate(sections, start=1):
+    derived_section_rels = [path.relative_to(VAULT_ROOT).as_posix() for path in section_paths]
+    section_index_lines = []
+    for index, (section, section_path) in enumerate(zip(sections, section_paths), start=1):
+        rel = section_path.relative_to(VAULT_ROOT).as_posix()
+        section_index_lines.append(f"- {index:02d}. {wiki_link_from_rel(rel, section.title)} | `{page_ref_label(section.refs)}`")
+
+    quality_lines = [
+        f"- 提取方式: `{extract_mode}`",
+        f"- 结构段落数: {len(sections)}",
+        f"- 引用粒度: `{source_ref_type(extract_mode)}`",
+        f"- 完整提取文本: `01_inbox/scratch/extracted/{slugify(title)}.txt`",
+        *quality_report_lines(quality),
+    ]
+    content = render_template(
+        TEMPLATE_DIR / "source-document-map.md",
+        {
+            "title": f"{title} - 文档地图",
+            "domain": domain,
+            "project": project_slug,
+            "tags": ", ".join(tags),
+            "updated": today_iso(),
+            "summary": f"{title} 的结构地图和章节索引。",
+            "source_note": note_rel,
+            "source_path": source_path,
+            "source_hash": source_hash,
+            "extract_mode": extract_mode,
+            "source_ref_type": source_ref_type(extract_mode),
+            "section_count": str(len(sections)),
+            "source_note_link": source_note_link,
+            "section_index": "\n".join(section_index_lines),
+            "quality_report": "\n".join(quality_lines),
+            "routing_report": routing_report_for(domain, project_slug),
+        },
+    )
+    write_text(map_path, content)
+    map_updates: dict[str, object] = {"derived_sections": derived_section_rels}
+    if quality is not None:
+        map_updates.update(quality_frontmatter(quality))
+    update_page_frontmatter(map_path, map_updates)
+
+    for index, (section, section_path) in enumerate(zip(sections, section_paths), start=1):
         section_title = f"{title} - {index:02d} {section.title}"
-        section_path = section_dir / f"{index:02d}-{slugify(section.title)}.md"
-        section_rel = section_path.relative_to(VAULT_ROOT).as_posix()
         recommended_targets = recommended_targets_for(domain, project_slug)
         content = render_template(
             TEMPLATE_DIR / "source-section-note.md",
@@ -563,48 +677,17 @@ def create_document_derivatives(
             },
         )
         write_text(section_path, content)
-        section_paths.append(section_path)
-
-    derived_section_rels = [path.relative_to(VAULT_ROOT).as_posix() for path in section_paths]
-    section_index_lines = []
-    for index, (section, section_path) in enumerate(zip(sections, section_paths), start=1):
-        rel = section_path.relative_to(VAULT_ROOT).as_posix()
-        section_index_lines.append(f"- {index:02d}. {wiki_link_from_rel(rel, section.title)} | `{page_ref_label(section.refs)}`")
-
-    quality_lines = [
-        f"- 提取方式: `{extract_mode}`",
-        f"- 结构段落数: {len(sections)}",
-        f"- 引用粒度: `{source_ref_type(extract_mode)}`",
-        f"- 完整提取文本: `01_inbox/scratch/extracted/{slugify(title)}.txt`",
-    ]
-    content = render_template(
-        TEMPLATE_DIR / "source-document-map.md",
-        {
-            "title": f"{title} - 文档地图",
-            "domain": domain,
-            "project": project_slug,
-            "tags": ", ".join(tags),
-            "updated": today_iso(),
-            "summary": f"{title} 的结构地图和章节索引。",
-            "source_note": note_rel,
-            "source_path": source_path,
-            "source_hash": source_hash,
-            "extract_mode": extract_mode,
-            "source_ref_type": source_ref_type(extract_mode),
-            "section_count": str(len(sections)),
-            "source_note_link": source_note_link,
-            "section_index": "\n".join(section_index_lines),
-            "quality_report": "\n".join(quality_lines),
-            "routing_report": routing_report_for(domain, project_slug),
-        },
-    )
-    write_text(map_path, content)
-    update_page_frontmatter(map_path, {"derived_sections": derived_section_rels})
     return [map_path, *section_paths]
 
 
-def detect_parse_status(media_type: str, extracted_text: str, extract_mode: str) -> str:
+def detect_parse_status(
+    media_type: str, extracted_text: str, extract_mode: str, quality: SourceQuality | None = None
+) -> str:
     if media_type == "document":
+        if quality is not None and quality.status == "blocked":
+            return "需OCR" if quality.needs_ocr else "提取失败"
+        if quality is not None and quality.status == "review":
+            return "待复核"
         return "已提取" if extract_mode != "binary" else "待处理"
     return "待处理"
 
@@ -613,7 +696,46 @@ def bool_literal(value: bool) -> str:
     return "true" if value else "false"
 
 
-def enrich_source_note(content: str, extracted_text: str, extract_mode: str, media_type: str) -> str:
+def quality_frontmatter(quality: SourceQuality) -> dict[str, object]:
+    return {
+        "ingest_quality_version": quality.quality_version,
+        "quality_status": quality.status,
+        "quality_total_units": quality.total_units,
+        "quality_extracted_units": quality.extracted_units,
+        "quality_empty_units": quality.empty_units,
+        "quality_extracted_chars": quality.extracted_chars,
+        "quality_unit_coverage": quality.unit_coverage,
+        "quality_average_chars_per_unit": quality.average_chars_per_extracted_unit,
+        "quality_garbled_ratio": quality.garbled_ratio,
+        "quality_fragmented_cjk_ratio": quality.fragmented_cjk_ratio,
+        "needs_ocr": quality.needs_ocr,
+        "quality_warnings": quality.warnings,
+    }
+
+
+def quality_report_lines(quality: SourceQuality | None) -> list[str]:
+    if quality is None:
+        return ["- 抽取质量门禁: 不适用。"]
+    lines = [
+        f"- 抽取质量门禁: `{quality.status}`",
+        f"- 结构单元覆盖: {quality.extracted_units}/{quality.total_units} ({quality.unit_coverage:.0%})",
+        f"- 提取字符数: {quality.extracted_chars}",
+        f"- 已提取单元平均字符数: {quality.average_chars_per_extracted_unit:.0f}",
+        f"- 疑似乱码比例: {quality.garbled_ratio:.2%}",
+        f"- 中文字符异常空格比例: {quality.fragmented_cjk_ratio:.2%}",
+        f"- 需要 OCR: `{bool_literal(quality.needs_ocr)}`",
+    ]
+    lines.extend(f"- 质量警告: {warning}" for warning in quality.warnings)
+    return lines
+
+
+def enrich_source_note(
+    content: str,
+    extracted_text: str,
+    extract_mode: str,
+    media_type: str,
+    quality: SourceQuality | None = None,
+) -> str:
     lines = content.rstrip().splitlines()
     if media_type == "image":
         lines.extend(["", "## 媒体处理", "", "- 媒体类型: 图片", "- 当前阶段: 已入库，待 OCR / caption。"])
@@ -622,6 +744,8 @@ def enrich_source_note(content: str, extracted_text: str, extract_mode: str, med
     elif media_type == "video":
         lines.extend(["", "## 媒体处理", "", "- 媒体类型: 视频", "- 当前阶段: 已入库，待音轨转写 / 关键帧 / 时间轴摘要。"])
     lines.extend(["", "## 文件识别", "", f"- 识别方式: {extract_mode}"])
+    if quality is not None:
+        lines.extend(quality_report_lines(quality))
     if extracted_text.strip():
         excerpt = extracted_text.strip()[:1200]
         if len(extracted_text.strip()) > 1200:
@@ -645,7 +769,11 @@ def append_to_project_sources(project_name: str, note_path: Path, stored_source:
         source_registry.write_text(text.rstrip() + "\n" + entry + "\n", encoding="utf-8")
 
 
-def detect_ingest_status(extracted_text: str, extract_mode: str) -> str:
+def detect_ingest_status(extracted_text: str, extract_mode: str, quality: SourceQuality | None = None) -> str:
+    if quality is not None and quality.status == "blocked":
+        return "待人工处理"
+    if quality is not None and quality.status == "review":
+        return "待复核"
     if extract_mode == "binary":
         return "已登记"
     if extracted_text.strip():
@@ -672,13 +800,22 @@ def main() -> None:
     tags = normalize_tags(args.tags)
     summary = args.summary.strip() or f"{title} 的来源笔记。"
     media_type = detect_media_type(source_file)
+    prospective_source = (
+        VAULT_ROOT / "20_projects" / "active" / project_slug / "sources" / source_file.name
+        if project_name
+        else personal_raw_dir_for_media_type(media_type) / source_file.name
+    )
+    exclusion = ai_access_exclusion_reason(source_file) or ai_access_exclusion_reason(prospective_source)
+    if exclusion:
+        raise SystemExit(f"source is blocked by AI access policy: {exclusion}")
     ensure_multimodal_scratch_dirs()
     stored_source = copy_source(source_file, project_name, media_type)
     extracted_text, extract_mode = extract_text_content(stored_source)
+    quality = audit_source(stored_source) if media_type == "document" else None
     extracted_text_path = write_extracted_text(title, extracted_text)
     source_hash = file_sha256(stored_source)
-    parse_status = detect_parse_status(media_type, extracted_text, extract_mode)
-    ingest_status = detect_ingest_status(extracted_text, extract_mode)
+    parse_status = detect_parse_status(media_type, extracted_text, extract_mode, quality)
+    ingest_status = detect_ingest_status(extracted_text, extract_mode, quality)
 
     if project_name:
         note_dir = ensure_project_layout(project_name) / "source-notes"
@@ -711,26 +848,31 @@ def main() -> None:
     for line in content.splitlines():
         lines.append(replacements.get(line.strip(), line))
     content = "\n".join(lines) + "\n"
-    content = enrich_source_note(content, extracted_text, extract_mode, media_type)
+    content = enrich_source_note(content, extracted_text, extract_mode, media_type, quality)
     write_text(note_path, content)
-    derived_paths = create_document_derivatives(
-        title=title,
-        domain=domain,
-        project_slug=project_slug,
-        tags=tags,
-        source_path=stored_source.relative_to(VAULT_ROOT).as_posix(),
-        source_hash=source_hash,
-        extract_mode=extract_mode,
-        extracted_text=extracted_text,
-        note_path=note_path,
-        note_dir=note_dir,
-    )
+    if quality is not None:
+        update_page_frontmatter(note_path, quality_frontmatter(quality))
+    derived_paths = []
+    if quality is None or quality.status != "blocked":
+        derived_paths = create_document_derivatives(
+            title=title,
+            domain=domain,
+            project_slug=project_slug,
+            tags=tags,
+            source_path=stored_source.relative_to(VAULT_ROOT).as_posix(),
+            source_hash=source_hash,
+            extract_mode=extract_mode,
+            extracted_text=extracted_text,
+            note_path=note_path,
+            note_dir=note_dir,
+            quality=quality,
+        )
     if derived_paths:
         update_page_frontmatter(
             note_path,
             {
                 "derived_pages": [path.relative_to(VAULT_ROOT).as_posix() for path in derived_paths],
-                "ingest_status": "已解析",
+                "ingest_status": "待复核" if quality is not None and quality.status == "review" else "已解析",
                 "recommended_targets": [f"file-project:{project_slug}"] if project_slug else ["review-personal", "review-shared"],
             },
         )

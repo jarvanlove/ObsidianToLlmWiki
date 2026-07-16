@@ -21,6 +21,18 @@ SECTION_NOTE_REQUIRED_HEADINGS = (
     "## 待追问问题",
     "## 沉淀候选",
 )
+INGEST_QUALITY_FIELDS = (
+    "quality_status",
+    "quality_total_units",
+    "quality_extracted_units",
+    "quality_empty_units",
+    "quality_extracted_chars",
+    "quality_unit_coverage",
+    "quality_garbled_ratio",
+    "quality_fragmented_cjk_ratio",
+    "needs_ocr",
+    "quality_warnings",
+)
 
 
 def resolve_link(target: str, page_map: dict[str, Path], stem_map: dict[str, list[Path]]) -> Path | None:
@@ -83,13 +95,28 @@ def check_structured_ingest_quality(page: dict[str, object]) -> list[str]:
         extract_mode = str(frontmatter.get("extract_mode") or "").strip()
         media_type = str(frontmatter.get("media_type") or "").strip()
         if media_type == "document" and extract_mode in {"text", "docx", "pptx", "pdf"}:
+            quality_version = frontmatter.get("ingest_quality_version")
+            quality_status = str(frontmatter.get("quality_status") or "").strip()
+            if quality_version:
+                for field in INGEST_QUALITY_FIELDS:
+                    if field not in frontmatter:
+                        errors.append(f"quality-gated source is missing field: {field}")
+                if quality_status not in {"pass", "review", "blocked"}:
+                    errors.append("quality-gated source has an invalid quality_status")
             derived_pages = list_items(frontmatter.get("derived_pages"))
-            if not any(path.endswith("-document-map.md") for path in derived_pages):
+            if quality_status == "blocked":
+                if derived_pages:
+                    errors.append("blocked source must not create document derivatives")
+            elif not any(path.endswith("-document-map.md") for path in derived_pages):
                 errors.append("structured document source is missing a document map in derived_pages")
-            if not any("-sections/" in path for path in derived_pages):
+            if quality_status != "blocked" and not any("-sections/" in path for path in derived_pages):
                 errors.append("structured document source is missing section notes in derived_pages")
 
     if note_type == "文档地图":
+        if frontmatter.get("ingest_quality_version"):
+            for field in INGEST_QUALITY_FIELDS:
+                if field not in frontmatter:
+                    errors.append(f"quality-gated document map is missing field: {field}")
         derived_sections = list_items(frontmatter.get("derived_sections"))
         if not derived_sections:
             errors.append("document map has no derived_sections")

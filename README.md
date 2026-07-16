@@ -184,7 +184,9 @@ Common file types that can be brought into the system include:
 
 Notes:
 
-- text, `docx`, `pptx`, and `pdf` currently support direct text extraction
+- text, `docx`, `pptx`, and `pdf` support direct extraction with pass/review/blocked quality gates
+- blocked extraction preserves the original and source note but creates no weak derivatives; scanned PDFs are marked `needs_ocr`
+- long documents create a document map before section notes, preserve page/slide/heading refs, and never auto-promote formal knowledge pages
 - images, audio, and video can already be formally ingested and registered as media sources
 - their semantic understanding should, by default, be delegated to the user's own multimodal LLM / API
 
@@ -331,6 +333,8 @@ ObsidianToWiki/
 
 After downloading from GitHub, use the system in this order.
 
+For first-time setup, run `install.ps1` on Windows or `install.sh` on macOS/Linux. The installer creates a repository-local `.venv`, installs core dependencies, safely installs or upgrades the global manager Skill, and runs `doctor`. Users still operate through natural language afterward.
+
 ### 1. Prepare two repositories
 
 You need:
@@ -382,16 +386,20 @@ Existing users do not need to rebuild their private vault or detach projects.
 Recommended order:
 
 1. Pull the latest public scaffold.
-2. Sync scaffold files into `ObsidianToWiki-private`.
-3. Open the project you are working on and say "start work".
-4. If the project still has old entrypoint wording, ask the agent to refresh the project attach with the latest ObsidianToWiki scaffold and run a strict check.
+2. Run the installer to update dependencies and the global manager Skill.
+3. Dry-run, then apply manifest-managed private-vault sync.
+4. Ask the agent to run one hash-safe upgrade and strict doctor. Existing projects do not need to be reattached.
 
 Windows:
 
 ```powershell
 cd <obsidiantowiki-public-root>
 git pull origin main
+./install.ps1
+python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root> --dry-run --format json
 python .\00_system\scripts\sync_private_vault.py --private-root <private-wiki-root>
+python .\00_system\scripts\otw.py upgrade --wiki-root <private-wiki-root> --apply --all-projects
+python .\00_system\scripts\otw.py doctor --wiki-root <private-wiki-root> --strict
 ```
 
 macOS / Linux:
@@ -399,7 +407,11 @@ macOS / Linux:
 ```bash
 cd <obsidiantowiki-public-root>
 git pull origin main
+./install.sh
+./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root> --dry-run --format json
 ./00_system/scripts/sync_private_vault.sh --private-root <private-wiki-root>
+./00_system/scripts/otw.sh upgrade --wiki-root <private-wiki-root> --apply --all-projects
+./00_system/scripts/otw.sh doctor --wiki-root <private-wiki-root> --strict
 ```
 
 The sync tool only updates manifest-managed scaffold files. Root indexes, logs, the project registry, personal/project/shared knowledge, outputs, and retrieval caches are protected; only `30_shared/prompts` is scaffold-managed inside the shared layer. Use `--dry-run --format json` before an upgrade and `--path <wiki-relative-path>` for a precise repair.
@@ -465,9 +477,10 @@ If you explicitly route a conclusion to the personal layer, the system should wr
 
 ### Skill and MCP configuration
 
-- Skills belong to the project execution layer. Install them per project with `--install-ai-adapters`; templates are placed under `.agents/skills/` and `.claude/skills/`.
+- The global manager Skill is installed once per agent configuration root and safely upgraded by the installer. It maps natural language to the unified `otw.py` runtime.
+- Project retrieval Skills and hook/subagent helpers remain opt-in. Only `--install-ai-adapters` places them under `.agents/skills/`, `.claude/skills/`, and `scripts/ai/`; normal upgrades do not force-enable them.
 - MCP belongs to the AI tool capability layer. Configure it once per Codex, Claude Code, Cursor, or compatible tool when the tool launches it from the active project.
-- Without MCP, the Skill uses the provider-neutral `scripts/ai/wiki-search.py` wrapper.
+- Without MCP or project adapters, the global manager Skill uses the public runtime directly.
 - MCP exposes only read-only `search_wiki` and `get_wiki_context` tools.
 
 See `docs/agent-retrieval.md` for the boundary and setup details.

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "quality_version": 1,
+  "thresholds": {
+    "minimum_unit_coverage_pass": 0.85,
+    "minimum_unit_coverage_nonblocked": 0.5,
+    "minimum_average_chars_per_unit": 80,
+    "minimum_text_chars_pass": 80,
+    "maximum_garbled_ratio": 0.02,
+    "maximum_fragmented_cjk_ratio": 0.03
+  }
+}

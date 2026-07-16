@@ -33,4 +33,4 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Keep project deliverables in the project repository.
 - Reuse shared knowledge when the same pattern appears in other projects.
 - Run AI coding work through the lifecycle: confirm task boundary before edits, verify after edits, update control files before close, and file back only durable conclusions.
-- Use `project_session.py check/start/close` or the matching wrapper when a task needs an explicit start/close checklist.
+- `close` creates `.obsidiantowiki/session-receipt.json`; resolve every candidate with `project_session.py resolve` before reporting the session closed.

@@ -9,6 +9,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from project_adapter import apply_adapter_upgrade
 from wiki_lib import (
     SCRIPT_DIR,
     detect_wiki_root,
@@ -35,7 +36,16 @@ PROJECT_CONTROL_TEMPLATE_DIR = SCRIPT_DIR.parent.parent / "docs" / "templates" /
 PROJECT_ADAPTER_TEMPLATE_DIR = SCRIPT_DIR.parent.parent / "docs" / "templates" / "project-adapters"
 WIKI_RUNTIME_PATHS = (
     "00_system/templates",
+    "00_system/scripts",
     "00_system/registry/page_schemas.json",
+    "00_system/registry/private_sync_manifest.json",
+    "00_system/registry/project_adapter_schema.json",
+    "00_system/registry/retrieval_aliases.json",
+    "00_system/registry/retrieval_eval_cases.json",
+    "00_system/registry/shared_assets.json",
+    "00_system/registry/vault_schema.json",
+    "00_system/requirements.txt",
+    "00_system/requirements-mcp.txt",
 )
 PROJECT_SUPPORT_DIRS = (
     "docs/adr",
@@ -87,8 +97,8 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
         "",
         "Read `wiki.context.json` first if it exists. Use the paths below as the human-readable bridge into the wiki.",
         "",
-        f"- wiki_root: `{wiki_root}`",
-        f"- project_repo_root: `{repo_root}`",
+        "- wiki_root: `<read-from-wiki.context.json>`",
+        "- project_repo_root: `<current-project-root>`",
         f"- project_slug: `{project_slug}`",
     ]
     for key, value in file_map.items():
@@ -271,6 +281,8 @@ def copy_missing_runtime_path(relative_path: str, wiki_root: Path) -> list[str]:
         if item.is_dir():
             continue
         rel = item.relative_to(source)
+        if "__pycache__" in rel.parts or item.suffix in {".pyc", ".pyo"}:
+            continue
         target = destination / rel
         if target.exists():
             continue
@@ -363,18 +375,8 @@ def ensure_project_control_files(repo_root: Path, project_name: str, project_slu
 
 
 def install_ai_adapters(repo_root: Path) -> dict[str, str]:
-    results: dict[str, str] = {}
-    for source in PROJECT_ADAPTER_TEMPLATE_DIR.rglob("*"):
-        if source.is_dir():
-            continue
-        relative_path = source.relative_to(PROJECT_ADAPTER_TEMPLATE_DIR)
-        destination = repo_root / relative_path
-        if destination.exists():
-            results[relative_path.as_posix()] = "exists"
-            continue
-        write_text(destination, source.read_text(encoding="utf-8"))
-        results[relative_path.as_posix()] = "created"
-    return results
+    report = apply_adapter_upgrade(repo_root, template_root=PROJECT_ADAPTER_TEMPLATE_DIR)
+    return {str(item["path"]): str(item["action"]) for item in report["actions"]}
 
 
 def projects_registry_path(wiki_root: Path) -> Path:
@@ -431,6 +433,32 @@ def append_log_entry(wiki_root: Path, kind: str, title: str, details: str) -> No
         handle.write(entry)
 
 
+def ensure_local_git_excludes(repo_root: Path) -> None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-path", "info/exclude"],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+    except OSError:
+        return
+    raw_path = result.stdout.strip()
+    if result.returncode != 0 or not raw_path:
+        return
+    exclude_path = Path(raw_path)
+    if not exclude_path.is_absolute():
+        exclude_path = repo_root / exclude_path
+    exclude_path.parent.mkdir(parents=True, exist_ok=True)
+    existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
+    lines = existing.splitlines()
+    additions = [item for item in ("wiki.context.json", ".obsidiantowiki/") if item not in lines]
+    if additions:
+        exclude_path.write_text(existing.rstrip() + "\n" + "\n".join(additions) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="把一个项目仓库接入 ObsidianToWiki 中心 wiki。")
     parser.add_argument("--repo-root", required=True, help="项目仓库根目录")
@@ -474,6 +502,7 @@ def main() -> None:
     )
 
     write_text(repo_root / "wiki.context.json", render_context(repo_root, wiki_root, project_slug))
+    ensure_local_git_excludes(repo_root)
     control_results: dict[str, str] = {}
     if not args.skip_control_files:
         control_results.update(ensure_project_control_files(repo_root, project_name, project_slug))

@@ -26,6 +26,10 @@ Must have:
 - AI coding lifecycle protocol for task start, verification, close, control-file updates, and wiki file-back candidates.
 - Optional hook/subagent adapter templates that call the lifecycle protocol without becoming a separate source of truth.
 - Project cockpit workflow that lets users operate daily work through only three phrases: `开始工作`, `继续`, and `收工`.
+- Provider-neutral global manager Skill and `otw.py` runtime so agents, rather than users, invoke lifecycle scripts.
+- Versioned vault, project-adapter, and shared-asset compatibility with hash-safe upgrades and staged conflicts.
+- Local `wiki.private.json` AI-access exclusions that remove protected paths from ObsidianToWiki indexing and ingestion without deleting the user's files.
+- Extraction quality gates for PDF, DOCX, PPTX, and text sources, including unit coverage, OCR detection, chapter mapping, page references, and bounded excerpts.
 
 Explicitly not doing unless added to `TASKS.md`:
 
@@ -77,7 +81,11 @@ Explicitly not doing unless added to `TASKS.md`:
 - Scripts are conservative with existing user files and avoid overwriting project-specific rules without preserving them.
 - Natural-language project attach must end with a machine-checkable report; missing required files means the attach is not complete.
 - Natural-language project attach must bootstrap missing wiki runtime templates and schema files when the selected wiki root is otherwise usable.
+- Generated project bridge files must not contain machine-specific absolute paths; real paths belong only in ignored local context/config files.
+- `收工` must create a local receipt and remain incomplete until every control-file/wiki candidate is resolved.
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
+- A blocked extraction must preserve the original and source note but must not create weak document derivatives.
+- Vault and scaffold upgrades must preserve modified private/project files and stage `.new` conflict candidates.
 - Section-level source notes must expose reviewable quality fields: theme, concepts, facts, process, bounded excerpt, follow-up questions, and promotion candidates.
 - Source promotion candidates must be review reports, not automatic formal knowledge pages; each candidate must include source section, source refs, target layer, rationale, and next action.
 - Source section promotion must be explicit per section; promoted pages must preserve source section backlinks and source refs, and the source section must record `promoted_to`.
@@ -100,3 +108,5 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-06-11 | Added explicit source section promotion | Turn selected section notes into formal knowledge pages without bulk auto-writing | Promoted pages preserve backlinks and source refs |
 | 2026-07-16 | Added local Retrieval Core P0 | Give agents a stable, fresh, provider-neutral knowledge retrieval contract | SQLite FTS5 derived index, JSON output, chunk localization, and bounded context packs |
 | 2026-07-16 | Completed Retrieval Integration P1 | Make retrieval safe to distribute and directly consumable by coding agents | Protected private sync, evaluation gates, topic aliases, Skills/MCP adapters, and provenance migration |
+| 2026-07-16 | Added Compatibility and Manager Runtime P2 | Let existing users upgrade safely and operate through natural language | Version ledgers, hash-safe candidates, global Skill, doctor, and unified runtime |
+| 2026-07-16 | Added Ingestion Quality Gate P2 | Prevent long or unreadable documents from producing weak knowledge pages | Coverage/OCR checks, chapter-aware maps, exact references, and golden-corpus tests |

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
+import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +33,9 @@ WIKI_CORE_KEYS = (
     "project_timeline",
     "project_memory",
 )
+
+RECEIPT_REL_PATH = Path(".obsidiantowiki/session-receipt.json")
+RESOLUTION_STATUSES = {"applied", "skipped", "not_applicable"}
 
 
 def load_context(repo_root: Path) -> dict[str, object]:
@@ -98,6 +104,100 @@ def classify_update_candidates(paths: list[str]) -> list[str]:
     return candidates
 
 
+def receipt_path(repo_root: Path, explicit: str = "") -> Path:
+    return Path(explicit).expanduser().resolve() if explicit.strip() else repo_root / RECEIPT_REL_PATH
+
+
+def load_receipt(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "invalid"}
+    return payload if isinstance(payload, dict) else {"status": "invalid"}
+
+
+def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+        os.replace(temp_name, path)
+    finally:
+        temporary = Path(temp_name)
+        if temporary.exists():
+            temporary.unlink()
+
+
+def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
+    candidates: list[dict[str, str]] = []
+    for recommendation in report["control_file_update_candidates"]:
+        target = recommendation.split(":", 1)[0]
+        candidate_id = target if target.endswith(".md") else "session_assessment"
+        candidates.append(
+            {
+                "id": f"control:{candidate_id}",
+                "category": "control_file",
+                "target": target,
+                "recommendation": recommendation,
+                "status": "pending",
+            }
+        )
+    wiki_targets = (
+        ("project_decisions", "Project decisions"),
+        ("project_risks", "Project risks"),
+        ("project_timeline", "Project timeline"),
+        ("shared", "30_shared"),
+        ("personal", "10_personal"),
+    )
+    for (candidate_id, target), recommendation in zip(wiki_targets, report["wiki_file_back_candidates"]):
+        candidates.append(
+            {
+                "id": f"wiki:{candidate_id}",
+                "category": "wiki_file_back",
+                "target": target,
+                "recommendation": recommendation,
+                "status": "pending",
+            }
+        )
+    return {
+        "schema_version": 1,
+        "status": "pending",
+        "created_at": datetime.now().astimezone().replace(microsecond=0).isoformat(),
+        "repo_root": str(repo_root),
+        "verification": report["verification"],
+        "changed_files": report["changed_files"],
+        "candidates": candidates,
+    }
+
+
+def resolve_receipt(path: Path, resolutions: list[str]) -> dict[str, Any]:
+    receipt = load_receipt(path)
+    if not receipt or receipt.get("status") == "invalid":
+        raise SystemExit(f"invalid or missing session receipt: {path}")
+    candidates = receipt.get("candidates")
+    if not isinstance(candidates, list):
+        raise SystemExit(f"session receipt has no candidates: {path}")
+    by_id = {str(item.get("id") or ""): item for item in candidates if isinstance(item, dict)}
+    for raw in resolutions:
+        candidate_id, separator, status = raw.partition("=")
+        if not separator or candidate_id not in by_id:
+            raise SystemExit(f"unknown receipt resolution: {raw}")
+        if status not in RESOLUTION_STATUSES:
+            raise SystemExit(f"invalid receipt status in {raw}; use applied, skipped, or not_applicable")
+        by_id[candidate_id]["status"] = status
+    pending = [candidate_id for candidate_id, item in by_id.items() if item.get("status") == "pending"]
+    receipt["status"] = "pending" if pending else "resolved"
+    receipt["resolved_at"] = "" if pending else datetime.now().astimezone().replace(microsecond=0).isoformat()
+    receipt["pending_candidates"] = pending
+    write_json_atomic(path, receipt)
+    receipt["receipt_path"] = str(path)
+    return receipt
+
+
 def project_state(repo_root: Path) -> dict[str, Any]:
     context = load_context(repo_root)
     control_files = {file_name: "ok" if (repo_root / file_name).exists() else "missing" for file_name in CONTROL_FILES}
@@ -118,7 +218,23 @@ def project_state(repo_root: Path) -> dict[str, Any]:
     missing_required.extend(name for name, status in support_directories.items() if status != "ok")
     missing_required.extend(key for key, status in wiki_pages.items() if status != "ok")
     changed = changed_files(repo_root)
-    cockpit_state = "not_attached" if not context else "needs_close" if changed else "attached_idle"
+    session_receipt = load_receipt(receipt_path(repo_root))
+    receipt_status = str(session_receipt.get("status") or "none")
+    receipt_candidates = session_receipt.get("candidates") if isinstance(session_receipt.get("candidates"), list) else []
+    pending_candidates = [
+        str(item.get("id") or "")
+        for item in receipt_candidates
+        if isinstance(item, dict) and item.get("status") == "pending"
+    ]
+    cockpit_state = (
+        "not_attached"
+        if not context
+        else "needs_receipt_resolution"
+        if receipt_status in {"pending", "invalid"}
+        else "needs_close"
+        if changed
+        else "attached_idle"
+    )
     return {
         "repo_root": str(repo_root),
         "wiki_root": str(context.get("wiki_root") or "") if context else "",
@@ -130,6 +246,11 @@ def project_state(repo_root: Path) -> dict[str, Any]:
         "control_files": control_files,
         "support_directories": support_directories,
         "wiki_core_pages": wiki_pages,
+        "session_receipt": {
+            "status": receipt_status,
+            "path": str(receipt_path(repo_root)),
+            "pending_candidates": pending_candidates,
+        },
     }
 
 
@@ -169,6 +290,8 @@ def close_report(repo_root: Path, verification: str) -> dict[str, Any]:
 def render_check_text(report: dict[str, Any]) -> str:
     lines = ["Project session check", f"- repo_root: {report['repo_root']}"]
     lines.append(f"- cockpit_state: {report.get('cockpit_state', 'unknown')}")
+    receipt = report.get("session_receipt") or {}
+    lines.append(f"- session_receipt: {receipt.get('status', 'none')}")
     if report["wiki_context"] == "ok":
         lines.extend([f"- wiki_root: {report['wiki_root']}", f"- project_slug: {report['project_slug']}"])
     else:
@@ -215,6 +338,15 @@ def render_close_text(report: dict[str, Any]) -> str:
     lines.append("\nWiki file-back candidates")
     lines.extend(f"- {item}" for item in report["wiki_file_back_candidates"])
     lines.extend(["", f"Rule: {report['rule']}"])
+    if report.get("receipt_path"):
+        lines.extend([f"Receipt: {report['receipt_path']}", "Resolve every receipt candidate before reporting the session closed."])
+    return "\n".join(lines)
+
+
+def render_receipt_text(report: dict[str, Any]) -> str:
+    lines = [f"Session receipt: {report['status']}", f"- path: {report['receipt_path']}"]
+    for candidate in report.get("candidates", []):
+        lines.append(f"- {candidate['id']}: {candidate['status']}")
     return "\n".join(lines)
 
 
@@ -238,13 +370,20 @@ def write_or_print(content: str, output: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Check or close an ObsidianToWiki AI coding session.")
-    parser.add_argument("command", choices=["check", "start", "close"])
+    parser.add_argument("command", choices=["check", "start", "close", "resolve"])
     parser.add_argument("--repo-root", default=".", help="Project repository root.")
     parser.add_argument("--task", default="", help="Task description for start.")
     parser.add_argument("--verification", default="", help="Verification summary for close.")
     parser.add_argument("--strict", action="store_true", help="Exit with code 1 when required attach items are missing.")
     parser.add_argument("--format", choices=["text", "json", "markdown"], default="text", help="Output format.")
     parser.add_argument("--output", default="", help="Optional output file.")
+    parser.add_argument("--receipt", default="", help="Optional session receipt path.")
+    parser.add_argument(
+        "--resolution",
+        action="append",
+        default=[],
+        help="Resolve one candidate as id=applied|skipped|not_applicable; repeat for each candidate.",
+    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).expanduser().resolve()
@@ -252,8 +391,18 @@ def main() -> None:
         report = project_state(repo_root)
     elif args.command == "start":
         report = start_report(repo_root, args.task)
-    else:
+    elif args.command == "close":
         report = close_report(repo_root, args.verification)
+        target_receipt = receipt_path(repo_root, args.receipt)
+        existing_receipt = load_receipt(target_receipt)
+        if existing_receipt.get("status") in {"pending", "invalid"}:
+            raise SystemExit(f"resolve the existing session receipt before closing again: {target_receipt}")
+        receipt = build_receipt(repo_root, report)
+        write_json_atomic(target_receipt, receipt)
+        report["receipt_path"] = str(target_receipt)
+        report["receipt_status"] = "pending"
+    else:
+        report = resolve_receipt(receipt_path(repo_root, args.receipt), args.resolution)
 
     if args.format == "json":
         write_or_print(json.dumps(report, ensure_ascii=False, indent=2), args.output)
@@ -263,10 +412,12 @@ def main() -> None:
         write_or_print(render_check_text(report), args.output)
     elif args.command == "start":
         write_or_print(render_start_text(report), args.output)
-    else:
+    elif args.command == "close":
         write_or_print(render_close_text(report), args.output)
+    else:
+        write_or_print(render_receipt_text(report), args.output)
 
-    if args.strict and report.get("missing_required"):
+    if args.strict and (report.get("missing_required") or report.get("status") == "pending"):
         raise SystemExit(1)
 
 

@@ -1,6 +1,8 @@
 .obsidian/
 .claudian/
 wiki.context.json
+wiki.private.json
+.obsidiantowiki/
 .trash/
 __pycache__/
 00_system/.cache/

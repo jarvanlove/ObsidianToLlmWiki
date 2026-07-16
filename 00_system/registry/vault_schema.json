@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "current_vault_version": 1,
+  "migrations": [
+    {
+      "id": "0001-initialize-vault-state",
+      "from_version": 0,
+      "to_version": 1,
+      "description": "Initialize the local migration ledger without rewriting historical knowledge pages."
+    }
+  ]
+}
