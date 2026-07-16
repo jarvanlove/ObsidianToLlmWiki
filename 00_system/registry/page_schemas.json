@@ -1,5 +1,6 @@
 {
   "default_required": ["title", "type", "domain", "status", "updated", "summary"],
+  "allowed_domains": ["个人", "项目", "共享", "输出"],
   "personal_relation_fields": ["related_to", "builds_on"],
   "provenance_fields": ["source_note", "source_notes", "source_refs", "provenance_status", "provenance_checked"],
   "ingest_quality_fields": ["ingest_quality_version", "quality_status", "quality_total_units", "quality_extracted_units", "quality_empty_units", "quality_extracted_chars", "quality_unit_coverage", "quality_average_chars_per_unit", "quality_garbled_ratio", "quality_fragmented_cjk_ratio", "needs_ocr", "quality_warnings"],

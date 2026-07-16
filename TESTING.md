@@ -62,7 +62,8 @@ python .\00_system\scripts\build_retrieval_index.py
 | Private sync behavior | run against known private vault only after checking changed paths |
 | Schema/template change | `lint_wiki.ps1` and inspect affected generated pages |
 | Source ingestion pipeline | ingest a disposable `.md` or `.txt`; verify source note, document map, section notes, extracted text, `derived_pages`, section quality headings, excerpt limits, routing candidates, promotion candidate report, and schema |
-| Source extraction quality | run `tests.test_source_ingestion_quality`; verify pass/review/blocked gates, OCR detection, DOCX fallback, CJK normalization, map-first ordering, complete refs, and exact excerpt limits |
+| Source extraction quality | run `tests.test_source_ingestion_quality`; verify pass/review/blocked gates, OCR detection, DOCX fallback, CJK normalization, TOC grouping, chapter false-positive rejection, continuation labels, safe reingestion cleanup, map-first ordering, complete refs, and exact excerpt limits |
+| Wiki governance semantics | run `tests.test_wiki_governance`; verify sibling/nearest link resolution, fenced-code exclusion, generated/archive boundaries, reviewed-date freshness, domain validation, and product-guide schema exemptions |
 | Compatibility/migration | run vault, adapter, shared-asset, and historical-upgrade tests; verify old Markdown hashes, idempotency, and `.new` conflict candidates |
 | Global manager/runtime | run manager install and lifecycle E2E tests; verify natural-language attach, local path isolation, opt-in adapters, close receipt, and resolution |
 | Cross-platform release | GitHub Actions must pass Python 3.10/3.12 on Windows, macOS, and Linux; local platform wrapper smoke test must pass |

@@ -33,6 +33,7 @@ All notable changes to this repository should be documented in this file.
 - Session close receipts with explicit candidate resolution
 - Reproducible dependencies, cross-platform installers, doctor diagnostics, and Windows/macOS/Linux CI
 - PDF/DOCX/PPTX/text extraction quality gates, CJK PDF normalization, OCR detection, chapter-aware maps, and golden-corpus tests
+- Wiki governance regression tests for local link resolution, generated/archive boundaries, freshness semantics, and schema exceptions
 
 ### Changed
 
@@ -47,6 +48,9 @@ All notable changes to this repository should be documented in this file.
 - Project bridge text no longer embeds machine paths; ignored local context/config files own real paths
 - First-time attach now bootstraps the complete missing wiki runtime and locally excludes context/receipt state from Git
 - Structured ingestion creates the document map before section notes and blocks weak derivatives when extraction quality fails
+- Long-document ingestion groups cover/TOC pages, rejects body facts and code comments as chapter headings, labels continued chapters, and removes only obsolete generated sections during reingestion
+- Wiki lint resolves sibling and nearest project links, ignores links inside fenced code, and separates current maintained pages from generated reports, source sections, and historical archives
+- Retrieval downranks generated document maps and section notes so curated knowledge remains the default answer surface while source evidence stays searchable
 
 ### Removed
 

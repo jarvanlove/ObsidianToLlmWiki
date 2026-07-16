@@ -73,6 +73,10 @@ def page_type_weight(page: dict[str, object]) -> int:
         return 5
     if page_type in {"概念", "实体", "综述", "模式", "工具", "架构", "提示词"}:
         return 3
+    if page_type == "章节笔记":
+        return -20
+    if page_type == "文档地图":
+        return -8
     if page_type == "来源":
         return -4
     if page_type in {"分析", "简报"} and rel_path.startswith("40_outputs/"):

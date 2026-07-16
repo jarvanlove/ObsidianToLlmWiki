@@ -81,6 +81,10 @@ Daily project work is exposed through the project cockpit:
 - User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
 - A close workflow is not complete while `.obsidiantowiki/session-receipt.json` contains pending candidates.
 - Source ingestion runs an extraction gate before derivatives; blocked sources cannot produce document maps or section notes.
+- Long-document maps group front matter and TOC pages separately, accept only defensible chapter headings, and label size-based chapter continuations explicitly.
+- Reingestion may delete only obsolete section files recorded by the previous generated document map; it must not delete hand-authored knowledge pages.
+- Governance reports current maintained knowledge separately from generated reports, archived evidence, source sections, and historical snapshots.
+- Retrieval keeps generated section notes searchable as evidence but ranks curated knowledge pages above partial keyword matches from generated sections.
 - Script changes must preserve existing user content unless explicitly migrating it.
 - High-risk learning candidates require review before promotion.
 - Multimodal direction remains in-session parsing plus wiki file-back unless a future task changes it.

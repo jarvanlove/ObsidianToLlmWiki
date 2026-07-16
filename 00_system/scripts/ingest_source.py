@@ -20,6 +20,7 @@ from wiki_lib import (
     VAULT_ROOT,
     ai_access_exclusion_reason,
     append_log,
+    load_page,
     normalize_tags,
     render_template,
     slugify,
@@ -40,9 +41,12 @@ HEADING_RE = re.compile(
     re.IGNORECASE,
 )
 NUMBERED_DOCUMENT_HEADING_RE = re.compile(
-    r"^(#{1,6}\s+.+|第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|chapter\s+\d+.*|\d{2}\.?\s+.+)$",
+    r"^(第[一二三四五六七八九十百千万0-9]+[章节篇部分].*|chapter\s+\d+.*|\d{2}\.?\s+.+)$",
     re.IGNORECASE,
 )
+APPENDIX_HEADING_RE = re.compile(r"^appendix\s+[a-z0-9].*$", re.IGNORECASE)
+LETTERED_CJK_APPENDIX_RE = re.compile(r"^[A-C](?:[.、])?\s+.*[\u3400-\u9fff].*$")
+TOC_MARKERS = {"目录", "目次", "table of contents", "contents"}
 
 
 @dataclass
@@ -295,7 +299,7 @@ def parse_heading_blocks(extracted_text: str) -> list[SourceBlock]:
                 )
                 section_index += 1
                 current_lines = []
-            current_title = stripped.lstrip("#").strip()
+            current_title = stripped
         current_lines.append(line)
 
     if current_lines:
@@ -352,29 +356,92 @@ def group_blocks(blocks: list[SourceBlock], *, max_chars: int = 9000, max_refs: 
 
 
 def detected_block_heading(block: SourceBlock) -> str:
-    for raw_line in block.text.splitlines()[:10]:
-        line = raw_line.strip()
-        if line and NUMBERED_DOCUMENT_HEADING_RE.match(line):
-            return line.lstrip("#").strip()
+    lines = [raw_line.strip() for raw_line in block.text.splitlines() if raw_line.strip()]
+    for index, raw_line in enumerate(lines):
+        line = raw_line.lstrip("#").strip()
+        if not line or len(line) > 80:
+            continue
+        is_numbered = bool(NUMBERED_DOCUMENT_HEADING_RE.match(line))
+        is_appendix = bool(APPENDIX_HEADING_RE.match(line) or LETTERED_CJK_APPENDIX_RE.match(line))
+        if not is_numbered and not is_appendix:
+            continue
+        if re.search(r"[。！？.!?]$", line):
+            continue
+        next_line = lines[index + 1].lstrip("#").strip() if index + 1 < len(lines) else ""
+        next_is_translation = (
+            len(next_line) <= 80
+            and bool(re.search(r"[A-Za-z]{3}", next_line))
+            and not bool(re.search(r"[\u3400-\u9fff]", next_line))
+            and not NUMBERED_DOCUMENT_HEADING_RE.match(next_line)
+            and not APPENDIX_HEADING_RE.match(next_line)
+            and not LETTERED_CJK_APPENDIX_RE.match(next_line)
+        )
+        if index <= 1 or next_is_translation:
+            return line
     return ""
+
+
+def split_front_matter_blocks(blocks: list[SourceBlock]) -> tuple[list[SourceBlock], list[SourceBlock]]:
+    toc_index = next(
+        (
+            index
+            for index, block in enumerate(blocks)
+            if any(line.strip().lower() in TOC_MARKERS for line in block.text.splitlines())
+        ),
+        None,
+    )
+    if toc_index is None:
+        return [], blocks
+
+    for index in range(toc_index + 1, len(blocks)):
+        block = blocks[index]
+        heading = detected_block_heading(block)
+        has_body_sentence = bool(re.search(r"[。！？.!?]", block.text))
+        if heading and has_body_sentence:
+            return blocks[:index], blocks[index:]
+    return [], blocks
+
+
+def label_section_continuations(sections: list[SourceSection]) -> list[SourceSection]:
+    previous_title = ""
+    continuation = 1
+    for section in sections:
+        original_title = section.title
+        if original_title == previous_title:
+            continuation += 1
+            section.title = f"{original_title}（续 {continuation}）"
+        else:
+            previous_title = original_title
+            continuation = 1
+    return sections
 
 
 def group_numbered_blocks(blocks: list[SourceBlock], *, max_chars: int = 9000, max_refs: int = 6) -> list[SourceSection]:
     if not blocks:
         return []
-    headings = [detected_block_heading(block) for block in blocks]
+    front_matter, body_blocks = split_front_matter_blocks(blocks)
+    headings = [detected_block_heading(block) for block in body_blocks]
     if not any(headings):
         return group_blocks(blocks, max_chars=max_chars, max_refs=max_refs)
 
     sections: list[SourceSection] = []
+    if front_matter:
+        sections.append(
+            SourceSection(
+                title="封面与目录",
+                refs=[item.ref for item in front_matter],
+                text="\n\n".join(item.text for item in front_matter).strip(),
+            )
+        )
+    body_sections: list[SourceSection] = []
     current: list[SourceBlock] = []
     current_heading = ""
     current_size = 0
-    for block, heading in zip(blocks, headings):
+    for block, heading in zip(body_blocks, headings):
         starts_new_heading = bool(heading and current and heading != current_heading)
         exceeds_limit = bool(current and (current_size + len(block.text) > max_chars or len(current) >= max_refs))
         if starts_new_heading or exceeds_limit:
-            sections.append(
+            body_sections.append(
                 SourceSection(
                     title=current_heading or build_section_title(current),
                     refs=[item.ref for item in current],
@@ -388,13 +455,14 @@ def group_numbered_blocks(blocks: list[SourceBlock], *, max_chars: int = 9000, m
         current.append(block)
         current_size += len(block.text)
     if current:
-        sections.append(
+        body_sections.append(
             SourceSection(
                 title=current_heading or build_section_title(current),
                 refs=[item.ref for item in current],
                 text="\n\n".join(item.text for item in current).strip(),
             )
         )
+    sections.extend(label_section_continuations(body_sections))
     return sections
 
 
@@ -575,6 +643,24 @@ def render_quoted_list(items: list[str]) -> str:
     return ", ".join(f'"{item}"' for item in items)
 
 
+def previous_generated_sections(map_path: Path, section_dir: Path) -> list[Path]:
+    if not map_path.exists():
+        return []
+    metadata = load_page(map_path)["frontmatter"]
+    derived_sections = metadata.get("derived_sections", [])
+    if not isinstance(derived_sections, list):
+        return []
+    expected_parent = section_dir.resolve()
+    paths: list[Path] = []
+    for rel_path in derived_sections:
+        if not isinstance(rel_path, str):
+            continue
+        path = (VAULT_ROOT / rel_path).resolve()
+        if path.parent == expected_parent:
+            paths.append(path)
+    return paths
+
+
 def create_document_derivatives(
     *,
     title: str,
@@ -602,6 +688,7 @@ def create_document_derivatives(
     source_note_link = wiki_link_from_rel(note_rel, "来源笔记")
     document_map_link = wiki_link_from_rel(map_rel, "文档地图")
     section_paths = [section_dir / f"{index:02d}-{slugify(section.title)}.md" for index, section in enumerate(sections, start=1)]
+    obsolete_section_paths = set(previous_generated_sections(map_path, section_dir)) - {path.resolve() for path in section_paths}
 
     derived_section_rels = [path.relative_to(VAULT_ROOT).as_posix() for path in section_paths]
     section_index_lines = []
@@ -677,6 +764,8 @@ def create_document_derivatives(
             },
         )
         write_text(section_path, content)
+    for obsolete_path in obsolete_section_paths:
+        obsolete_path.unlink(missing_ok=True)
     return [map_path, *section_paths]
 
 

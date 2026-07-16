@@ -10,6 +10,7 @@ tags:
   - Codex
   - ClaudeCode
 updated: 2026-05-19
+reviewed: 2026-07-16
 summary: 用于让 Codex 或 Claude Code 为一个新项目创建项目级约束文件和最小工程控制面的提示词。
 ---
 

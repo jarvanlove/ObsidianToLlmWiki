@@ -252,6 +252,34 @@ class RetrievalCoreCliTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["results"][0]["path"], "30_shared/patterns/完整答案.md")
 
+    def test_curated_knowledge_outranks_generated_source_sections(self) -> None:
+        source_dir = self.vault / "01_inbox" / "clips" / "guide-sections"
+        source_dir.mkdir(parents=True)
+        (source_dir / "安装指南.md").write_text(
+            page(
+                "安装指南章节",
+                page_type="章节笔记",
+                domain="个人",
+                body="## 安装策略\n\n安装策略来自原始资料。",
+            ),
+            encoding="utf-8",
+        )
+        curated_path = self.vault / "30_shared" / "patterns" / "适配层协议.md"
+        curated_path.write_text(
+            page(
+                "AI coding 生命周期控制协议",
+                page_type="架构",
+                domain="共享",
+                body="## 适配层安装策略\n\nhooks 和 subagents 只作为可选执行器。",
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_search("hooks subagents 安装策略", "--format", "json", "--limit", "1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["results"][0]["path"], "30_shared/patterns/适配层协议.md")
+
     def test_query_alias_expansion_is_explicit_and_retrieves_synonymous_language(self) -> None:
         registry = self.vault / "00_system" / "registry"
         registry.mkdir(parents=True)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import posixpath
 import re
 import subprocess
 import sys
@@ -9,7 +10,17 @@ from datetime import date
 from pathlib import Path
 
 from schema_lib import load_schema_registry, page_link, validate_page_schema
-from wiki_lib import SCRIPT_DIR, VAULT_ROOT, append_log, iter_markdown_files, load_page, parse_date, write_text
+from wiki_lib import (
+    SCRIPT_DIR,
+    VAULT_ROOT,
+    append_log,
+    iter_markdown_files,
+    load_page,
+    parse_date,
+    resolve_wikilink,
+    strip_fenced_code_blocks,
+    write_text,
+)
 
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
 SECTION_NOTE_REQUIRED_HEADINGS = (
@@ -35,17 +46,6 @@ INGEST_QUALITY_FIELDS = (
 )
 
 
-def resolve_link(target: str, page_map: dict[str, Path], stem_map: dict[str, list[Path]]) -> Path | None:
-    normalized = target.strip().replace("\\", "/").removesuffix(".md")
-    if normalized in page_map:
-        return page_map[normalized]
-    stem = Path(normalized).name
-    matches = stem_map.get(stem, [])
-    if len(matches) == 1:
-        return matches[0]
-    return None
-
-
 def should_skip_orphan(rel_path: str) -> bool:
     return (
         rel_path
@@ -62,7 +62,94 @@ def should_skip_orphan(rel_path: str) -> bool:
             "SECURITY.md",
         }
         or rel_path.endswith("/索引.md")
+        or rel_path.endswith("/关系索引.md")
         or rel_path.startswith("40_outputs/analyses/知识库体检-")
+        or rel_path == "40_outputs/学习候选审批视图.md"
+    )
+
+
+def should_check_orphan(page: dict[str, object]) -> bool:
+    rel_path = str(page["rel_path"])
+    if should_skip_orphan(rel_path) or rel_path.startswith("20_projects/archive/"):
+        return False
+    frontmatter = page.get("frontmatter")
+    if not isinstance(frontmatter, dict):
+        return True
+    status = str(frontmatter.get("status") or "").strip()
+    return status not in {"历史", "归档", "已归档", "已收录"}
+
+
+def should_skip_link_source(rel_path: str) -> bool:
+    return rel_path.startswith("40_outputs/analyses/知识库体检-")
+
+
+def should_check_links(page: dict[str, object]) -> bool:
+    rel_path = str(page["rel_path"])
+    if should_skip_link_source(rel_path) or rel_path.startswith("20_projects/archive/"):
+        return False
+    frontmatter = page.get("frontmatter")
+    if not isinstance(frontmatter, dict):
+        return True
+    status = str(frontmatter.get("status") or "").strip()
+    return status not in {"历史", "归档", "已归档", "已收录"}
+
+
+def direct_wikilink_target_exists(
+    target: str,
+    source_rel_path: str,
+    *,
+    vault_root: Path = VAULT_ROOT,
+) -> bool:
+    normalized = target.strip().replace("\\", "/").removesuffix(".md").lstrip("/")
+    source_parent = posixpath.dirname(source_rel_path.replace("\\", "/"))
+    candidates = {normalized, posixpath.normpath(posixpath.join(source_parent, normalized))}
+    for candidate in candidates:
+        if not candidate or candidate == ".." or candidate.startswith("../"):
+            continue
+        if (vault_root / f"{candidate}.md").is_file():
+            return True
+    return False
+
+
+def should_check_stale(page: dict[str, object]) -> bool:
+    rel_path = str(page["rel_path"])
+    if (
+        rel_path.startswith("20_projects/archive/")
+        or "/sources/" in rel_path
+        or "/source-notes/" in rel_path
+    ):
+        return False
+    frontmatter = page.get("frontmatter")
+    if not isinstance(frontmatter, dict):
+        return False
+    status = str(frontmatter.get("status") or "").strip()
+    return status in {"活跃", "常青", "进行中", "待处理", "待验证"}
+
+
+def page_freshness_date(page: dict[str, object]) -> date | None:
+    frontmatter = page.get("frontmatter")
+    if not isinstance(frontmatter, dict):
+        return None
+    reviewed = parse_date(str(frontmatter.get("reviewed") or ""))
+    if reviewed is not None:
+        return reviewed
+    return parse_date(str(frontmatter.get("updated") or ""))
+
+
+def section_requires_promotion_review(
+    frontmatter: dict[str, object],
+    *,
+    today: date,
+    backlog_days: int,
+) -> bool:
+    updated = parse_date(str(frontmatter.get("updated") or ""))
+    status = str(frontmatter.get("status") or "").strip()
+    has_targets = bool(list_items(frontmatter.get("recommended_targets")))
+    return bool(
+        updated is not None
+        and status == "已生成"
+        and has_targets
+        and (today - updated).days > backlog_days
     )
 
 
@@ -178,12 +265,15 @@ def main() -> None:
         stem_map[Path(rel_path).name].append(path)
 
     for page in pages:
-        matches = WIKILINK_RE.findall(str(page["body"]))
+        source_rel_path = str(page["rel_path"])
+        if not should_check_links(page):
+            continue
+        matches = WIKILINK_RE.findall(strip_fenced_code_blocks(str(page["body"])))
         for match in matches:
-            resolved = resolve_link(match, page_map, stem_map)
+            resolved = resolve_wikilink(match, source_rel_path, page_map, stem_map)
             if resolved is not None:
                 incoming[resolved].add(page["path"])
-            else:
+            elif not direct_wikilink_target_exists(match, source_rel_path):
                 dead_links[page["path"]].append(match)
 
         for error in validate_page_schema(page, schema_registry):
@@ -193,7 +283,7 @@ def main() -> None:
 
         title = str(page["title"]).strip()
         rel_path = str(page["rel_path"])
-        if title and not should_skip_orphan(rel_path):
+        if title and should_check_orphan(page):
             duplicate_titles[title].append(page)
 
     today = date.today()
@@ -205,23 +295,28 @@ def main() -> None:
 
     for page in pages:
         rel_path = str(page["rel_path"])
-        if should_skip_orphan(rel_path):
+        if not should_check_orphan(page):
             continue
         if page["path"] not in incoming:
             orphans.append(page)
 
         frontmatter = page["frontmatter"]
         if isinstance(frontmatter, dict):
-            updated = parse_date(str(frontmatter.get("updated") or ""))
-            if updated is not None and (today - updated).days > args.stale_days:
+            freshness_date = page_freshness_date(page)
+            if (
+                should_check_stale(page)
+                and freshness_date is not None
+                and (today - freshness_date).days > args.stale_days
+            ):
                 stale.append(page)
 
             note_type = str(frontmatter.get("type") or "").strip()
-            if note_type == "章节笔记":
-                status = str(frontmatter.get("status") or "").strip()
-                has_targets = bool(list_items(frontmatter.get("recommended_targets")))
-                if updated is not None and status == "已生成" and has_targets and (today - updated).days > args.section_backlog_days:
-                    section_promotion_backlog.append(page)
+            if note_type == "章节笔记" and section_requires_promotion_review(
+                frontmatter,
+                today=today,
+                backlog_days=args.section_backlog_days,
+            ):
+                section_promotion_backlog.append(page)
             if note_type == "来源":
                 media_type = str(frontmatter.get("media_type") or "").strip()
                 parse_status = str(frontmatter.get("parse_status") or "").strip()

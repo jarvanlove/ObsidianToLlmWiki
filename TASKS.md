@@ -24,6 +24,8 @@
 | OTW-PRIV-001 | Add local AI-access exclusion policy | P0 | Excluded pages leave retrieval, excluded sources cannot be ingested, and files remain available to the user | Done |
 | OTW-LIFE-001 | Close lifecycle with session receipts | P1 | `收工` emits a local receipt and every candidate must be resolved | Done |
 | OTW-INGEST-005 | Add source extraction quality gate | P0 | Empty/scanned sources are blocked, long sources retain map/sections/refs, and OpenClaw 114-page validation covers every page | Done |
+| OTW-INGEST-006 | Harden long-document chapter maps and reingestion | P0 | TOC pages are grouped, body/code lines do not become headings, split chapters retain continuation labels, and obsolete generated sections are removed safely | Done |
+| OTW-GOV-001 | Distinguish current health from historical and generated content | P0 | Schema, dead-link, orphan, and stale checks resolve local links correctly, ignore generated/archive evidence where appropriate, and retain a truthful review queue | Done |
 | OTW-XPLAT-001 | Add reproducible install, doctor, and three-platform CI | P1 | Python 3.10/3.12 test matrix covers Windows, macOS, Linux; local doctor validates runtime prerequisites | Done |
 
 ## Next

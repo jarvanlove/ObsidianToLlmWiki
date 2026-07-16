@@ -14,6 +14,8 @@ from wiki_lib import (
     iter_markdown_files,
     load_page,
     parse_date,
+    resolve_wikilink,
+    strip_fenced_code_blocks,
     update_page_frontmatter,
 )
 
@@ -21,17 +23,6 @@ WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".tif", ".tiff"}
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".m4v"}
-
-
-def resolve_link(target: str, page_map: dict[str, Path], stem_map: dict[str, list[Path]]) -> Path | None:
-    normalized = target.strip().replace("\\", "/").removesuffix(".md")
-    if normalized in page_map:
-        return page_map[normalized]
-    stem = Path(normalized).name
-    matches = stem_map.get(stem, [])
-    if len(matches) == 1:
-        return matches[0]
-    return None
 
 
 STRUCTURAL_DERIVED_TYPES = {"文档地图", "章节笔记"}
@@ -73,8 +64,9 @@ def build_backlinks() -> tuple[list[dict[str, object]], dict[Path, set[Path]]]:
         stem_map[Path(rel_path).name].append(path)
 
     for page in pages:
-        for match in WIKILINK_RE.findall(str(page["body"])):
-            resolved = resolve_link(match, page_map, stem_map)
+        source_rel_path = str(page["rel_path"])
+        for match in WIKILINK_RE.findall(strip_fenced_code_blocks(str(page["body"]))):
+            resolved = resolve_wikilink(match, source_rel_path, page_map, stem_map)
             if resolved is not None:
                 incoming[resolved].add(page["path"])
     return pages, incoming

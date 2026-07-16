@@ -97,6 +97,54 @@ class SourceQualityUnitTests(unittest.TestCase):
         self.assertEqual(len(sections), 1)
         self.assertEqual(sections[0].refs, ["p.1", "p.2", "p.3"])
 
+    def test_pdf_front_matter_and_toc_are_grouped_before_body_sections(self) -> None:
+        pages = [
+            "## 第 1 页\n\nDocument title\nVersion 1.0",
+            "## 第 2 页\n\n目录\nTable of Contents\n01 Architecture\n02 Workflow",
+            "## 第 3 页\n\n03 Operations\n04 Security\nAppendix A FAQ",
+            "## 第 4 页\n\n01 Architecture\nArchitecture\n这是正文内容。" + ("架构说明" * 30),
+        ]
+        sections = ingest_module.build_source_sections("\n\n".join(pages), "pdf")
+        self.assertEqual(sections[0].title, "封面与目录")
+        self.assertEqual(sections[0].refs, ["p.1", "p.2", "p.3"])
+        self.assertEqual(sections[1].title, "01 Architecture")
+        self.assertEqual(sections[1].refs, ["p.4"])
+
+    def test_pdf_numeric_facts_and_code_comments_do_not_become_chapters(self) -> None:
+        pages = [
+            "## 第 1 页\n\n01 Architecture\nArchitecture\n" + ("architecture content " * 30),
+            "## 第 2 页\n\nMetrics\n43 lines of code are enough for this example.\n# Update stable version\n" + ("metrics content " * 30),
+            "## 第 3 页\n\n02 Workflow\nWorkflow\n" + ("workflow content " * 30),
+        ]
+        sections = ingest_module.build_source_sections("\n\n".join(pages), "pdf")
+        self.assertEqual([section.title for section in sections], ["01 Architecture", "02 Workflow"])
+        self.assertEqual(sections[0].refs, ["p.1", "p.2"])
+        self.assertEqual(sections[1].refs, ["p.3"])
+
+    def test_long_pdf_chapters_keep_heading_on_continuation_sections(self) -> None:
+        pages = []
+        for number in range(1, 15):
+            heading = "01 Architecture\nArchitecture" if number == 1 else "02 Workflow\nWorkflow" if number == 8 else ""
+            pages.append(f"## 第 {number} 页\n\n{heading}\n" + (f"page {number} content " * 40))
+        sections = ingest_module.build_source_sections("\n\n".join(pages), "pdf")
+        self.assertEqual(
+            [section.title for section in sections],
+            ["01 Architecture", "01 Architecture（续 2）", "02 Workflow", "02 Workflow（续 2）"],
+        )
+        self.assertEqual(sections[1].refs, ["p.7"])
+        self.assertEqual(sections[3].refs, ["p.14"])
+
+    def test_english_sentence_is_not_mistaken_for_a_lettered_appendix(self) -> None:
+        pages = [
+            "## 第 1 页\n\n01 Architecture\nArchitecture\n" + ("architecture content " * 30),
+            "## 第 2 页\n\nA system design principle\n" + ("design content " * 30),
+            "## 第 3 页\n\nA 常见问题 FAQ\nFrequently Asked Questions\n" + ("answer content " * 30),
+        ]
+        sections = ingest_module.build_source_sections("\n\n".join(pages), "pdf")
+        self.assertEqual([section.title for section in sections], ["01 Architecture", "A 常见问题 FAQ"])
+        self.assertEqual(sections[0].refs, ["p.1", "p.2"])
+        self.assertEqual(sections[1].refs, ["p.3"])
+
     def test_pdf_cjk_spacing_is_normalized_and_excerpt_limit_is_exact(self) -> None:
         self.assertEqual(quality_module.normalize_pdf_text("国 际 平 台 OpenClaw"), "国际平台 OpenClaw")
         excerpt = ingest_module.excerpt_from_text("正文" * 1000, limit=1200)
@@ -162,6 +210,22 @@ class SourceIngestionGoldenTests(unittest.TestCase):
         self.assertTrue(metadata["needs_ocr"])
         self.assertEqual(metadata["derived_pages"], [])
         self.assertTrue((self.vault / metadata["source_path"]).exists())
+
+    def test_reingestion_removes_only_obsolete_generated_sections(self) -> None:
+        source = self.root / "changing-guide.md"
+        source.write_text("# One\n\nFirst body.\n\n# Two\n\nSecond body.\n\n# Three\n\nThird body.\n", encoding="utf-8")
+        first_note = self.ingest(source, "Changing Guide")
+        first_map = self.vault / frontmatter(first_note)["derived_pages"][0]
+        first_sections = frontmatter(first_map)["derived_sections"]
+        self.assertEqual(len(first_sections), 3)
+
+        source.write_text("# One\n\nFirst body.\n\n# Two\n\nSecond body.\n", encoding="utf-8")
+        second_note = self.ingest(source, "Changing Guide")
+        second_map = self.vault / frontmatter(second_note)["derived_pages"][0]
+        second_sections = frontmatter(second_map)["derived_sections"]
+        self.assertEqual(len(second_sections), 2)
+        self.assertFalse((self.vault / first_sections[-1]).exists())
+        self.assertEqual(len(list((second_map.parent / "changing-guide-sections").glob("*.md"))), 2)
 
 
 if __name__ == "__main__":

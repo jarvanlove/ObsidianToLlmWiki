@@ -19,8 +19,11 @@ EXEMPT_SCHEMA_PATHS = {
     "SECURITY.md",
     "index.md",
     "log.md",
+    "快速开始.md",
+    "标准自然语言话术清单.md",
     "会话启动页.md",
     "使用手册.md",
+    "40_outputs/学习候选审批视图.md",
 }
 
 
@@ -70,7 +73,14 @@ def validate_page_schema(page: dict[str, object], registry: dict[str, object]) -
 
     allowed_domains = [str(item) for item in rule.get("domain", []) if str(item).strip()]
     domain = str(frontmatter.get("domain") or "").strip()
-    if allowed_domains and domain not in allowed_domains:
+    global_allowed_domains = [
+        str(item) for item in registry.get("allowed_domains", []) if str(item).strip()
+    ]
+    if global_allowed_domains and domain not in global_allowed_domains:
+        errors.append(
+            f"`domain` 非法，当前为 `{domain}`，允许值: {', '.join(global_allowed_domains)}。"
+        )
+    elif allowed_domains and domain not in allowed_domains:
         errors.append(f"`domain` 非法，当前为 `{domain}`，允许值: {', '.join(allowed_domains)}。")
 
     updated = frontmatter.get("updated")

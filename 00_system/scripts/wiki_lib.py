@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import posixpath
 import re
 from fnmatch import fnmatchcase
 from datetime import date, datetime
@@ -33,6 +34,51 @@ EXCLUDED_PATH_SNIPPETS = (
 
 class PrivatePolicyError(RuntimeError):
     pass
+
+
+def resolve_wikilink(
+    target: str,
+    source_rel_path: str,
+    page_map: dict[str, Path],
+    stem_map: dict[str, list[Path]],
+) -> Path | None:
+    normalized = target.strip().replace("\\", "/").removesuffix(".md").lstrip("/")
+    if normalized in page_map:
+        return page_map[normalized]
+
+    source_parent = posixpath.dirname(source_rel_path.replace("\\", "/"))
+    sibling = posixpath.normpath(posixpath.join(source_parent, normalized))
+    if sibling in page_map:
+        return page_map[sibling]
+
+    matches = stem_map.get(posixpath.basename(normalized), [])
+    if len(matches) == 1:
+        return matches[0]
+    if matches:
+        source_parts = tuple(part for part in posixpath.dirname(source_rel_path).split("/") if part)
+        candidates: list[tuple[int, Path]] = []
+        for rel_path, path in page_map.items():
+            if path not in matches:
+                continue
+            candidate_parts = tuple(part for part in posixpath.dirname(rel_path).split("/") if part)
+            common = 0
+            for source_part, candidate_part in zip(source_parts, candidate_parts):
+                if source_part != candidate_part:
+                    break
+                common += 1
+            distance = len(source_parts) + len(candidate_parts) - (2 * common)
+            candidates.append((distance, path))
+        if candidates:
+            minimum = min(distance for distance, _ in candidates)
+            nearest = [path for distance, path in candidates if distance == minimum]
+            if len(nearest) == 1:
+                return nearest[0]
+    return None
+
+
+def strip_fenced_code_blocks(text: str) -> str:
+    without_backticks = re.sub(r"(?ms)^```[^\n]*\n.*?^```[ \t]*$", "", text)
+    return re.sub(r"(?ms)^~~~[^\n]*\n.*?^~~~[ \t]*$", "", without_backticks)
 
 
 def _policy_string_list(value: object, field: str) -> list[str]:
