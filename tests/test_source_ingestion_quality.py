@@ -197,6 +197,24 @@ class SourceIngestionGoldenTests(unittest.TestCase):
         first_section = self.vault / map_metadata["derived_sections"][0]
         self.assertTrue(frontmatter(first_section)["source_refs"])
 
+    def test_colons_in_document_and_section_titles_produce_valid_frontmatter(self) -> None:
+        source = self.root / "colon-heading.md"
+        source.write_text(
+            "# Architecture: Runtime\n\n" + ("Reliable source material. " * 80),
+            encoding="utf-8",
+        )
+
+        note = self.ingest(source, "Guide: UI Governance")
+        metadata = frontmatter(note)
+        document_map = self.vault / metadata["derived_pages"][0]
+        section = self.vault / frontmatter(document_map)["derived_sections"][0]
+
+        self.assertEqual(metadata["title"], "Guide: UI Governance")
+        self.assertEqual(
+            frontmatter(section)["title"],
+            "Guide: UI Governance - 01 Architecture: Runtime",
+        )
+
     def test_blocked_pdf_preserves_source_but_creates_no_weak_derivatives(self) -> None:
         source = self.root / "blank.pdf"
         writer = PdfWriter()

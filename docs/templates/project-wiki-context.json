@@ -3,7 +3,7 @@
   "runtime_root": "<obsidiantowiki-public-root>",
   "project_repo_root": "<current-project-repo-root>",
   "project_slug": "<project-slug>",
-  "project_scaffold_version": 1,
+  "project_scaffold_version": 2,
   "project_index": "20_projects/active/<project-slug>/索引.md",
   "project_overview": "20_projects/active/<project-slug>/概览.md",
   "project_architecture": "20_projects/active/<project-slug>/架构.md",

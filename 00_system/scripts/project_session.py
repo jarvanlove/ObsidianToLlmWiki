@@ -93,6 +93,8 @@ def classify_update_candidates(paths: list[str]) -> list[str]:
         candidates.append("ARCHITECTURE.md or docs/adr/: check whether boundaries, contracts, or data flow changed.")
     if has_any(paths, ("test", "spec", "playwright", "pytest", "vitest", "jest", "testing.md")):
         candidates.append("TESTING.md: check whether verification commands or required checks changed.")
+    if has_any(paths, ("docs/design", "design/", "ui/", "component", "token", "theme", "css", "scss", "tailwind")):
+        candidates.append("docs/design/UI_CONTRACT.md: check UI task evidence, approved design sources, and design-system impact.")
     if has_any(paths, ("auth", "security", "permission", "secret", "token", "login", "session")):
         candidates.append("SECURITY.md: check whether trust boundaries or sensitive rules changed.")
     if has_any(paths, ("deploy", "docker", "compose", "ci", "github/workflows", "env", "terraform", "helm")):
@@ -231,6 +233,8 @@ def project_state(repo_root: Path) -> dict[str, Any]:
         if not context
         else "needs_receipt_resolution"
         if receipt_status in {"pending", "invalid"}
+        else "closed_pending_commit"
+        if receipt_status == "resolved" and changed
         else "needs_close"
         if changed
         else "attached_idle"
@@ -269,9 +273,9 @@ def start_report(repo_root: Path, task: str) -> dict[str, Any]:
     }
 
 
-def close_report(repo_root: Path, verification: str) -> dict[str, Any]:
+def close_report(repo_root: Path, verification: str, ui_task: str = "") -> dict[str, Any]:
     paths = changed_files(repo_root)
-    return {
+    report: dict[str, Any] = {
         "kind": "task_close",
         "changed_files": paths,
         "verification": verification.strip() or "TODO: record exact commands and results.",
@@ -285,6 +289,14 @@ def close_report(repo_root: Path, verification: str) -> dict[str, Any]:
         ],
         "rule": "do not write wiki for routine code edits without a durable conclusion.",
     }
+    if ui_task.strip():
+        from ui_governance import validate_task
+
+        ui_report = validate_task(repo_root, ui_task.strip(), phase="close")
+        report["ui_governance"] = ui_report
+        if not ui_report["passed"]:
+            raise ValueError("UI task cannot close: " + "; ".join(ui_report["blocking"]))
+    return report
 
 
 def render_check_text(report: dict[str, Any]) -> str:
@@ -374,6 +386,7 @@ def main() -> None:
     parser.add_argument("--repo-root", default=".", help="Project repository root.")
     parser.add_argument("--task", default="", help="Task description for start.")
     parser.add_argument("--verification", default="", help="Verification summary for close.")
+    parser.add_argument("--ui-task", default="", help="Optional project-local UI task id that must pass visual evidence gates.")
     parser.add_argument("--strict", action="store_true", help="Exit with code 1 when required attach items are missing.")
     parser.add_argument("--format", choices=["text", "json", "markdown"], default="text", help="Output format.")
     parser.add_argument("--output", default="", help="Optional output file.")
@@ -392,7 +405,10 @@ def main() -> None:
     elif args.command == "start":
         report = start_report(repo_root, args.task)
     elif args.command == "close":
-        report = close_report(repo_root, args.verification)
+        try:
+            report = close_report(repo_root, args.verification, args.ui_task)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
         target_receipt = receipt_path(repo_root, args.receipt)
         existing_receipt = load_receipt(target_receipt)
         if existing_receipt.get("status") in {"pending", "invalid"}:

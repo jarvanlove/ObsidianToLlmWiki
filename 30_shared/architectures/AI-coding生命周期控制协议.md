@@ -71,6 +71,19 @@ ObsidianToWiki 负责定义协议、模板和脚本；接入项目负责在本�
 |---|---|---|---|
 | `project_attach` | 项目未接入或用户要求重新接入 | 当前 repo root、wiki root、项目名 | `wiki.context.json`、入口文件、控制文件、support dirs、项目 wiki 页、严格检查报告 |
 
+## UI 子生命周期
+
+用户面对 UI 任务仍只使用自然语言。Agent 在 `task_start` 后判断 UI 影响：
+
+| 等级 | 动作 |
+|---|---|
+| U0 | 继续正常生命周期。 |
+| U1 | 初始化项目 UI Contract/task，按既有设计系统实现，收工前验证视觉证据。 |
+| U2 | 先执行体验梳理和视觉方向；Design Authority 批准后才进入实现。 |
+| U3 | 在 U2 基础上增加 Design RFC、迁移影响与批准。 |
+
+项目内 `ui_governance.py` 只验证阶段、批准和证据；设计判断由 [[30_shared/architectures/AI产品UI设计治理协议|AI产品UI设计治理协议]] 约束。用户点名 Skill、Figma 或 Stitch 时，它们是任务执行器，不得跳过该子生命周期。
+
 ## 更新规则矩阵
 
 | 事件 | 必须更新 | 可选更新 |
@@ -84,6 +97,7 @@ ObsidianToWiki 负责定义协议、模板和脚本；接入项目负责在本�
 | 运维事故或排障 | `OPERATIONS.md` | 项目 wiki 时间线/风险页 |
 | 安全、权限、数据删除变化 | `SECURITY.md`, `TASKS.md` | 项目 wiki 风险页 |
 | 版本级用户可见变化 | `CHANGELOG.md` | 项目时间线 |
+| U1+ UI 任务 | `docs/design/UI_CONTRACT.md`, UI task, `TESTING.md` | 项目决策；跨项目规则回写共享 UI 治理协议 |
 | 跨项目可复用经验 | 无固定项目文件 | `30_shared/` |
 | 个人偏好或工作方法 | 无固定项目文件 | `10_personal/` |
 

@@ -101,6 +101,16 @@ class WikiGovernanceTests(unittest.TestCase):
         self.assertFalse(lint_wiki.should_check_orphan(archived))
         self.assertTrue(lint_wiki.should_check_orphan(active))
 
+    def test_preserved_raw_sources_are_not_treated_as_governed_knowledge_pages(self) -> None:
+        raw_source = {
+            "rel_path": "01_inbox/raw/original-handbook.md",
+            "frontmatter": {},
+        }
+
+        self.assertFalse(lint_wiki.should_check_links(raw_source))
+        self.assertFalse(lint_wiki.should_check_orphan(raw_source))
+        self.assertFalse(schema_lib.page_requires_schema("01_inbox/raw/original-handbook.md"))
+
     def test_mermaid_node_shapes_are_not_parsed_as_wikilinks(self) -> None:
         body = "before [[real-page]]\n```mermaid\nP1[[[登录页]] 登录页]\n```\nafter"
         stripped = wiki_lib.strip_fenced_code_blocks(body)

@@ -40,7 +40,7 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
             self.assertEqual(attached.returncode, 0, attached.stderr)
             context = json.loads((repo / "wiki.context.json").read_text(encoding="utf-8"))
             self.assertEqual(Path(context["runtime_root"]), REPO_ROOT)
-            self.assertEqual(context["project_scaffold_version"], 1)
+            self.assertEqual(context["project_scaffold_version"], 2)
             self.assertTrue((repo / ".obsidiantowiki/project-scaffold-state.json").exists())
             self.assertFalse((repo / "scripts/ai").exists())
             self.assertFalse((repo / ".agents").exists())

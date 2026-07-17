@@ -35,6 +35,8 @@ Read `wiki.context.json` first if it exists. Use the paths below as the human-re
 - Do not treat `CLAUDE.md` as Codex's parent instruction file.
 - Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.
 - Run AI coding tasks through the project lifecycle: task_start -> task_plan -> task_implement -> task_verify -> task_close -> memory_file_back.
+- Classify user-facing work as U0/U1/U2/U3 UI impact. For U1+ tasks, create and follow `docs/design/UI_CONTRACT.md` and the matching `docs/design/ui-tasks/<id>.yaml` through the public runtime.
+- A named UI Skill is an executor, not design authority. U2/U3 production implementation requires an approved visual direction; UI close requires browser screenshots, Visual QA, and accessibility evidence.
 - Before closing a task, update relevant project control files and only file back durable conclusions to the wiki.
 - For local implementation tasks, read project control files directly when they exist:
   - `PRODUCT_SPEC.md`

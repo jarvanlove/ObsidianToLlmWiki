@@ -33,7 +33,7 @@ def add_project_options(parser: argparse.ArgumentParser) -> None:
 
 def nl_args(args: argparse.Namespace, request: str) -> list[str]:
     values = ["--request", request, "--repo-root", str(Path(args.repo_root).expanduser().resolve())]
-    for name in ("wiki_root", "source", "title", "question", "conclusion", "tags"):
+    for name in ("wiki_root", "source", "title", "question", "conclusion", "tags", "task", "ui_task"):
         value = str(getattr(args, name, "") or "").strip()
         if value:
             values.extend([f"--{name.replace('_', '-')}", value])
@@ -98,6 +98,26 @@ def main() -> None:
         command_parser = subparsers.add_parser(command)
         add_project_options(command_parser)
         command_parser.add_argument("--verification", default="")
+        if command in {"start", "continue"}:
+            command_parser.add_argument("--task", default="")
+        if command == "close":
+            command_parser.add_argument("--ui-task", default="")
+
+    ui = subparsers.add_parser("ui", help="Run project-local UI governance checks for an agent-managed UI task.")
+    ui.add_argument("action", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check"])
+    add_project_options(ui)
+    ui.add_argument("--task", default="")
+    ui.add_argument("--task-id", default="")
+    ui.add_argument("--level", choices=["U0", "U1", "U2", "U3"], default="")
+    ui.add_argument("--requested-skill", default="")
+    ui.add_argument("--stage", default="")
+    ui.add_argument("--approval-note", default="")
+    ui.add_argument("--screenshot", action="append", default=[])
+    ui.add_argument("--visual-qa", default="")
+    ui.add_argument("--accessibility-report", action="append", default=[])
+    ui.add_argument("--note", default="")
+    ui.add_argument("--phase", choices=["implementation", "close"], default="implementation")
+    ui.add_argument("--format", choices=["text", "json"], default="text")
 
     search = subparsers.add_parser("search")
     search.add_argument("query")
@@ -152,6 +172,17 @@ def main() -> None:
     elif args.command == "close":
         args.conclusion = args.verification
         run_natural_language(args, "收工")
+    elif args.command == "ui":
+        values = [args.action, "--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format]
+        for name in ("task", "task_id", "level", "requested_skill", "stage", "approval_note", "visual_qa", "note", "phase"):
+            value = str(getattr(args, name, "") or "").strip()
+            if value:
+                values.extend([f"--{name.replace('_', '-')}", value])
+        for item in args.screenshot:
+            values.extend(["--screenshot", item])
+        for item in args.accessibility_report:
+            values.extend(["--accessibility-report", item])
+        run_script("ui_governance.py", values)
     elif args.command == "attach":
         run_natural_language(args, "将当前项目接入 wiki")
     elif args.command == "search":

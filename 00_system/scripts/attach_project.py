@@ -66,6 +66,15 @@ PROJECT_SUPPORT_FILES = {
 }
 
 
+def project_scaffold_version() -> int:
+    schema_path = SCRIPT_DIR.parent / "registry" / "project_scaffold_schema.json"
+    try:
+        payload = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 1
+    return int(payload.get("current_project_scaffold_version") or 1) if isinstance(payload, dict) else 1
+
+
 def project_file_map(project_slug: str) -> dict[str, str]:
     base = f"20_projects/active/{project_slug}"
     return {
@@ -120,6 +129,8 @@ def render_bootstrap(title: str, repo_root: Path, wiki_root: Path, project_slug:
             f"- {peer_rule}",
             "- Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.",
             "- Run AI coding tasks through the project lifecycle: task_start -> task_plan -> task_implement -> task_verify -> task_close -> memory_file_back.",
+            "- Classify user-facing work as U0/U1/U2/U3 UI impact. For U1+ tasks, create and follow `docs/design/UI_CONTRACT.md` and the matching `docs/design/ui-tasks/<id>.yaml` through the public runtime.",
+            "- A named UI Skill is an executor, not design authority. U2/U3 production implementation requires an approved visual direction; UI close requires browser screenshots, Visual QA, and accessibility evidence.",
             "- Before closing a task, update relevant project control files and only file back durable conclusions to the wiki.",
             "- For local implementation tasks, read project control files directly when they exist:",
             "  - `PRODUCT_SPEC.md`",
@@ -167,7 +178,7 @@ def render_context(repo_root: Path, wiki_root: Path, project_slug: str) -> str:
         "runtime_root": str(SCRIPT_DIR.parent.parent),
         "project_repo_root": str(repo_root),
         "project_slug": project_slug,
-        "project_scaffold_version": 1,
+        "project_scaffold_version": project_scaffold_version(),
         **project_file_map(project_slug),
         "shared_index": "30_shared/索引.md",
     }

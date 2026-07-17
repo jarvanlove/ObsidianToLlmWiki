@@ -64,6 +64,52 @@ class ProjectSessionReceiptTests(unittest.TestCase):
             self.assertEqual(resolved.returncode, 0, resolved.stderr)
             self.assertEqual(json.loads(resolved.stdout)["status"], "resolved")
 
+    def test_resolved_receipt_with_uncommitted_changes_is_closed_pending_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            run(["git", "init"], repo)
+            run(["git", "config", "user.email", "test@example.com"], repo)
+            run(["git", "config", "user.name", "Test"], repo)
+            source = repo / "feature.py"
+            source.write_text("value = 1\n", encoding="utf-8")
+            run(["git", "add", "feature.py"], repo)
+            run(["git", "commit", "-m", "initial"], repo)
+            wiki_root = repo / "wiki"
+            (repo / "wiki.context.json").write_text(
+                json.dumps({"wiki_root": str(wiki_root), "project_slug": "demo"}),
+                encoding="utf-8",
+            )
+            source.write_text("value = 2\n", encoding="utf-8")
+
+            closed = run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "close",
+                    "--repo-root",
+                    str(repo),
+                    "--verification",
+                    "unit tests passed",
+                    "--format",
+                    "json",
+                ],
+                REPO_ROOT,
+            )
+            self.assertEqual(closed.returncode, 0, closed.stderr)
+            receipt = json.loads(Path(json.loads(closed.stdout)["receipt_path"]).read_text(encoding="utf-8"))
+            resolve_command = [sys.executable, str(SCRIPT), "resolve", "--repo-root", str(repo), "--format", "json"]
+            for candidate in receipt["candidates"]:
+                resolve_command.extend(["--resolution", f"{candidate['id']}=not_applicable"])
+            resolved = run(resolve_command, REPO_ROOT)
+            self.assertEqual(resolved.returncode, 0, resolved.stderr)
+
+            checked = run(
+                [sys.executable, str(SCRIPT), "check", "--repo-root", str(repo), "--format", "json"],
+                REPO_ROOT,
+            )
+            self.assertEqual(checked.returncode, 0, checked.stderr)
+            self.assertEqual(json.loads(checked.stdout)["cockpit_state"], "closed_pending_commit")
+
 
 if __name__ == "__main__":
     unittest.main()

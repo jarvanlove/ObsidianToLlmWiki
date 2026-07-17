@@ -12,6 +12,7 @@ This is not just a note template repository and not just a set of search scripts
 - It supports project attachment, source ingestion, retrieval, answer file-back, shared promotion, and ongoing governance
 - Users interact through natural language while scripts, indexing, sync, and maintenance stay inside the system
 - For daily project work, remember only three cockpit phrases first: "start work", "continue", and "close work"
+- Product UI tasks use the same cockpit: the agent classifies UI impact, controls UI Skill authority, and requires approved direction plus visual evidence when the change is material
 - It is meant for long-term use, not for leaving knowledge trapped in chat windows or scattered folders
 
 ## Is This Project Now A Skill?
@@ -26,6 +27,8 @@ Not by itself. The complete product has four cooperating parts:
 Install the Manager Skill once for each AI tool environment that should operate the wiki. Attach each project once. A normal ObsidianToWiki upgrade does not require rebuilding the private vault or attaching existing projects again. Project hooks and subagents are optional adapters, not a prerequisite for daily use.
 
 Daily use remains natural language. In an attached project, say "start work", "continue", or "close work"; for knowledge work, ask the agent to ingest, find, compare, or write back material. The agent is responsible for invoking scripts and strict checks internally.
+
+For a material UI task, describe the page or flow normally. The agent creates project-local UI controls only when needed: local UI fixes stay within the approved system, while new flows or global visual changes require an approved direction before implementation and browser/QA/accessibility evidence before close. A named UI Skill, Figma node, or Stitch output is an executor or reference, never automatic Design Authority.
 
 ## Who This Is For
 

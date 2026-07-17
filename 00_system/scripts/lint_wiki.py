@@ -70,7 +70,11 @@ def should_skip_orphan(rel_path: str) -> bool:
 
 def should_check_orphan(page: dict[str, object]) -> bool:
     rel_path = str(page["rel_path"])
-    if should_skip_orphan(rel_path) or rel_path.startswith("20_projects/archive/"):
+    if (
+        should_skip_orphan(rel_path)
+        or rel_path.startswith("20_projects/archive/")
+        or rel_path.startswith("01_inbox/raw/")
+    ):
         return False
     frontmatter = page.get("frontmatter")
     if not isinstance(frontmatter, dict):
@@ -85,7 +89,11 @@ def should_skip_link_source(rel_path: str) -> bool:
 
 def should_check_links(page: dict[str, object]) -> bool:
     rel_path = str(page["rel_path"])
-    if should_skip_link_source(rel_path) or rel_path.startswith("20_projects/archive/"):
+    if (
+        should_skip_link_source(rel_path)
+        or rel_path.startswith("20_projects/archive/")
+        or rel_path.startswith("01_inbox/raw/")
+    ):
         return False
     frontmatter = page.get("frontmatter")
     if not isinstance(frontmatter, dict):

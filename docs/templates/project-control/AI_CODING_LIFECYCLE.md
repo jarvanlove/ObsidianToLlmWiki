@@ -24,6 +24,19 @@ Before editing:
 4. Classify the request as a normal task, requirement change, bug fix, release check, or operations incident.
 5. State task boundary, risk level, expected touched files, and verification plan.
 
+## UI Task Gate
+
+For user-facing work, the agent classifies UI impact before implementation:
+
+| Level | Meaning | Gate |
+|---|---|---|
+| U0 | No UI impact | Normal lifecycle only |
+| U1 | Local UI change inside the approved system | Reuse `docs/design/UI_CONTRACT.md`; close with screenshots, Visual QA, and accessibility evidence |
+| U2 | New or materially redesigned user flow | Record a UI task and obtain Design Authority direction approval before implementation |
+| U3 | Global visual, token, component, or brand-system change | U2 gates plus an approved Design RFC |
+
+The agent owns classification and internal runtime calls. The user does not need to run a script or memorize these levels. A named UI Skill is only an executor; it cannot override approved design sources. For U1+ use the `otw.py ui` runtime to create and validate project-local UI task evidence.
+
 The agent invokes the lifecycle runtime internally. Do not ask the user to locate the runtime or run a checklist script.
 
 ## Close A Task
@@ -35,6 +48,8 @@ Before reporting completion:
 3. Update `TASKS.md`.
 4. Check whether `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECURITY.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, `CHANGELOG.md`, or `docs/adr/` should change.
 5. File back only durable conclusions to the wiki.
+
+For U1+ work, do not close until the linked UI task has passed its visual-evidence gate. A material UI task needs browser screenshots, an independent Visual QA report, and accessibility evidence. U2/U3 additionally require recorded visual-direction approval.
 
 The agent records and resolves the close receipt internally before reporting completion.
 

@@ -58,6 +58,7 @@ python .\00_system\scripts\build_retrieval_index.py
 | Shared prompt/pattern/index | `lint_wiki.ps1`, verify `30_shared/索引.md` |
 | Project attach templates | inspect generated template wording; if possible, test on disposable project |
 | AI session protocol/script | run `project_session.py check --strict` and `handle_nl_request.py --request "开始工作"` / `"继续"` / `"收工"` on a disposable attached project |
+| UI governance runtime | run `tests.test_ui_governance`; verify U0 creates no design controls, U2 blocks implementation until direction approval, U3 blocks implementation until RFC approval, and U1+ close requires screenshot/Visual QA/accessibility evidence |
 | Natural-language project attach | run `handle_nl_request.py --request "开始工作"` against an existing disposable git repo and an empty disposable wiki root; verify `wiki.context.json`, control files, wiki core pages, runtime templates, and `page_schemas.json` exist |
 | AI adapter templates | test disposable attach with `--install-ai-adapters`; verify no private wiki path is written |
 | Python script | targeted script run plus `lint_wiki.ps1` |
@@ -82,6 +83,7 @@ python .\00_system\scripts\build_retrieval_index.py
 - Confirm Codex instructions do not require reading `CLAUDE.md`.
 - Confirm Claude Code instructions do not require reading `AGENTS.md`.
 - Confirm public scaffold assets do not include private raw material or secrets.
+- Confirm user-facing UI tasks still use natural language, named Skills are recorded as executors, and Figma/Stitch sources are not treated as approved unless the UI task says so.
 - Confirm private project memory is updated for durable conclusions.
 - Confirm README, quick start, manual, Skill template, installers, manifests, control templates, architecture, operations, deployment, security, changelog, and tests describe the same setup/update contract.
 

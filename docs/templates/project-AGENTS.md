@@ -34,4 +34,6 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - 稳定结论写回 wiki，不要只留在聊天窗口
 - 项目交付物留在项目仓库，长期记忆留在 wiki
 - AI coding 任务按生命周期执行：开始前确认任务边界、修改后验证、收工前更新控制文件并判断是否回写 wiki
+- 用户面对 UI 的任务先按 U0/U1/U2/U3 分级；U1+ 使用 `docs/design/UI_CONTRACT.md` 和对应 UI task，U2/U3 未获视觉方向批准不得写生产页面
+- 用户点名的 UI Skill 只是执行器，不能覆盖项目设计来源、Token、组件和视觉验收规则
 - `收工` 会生成本地 `.obsidiantowiki/session-receipt.json`；agent 必须逐项执行或标记不适用，再用 `project_session.py resolve` 完成闭环

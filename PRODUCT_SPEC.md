@@ -29,6 +29,8 @@ Must have:
 - Optional hook/subagent adapter templates that call the lifecycle protocol without becoming a separate source of truth.
 - Project cockpit workflow that lets users operate daily work through only three phrases: `开始工作`, `继续`, and `收工`.
 - Provider-neutral global manager Skill and `otw.py` runtime so agents, rather than users, invoke lifecycle scripts.
+- UI governance for AI coding: U0-U3 task classification, project-local Design Authority, Skill Registry, direction/RFC gates, and visual evidence before UI-task close.
+- Optional Figma and Stitch workflow adapters that preserve project-owned design facts without requiring either tool for every project.
 - Versioned vault, project-adapter, and shared-asset compatibility with hash-safe upgrades and staged conflicts.
 - Separate runtime, private-scaffold, core project-scaffold, and optional adapter versions.
 - Local `wiki.private.json` AI-access exclusions that remove protected paths from ObsidianToWiki indexing and ingestion without deleting the user's files.
@@ -65,6 +67,13 @@ Explicitly not doing unless added to `TASKS.md`:
 - Success: users do not need to remember script names, hook names, or wiki update rules.
 - Failure states: missing project context, missing control files, ambiguous task, unverified changes.
 
+### Deliver a UI task
+
+- Entry: user describes a page or flow in natural language, optionally naming a Skill, Stitch, or an approved Figma node.
+- Steps: Agent classifies U0-U3 -> creates project UI task only when U1+ -> records requested Skill and design sources -> obtains direction/RFC approval when required -> implements under the UI Contract -> records browser, Visual QA, and accessibility evidence -> closes through the normal cockpit.
+- Success: a named Skill cannot override project design facts; U2/U3 cannot write production UI before approval; UI release evidence remains in the project repository.
+- Failure states: missing approved direction, missing RFC, absent project design contract, missing screenshot/QA/accessibility evidence.
+
 ### Ingest a source
 
 - Entry: user provides file/material.
@@ -93,6 +102,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Natural-language project attach must bootstrap missing wiki runtime templates and schema files when the selected wiki root is otherwise usable.
 - Generated project bridge files must not contain machine-specific absolute paths; real paths belong only in ignored local context/config files.
 - `收工` must create a local receipt and remain incomplete until every control-file/wiki candidate is resolved.
+- U1+ UI tasks create project-local design controls only on first use; U2/U3 are blocked before implementation without direction approval, and UI close validates evidence without pretending that a script can judge aesthetics.
 - Long document ingestion must create a document map and section-level notes before any durable knowledge-page promotion.
 - A blocked extraction must preserve the original and source note but must not create weak document derivatives.
 - Vault and scaffold upgrades must preserve modified private/project files and stage `.new` conflict candidates.
@@ -124,3 +134,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-07-16 | Added Compatibility and Manager Runtime P2 | Let existing users upgrade safely and operate through natural language | Version ledgers, hash-safe candidates, global Skill, doctor, and unified runtime |
 | 2026-07-16 | Added Ingestion Quality Gate P2 | Prevent long or unreadable documents from producing weak knowledge pages | Coverage/OCR checks, chapter-aware maps, exact references, and golden-corpus tests |
 | 2026-07-16 | Added product setup and safe update lifecycle | Remove manual onboarding and per-project reattachment while preserving local customization | One-command setup, natural-language update, versioned project bridges, hash-safe private sync, and update receipts |
+| 2026-07-17 | Added UI governance runtime | Make AI-generated product UI direction, Skill use, and visual acceptance controllable | U0-U3 UI tasks, project UI Contract/Registry, visual evidence gates, optional Figma/Stitch workflow rules |

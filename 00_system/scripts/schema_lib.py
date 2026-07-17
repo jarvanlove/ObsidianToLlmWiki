@@ -41,6 +41,7 @@ def page_requires_schema(rel_path: str) -> bool:
         rel_path not in EXEMPT_SCHEMA_PATHS
         and not rel_path.endswith("/索引.md")
         and not rel_path.endswith("/关系索引.md")
+        and not rel_path.startswith("01_inbox/raw/")
         and not rel_path.startswith("40_outputs/analyses/知识库体检-")
     )
 

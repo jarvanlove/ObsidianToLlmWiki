@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -121,6 +122,10 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def render_yaml_scalar(value: object) -> str:
+    return json.dumps(str(value), ensure_ascii=False)
+
+
 def render_source_note(
     title: str,
     domain: str,
@@ -137,25 +142,25 @@ def render_source_note(
     content = render_template(
         TEMPLATE_DIR / "source-note.md",
         {
-            "title": title,
+            "title": render_yaml_scalar(title),
             "type": "来源",
-            "domain": domain,
-            "project": project_slug,
-            "status": "已收录",
-            "tags": ", ".join(tags),
-            "updated": today_iso(),
-            "summary": summary,
+            "domain": render_yaml_scalar(domain),
+            "project": render_yaml_scalar(project_slug),
+            "status": render_yaml_scalar("已收录"),
+            "tags": render_quoted_list(tags),
+            "updated": render_yaml_scalar(today_iso()),
+            "summary": render_yaml_scalar(summary),
         },
     )
     replacements = {
-        "source_path:": f"source_path: {source_path}",
-        "source_hash:": f"source_hash: {source_hash}",
-        "media_type: document": f"media_type: {media_type}",
-        "extract_mode:": f"extract_mode: {extract_mode}",
-        "parse_status: 已提取": f"parse_status: {parse_status}",
-        "ingest_status: 已登记": f"ingest_status: {ingest_status}",
-        "review_due:": f"review_due: {today_iso()}",
-        "last_parse_attempt:": f"last_parse_attempt: {today_iso()}",
+        "source_path:": f"source_path: {render_yaml_scalar(source_path)}",
+        "source_hash:": f"source_hash: {render_yaml_scalar(source_hash)}",
+        "media_type: document": f"media_type: {render_yaml_scalar(media_type)}",
+        "extract_mode:": f"extract_mode: {render_yaml_scalar(extract_mode)}",
+        "parse_status: 已提取": f"parse_status: {render_yaml_scalar(parse_status)}",
+        "ingest_status: 已登记": f"ingest_status: {render_yaml_scalar(ingest_status)}",
+        "review_due:": f"review_due: {render_yaml_scalar(today_iso())}",
+        "last_parse_attempt:": f"last_parse_attempt: {render_yaml_scalar(today_iso())}",
     }
     lines = []
     for line in content.splitlines():
@@ -640,7 +645,7 @@ def wiki_link_from_rel(rel_path: str, label: str) -> str:
 
 
 def render_quoted_list(items: list[str]) -> str:
-    return ", ".join(f'"{item}"' for item in items)
+    return ", ".join(render_yaml_scalar(item) for item in items)
 
 
 def previous_generated_sections(map_path: Path, section_dir: Path) -> list[Path]:
@@ -706,17 +711,17 @@ def create_document_derivatives(
     content = render_template(
         TEMPLATE_DIR / "source-document-map.md",
         {
-            "title": f"{title} - 文档地图",
-            "domain": domain,
-            "project": project_slug,
-            "tags": ", ".join(tags),
-            "updated": today_iso(),
-            "summary": f"{title} 的结构地图和章节索引。",
-            "source_note": note_rel,
-            "source_path": source_path,
-            "source_hash": source_hash,
-            "extract_mode": extract_mode,
-            "source_ref_type": source_ref_type(extract_mode),
+            "title": render_yaml_scalar(f"{title} - 文档地图"),
+            "domain": render_yaml_scalar(domain),
+            "project": render_yaml_scalar(project_slug),
+            "tags": render_quoted_list(tags),
+            "updated": render_yaml_scalar(today_iso()),
+            "summary": render_yaml_scalar(f"{title} 的结构地图和章节索引。"),
+            "source_note": render_yaml_scalar(note_rel),
+            "source_path": render_yaml_scalar(source_path),
+            "source_hash": render_yaml_scalar(source_hash),
+            "extract_mode": render_yaml_scalar(extract_mode),
+            "source_ref_type": render_yaml_scalar(source_ref_type(extract_mode)),
             "section_count": str(len(sections)),
             "source_note_link": source_note_link,
             "section_index": "\n".join(section_index_lines),
@@ -736,17 +741,17 @@ def create_document_derivatives(
         content = render_template(
             TEMPLATE_DIR / "source-section-note.md",
             {
-                "title": section_title,
-                "domain": domain,
-                "project": project_slug,
-                "tags": ", ".join(tags),
-                "updated": today_iso(),
-                "summary": f"{title} 的章节笔记：{section.title}。",
-                "source_note": note_rel,
-                "source_path": source_path,
-                "source_hash": source_hash,
+                "title": render_yaml_scalar(section_title),
+                "domain": render_yaml_scalar(domain),
+                "project": render_yaml_scalar(project_slug),
+                "tags": render_quoted_list(tags),
+                "updated": render_yaml_scalar(today_iso()),
+                "summary": render_yaml_scalar(f"{title} 的章节笔记：{section.title}。"),
+                "source_note": render_yaml_scalar(note_rel),
+                "source_path": render_yaml_scalar(source_path),
+                "source_hash": render_yaml_scalar(source_hash),
                 "source_refs": render_quoted_list(section.refs),
-                "document_map": map_rel,
+                "document_map": render_yaml_scalar(map_rel),
                 "excerpt_limit_chars": str(SECTION_EXCERPT_LIMIT_CHARS),
                 "recommended_targets": render_quoted_list(recommended_targets),
                 "source_note_link": source_note_link,

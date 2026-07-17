@@ -40,6 +40,8 @@ All notable changes to this repository should be documented in this file.
 - Hash-baselined private scaffold sync with staged candidates and timestamped backups
 - Safe all-project core bridge upgrades independent from optional hooks/subagents
 - Hash-bound `merged`/`keep-local` decisions for reviewed shared-asset and project-lifecycle candidates
+- Project-local UI governance runtime with U0-U3 task classification, UI Contract, Skill Registry, direction/RFC approval, and visual evidence gates
+- Optional Figma/Stitch workflow rules that keep design tools and named Skills below project Design Authority
 
 ### Changed
 

@@ -44,7 +44,7 @@ summary: 项目级 AI 约束文件的职责分工和最小模板。用于把全�
   DEPLOYMENT.md
   OPERATIONS.md
   CHANGELOG.md
-  docs/
+    docs/
     adr/
     design/
     product/
@@ -56,6 +56,19 @@ summary: 项目级 AI 约束文件的职责分工和最小模板。用于把全�
     deploy/
     db/
 ```
+
+有 U1+ UI 任务的项目，在首次任务时按需创建：
+
+```text
+docs/design/
+  UI_CONTRACT.md
+  UI_SKILL_REGISTRY.yaml
+  ui-tasks/
+  qa/
+  decisions/
+```
+
+这些文件不在项目接入时强制生成。它们只在项目确实出现用户界面工作后建立，用于保存项目 Design Authority、被点名 Skill 的角色、方向批准和视觉证据。
 
 ## 3. CLAUDE.md 最小模板
 

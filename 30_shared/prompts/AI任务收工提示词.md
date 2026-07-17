@@ -49,6 +49,7 @@ summary: 接入 ObsidianToWiki 的项目在完成 AI coding 任务后用于更�
 - 涉及 API/session 时是否跑过真实 HTTP smoke。
 - 涉及数据库时是否跑过 migration、seed 或真实 DB 查询。
 - 涉及 UI 时是否跑过浏览器 smoke，并检查控制台和 hydration。
+- U1+ UI task 是否保留固定视口截图、Visual QA 和无障碍证据；U2/U3 是否已有方向批准，U3 是否已有 RFC 批准。
 - 涉及权限时是否跑过未登录、无权限或失败路径。
 - 涉及数据质量时是否检查来源、口径、置信度或人工确认状态。
 - 项目控制文件是否需要更新。

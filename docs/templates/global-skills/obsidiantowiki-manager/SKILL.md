@@ -22,15 +22,30 @@ Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, k
 
 ## Routing
 
-- `开始工作`: run `otw.py start --repo-root <project>`.
-- `继续`: run `otw.py continue --repo-root <project>`.
-- `收工`: run `otw.py close --repo-root <project> --verification <evidence>`, execute or reject every receipt candidate, then resolve all candidates before reporting completion.
+- `开始工作`: run `otw.py start --repo-root <project> [--task <request>]`.
+- `继续`: run `otw.py continue --repo-root <project> [--task <request>]`.
+- `收工`: run `otw.py close --repo-root <project> --verification <evidence> [--ui-task <id>]`, execute or reject every receipt candidate, then resolve all candidates before reporting completion.
 - Attach current project: run `otw.py attach --repo-root <project>`.
 - Install and initialize once: run `otw.py setup`; provide a private root only when automatic sibling discovery is not desired.
 - Update ObsidianToWiki: run `otw.py update`. Use `otw.py update --check` for a report-only check.
 - Retrieve wiki context: run `otw.py search <query> --repo-root <project> --format context`.
 - Ingest a source: run `otw.py ingest <source> --scope personal|project --repo-root <project>`.
 - Use `otw.py upgrade --apply` only for an explicit local compatibility repair; normal product updates go through `otw.py update`.
+
+## UI Governance
+
+For a task that changes a user-facing screen, interaction, layout, visual system, or responsive behavior, classify UI impact before writing production UI:
+
+- `U0`: no UI impact. Use the normal lifecycle.
+- `U1`: local change within an approved design system. Reuse the project UI contract and collect visual evidence.
+- `U2`: new or materially redesigned user flow. Produce a direction candidate and obtain explicit Design Authority approval before implementation.
+- `U3`: design-system or global visual change. Require an approved direction and Design RFC before implementation.
+
+For U1+ use `otw.py ui assess`, then `otw.py ui init` with a stable task id. Read `docs/design/UI_CONTRACT.md` and the generated task file before using a UI Skill. Record a user-named Skill as `--requested-skill`; it is an executor, never design authority. Generic "make it prettier" Skills are candidate-only unless the project registry grants a narrower role.
+
+Use Stitch only for visual exploration or prototype candidates. Use Figma nodes as authority only when the task records them as approved. Do not copy generated design-tool code directly into production without the project component/token constraints.
+
+Before U2/U3 implementation, record `direction_approved` with the user's approval note. For U3, record the approved RFC with `otw.py ui approve-rfc`. Before closing any U1+ task, record screenshot, Visual QA, and accessibility evidence, run `otw.py ui check --phase close`, then pass `--ui-task <id>` to `otw.py close`.
 
 ## Boundaries
 
@@ -41,3 +56,4 @@ Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, k
 - Markdown remains the source of truth. Retrieval indexes are disposable caches.
 - Safe upgrades may update only unmodified managed assets. Preserve modified project/private files and review `.new` candidates.
 - Project `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Do not make one the parent of the other.
+- Do not silently alter a user's global Codex/Claude/third-party UI Skill configuration. Project registry rules control project-owned execution; report conflicts and ask for explicit approval before changing user-level configuration.

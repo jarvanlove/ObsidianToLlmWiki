@@ -135,26 +135,29 @@ def handle_runtime(command: str, wiki_root_arg: str, *, check_only: bool = False
     run_python("runtime_manager.py", args)
 
 
-def handle_start_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str) -> None:
+def handle_start_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str, task: str = "") -> None:
     if not load_project_context(repo_root):
         handle_attach_project(repo_root, request, tags, wiki_root_arg)
         print("\n当前项目已完成 wiki 接入和严格检查。")
     else:
         run_project_session(repo_root, "check", ["--strict"])
-    run_project_session(repo_root, "start", ["--task", "Read TASKS.md and select the next actionable task."])
+    run_project_session(repo_root, "start", ["--task", task.strip() or "Read TASKS.md and select the next actionable task."])
 
 
-def handle_continue_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str) -> None:
+def handle_continue_work(repo_root: Path, request: str, tags: str, wiki_root_arg: str, task: str = "") -> None:
     if not load_project_context(repo_root):
-        handle_start_work(repo_root, request, tags, wiki_root_arg)
+        handle_start_work(repo_root, request, tags, wiki_root_arg, task)
         return
     run_project_session(repo_root, "check")
     print("\n继续执行当前项目：请结合 TASKS.md、本次 diff 和上面的驾驶舱状态选择下一步。")
 
 
-def handle_close_work(repo_root: Path, verification: str) -> None:
+def handle_close_work(repo_root: Path, verification: str, ui_task: str = "") -> None:
     load_required_project_context(repo_root)
-    run_project_session(repo_root, "close", ["--verification", verification.strip()])
+    extra_args = ["--verification", verification.strip()]
+    if ui_task.strip():
+        extra_args.extend(["--ui-task", ui_task.strip()])
+    run_project_session(repo_root, "close", extra_args)
 
 
 def handle_ingest_personal(source: str, title: str, tags: str) -> None:
@@ -256,6 +259,8 @@ def main() -> None:
     parser.add_argument("--question", default="", help="问题")
     parser.add_argument("--conclusion", default="", help="结论")
     parser.add_argument("--tags", default="", help="英文逗号分隔标签")
+    parser.add_argument("--task", default="", help="可选，当前自然语言工作请求的任务描述")
+    parser.add_argument("--ui-task", default="", help="可选，收工时必须通过 UI 证据门禁的任务 ID")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).expanduser().resolve()
@@ -275,13 +280,13 @@ def main() -> None:
         handle_attach_project(repo_root, args.request, tags, args.wiki_root)
         return
     if request_kind == "start_work":
-        handle_start_work(repo_root, args.request, tags, args.wiki_root)
+        handle_start_work(repo_root, args.request, tags, args.wiki_root, args.task)
         return
     if request_kind == "continue_work":
-        handle_continue_work(repo_root, args.request, tags, args.wiki_root)
+        handle_continue_work(repo_root, args.request, tags, args.wiki_root, args.task)
         return
     if request_kind == "close_work":
-        handle_close_work(repo_root, args.conclusion or args.question)
+        handle_close_work(repo_root, args.conclusion or args.question, args.ui_task)
         return
     if request_kind == "answer_project":
         handle_answer_project(repo_root, args.question)

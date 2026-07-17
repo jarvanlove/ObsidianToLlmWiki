@@ -36,4 +36,6 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Keep project deliverables in the project repository.
 - Reuse shared knowledge when the same pattern appears in other projects.
 - Run AI coding work through the lifecycle: confirm task boundary before edits, verify after edits, update control files before close, and file back only durable conclusions.
+- Classify user-facing changes as U0/U1/U2/U3. U1+ work uses `docs/design/UI_CONTRACT.md` and a task record; U2/U3 cannot enter production implementation before visual direction approval.
+- A user-named or third-party UI Skill is an executor, never Design Authority. It must not override approved sources, tokens, components, or release evidence.
 - `close` creates `.obsidiantowiki/session-receipt.json`; resolve every candidate with `project_session.py resolve` before reporting the session closed.
