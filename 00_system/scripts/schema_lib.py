@@ -15,6 +15,7 @@ EXEMPT_SCHEMA_PATHS = {
     "Home.md",
     "LICENSE",
     "README.md",
+    "README-EN.md",
     "README-zh.md",
     "SECURITY.md",
     "index.md",

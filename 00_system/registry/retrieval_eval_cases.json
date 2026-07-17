@@ -5,8 +5,8 @@
       "id": "retrieval-contract",
       "query": "SQLite FTS5 context pack",
       "expected_paths": [
-        "README-zh.md",
         "README.md",
+        "README-EN.md",
         "20_projects/active/obsidiantowiki/project.memory.md",
         "20_projects/active/obsidiantowiki/任务.md",
         "20_projects/active/obsidiantowiki/架构.md"
@@ -34,7 +34,7 @@
       "query": "项目接入 wiki.context.json AGENTS CLAUDE",
       "expected_paths": [
         "30_shared/architectures/AI-coding生命周期控制协议.md",
-        "README-zh.md",
+        "README.md",
         "使用手册.md"
       ],
       "max_rank": 3
@@ -45,7 +45,7 @@
       "expected_paths": [
         "30_shared/architectures/AI-coding生命周期控制协议.md",
         "30_shared/patterns/独立开发者AI项目实操工作流.md",
-        "README-zh.md",
+        "README.md",
         "使用手册.md"
       ],
       "max_rank": 3
@@ -61,7 +61,7 @@
     {
       "id": "semantic-bounded-agent-context",
       "query": "让编程智能体获得有限长度并且带出处的知识包",
-      "expected_paths": ["README-zh.md", "README.md"],
+      "expected_paths": ["README.md", "README-EN.md"],
       "max_rank": 3,
       "semantic_probe": true,
       "gating": false

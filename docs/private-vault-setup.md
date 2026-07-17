@@ -39,8 +39,8 @@
 ├─ log.md
 ├─ AGENTS.md
 ├─ CLAUDE.md
-├─ README.md
-└─ README-zh.md
+├─ README.md                     # 中文主文档
+└─ README-EN.md                  # English guide
 ```
 
 这些内容由根安装器自动创建。不要手工复制公开仓库的 `AGENTS.md` / `CLAUDE.md` 到私有库；私有库有独立入口模板。

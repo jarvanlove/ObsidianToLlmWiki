@@ -20,6 +20,7 @@ DEFAULT_MANIFEST = {
     "categories": {
         "root": [
             "README.md",
+            "README-EN.md",
             "README-zh.md",
             "快速开始.md",
             "标准自然语言话术清单.md",

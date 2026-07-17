@@ -56,6 +56,7 @@ def should_skip_orphan(rel_path: str) -> bool:
             "AGENTS.md",
             "CLAUDE.md",
             "README.md",
+            "README-EN.md",
             "README-zh.md",
             "CHANGELOG.md",
             "CONTRIBUTING.md",

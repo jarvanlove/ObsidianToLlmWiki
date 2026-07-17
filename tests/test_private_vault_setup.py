@@ -52,6 +52,8 @@ class PrivateVaultSetupTests(unittest.TestCase):
                 "index.md",
                 "log.md",
                 "wiki.private.json",
+                "README.md",
+                "README-EN.md",
                 "README-zh.md",
                 "00_system/scripts/otw.py",
                 "00_system/registry/private_scaffold_state.json",

@@ -13,7 +13,7 @@
 
 ## 私有库验收
 
-- `Home.md`、`index.md`、`log.md`、`README-zh.md` 存在
+- `Home.md`、`index.md`、`log.md`、`README.md`、`README-EN.md` 存在
 - `AGENTS.md` / `CLAUDE.md` 是私有库入口，不是公开项目入口副本
 - `wiki.private.json` 存在且格式有效
 - `01_inbox/`、`10_personal/`、`20_projects/`、`30_shared/`、`40_outputs/`、`90_archive/` 存在

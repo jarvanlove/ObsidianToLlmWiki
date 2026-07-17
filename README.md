@@ -1,312 +1,341 @@
-This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and adapted into a local Obsidian-first scaffold.
+本项目参考了 Andrej Karpathy 提出的 [Karpathy LLM-Wiki 方法论](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)，并适配为本地优先、Obsidian-first 的知识系统。
+
+[中文](README.md) | [English](README-EN.md)
 
 # ObsidianToWiki
 
-Obsidian-first LLM-maintained knowledge system for durable personal knowledge and project memory.
+面向 Obsidian 的 LLM 持续维护型知识系统。
 
-This is not just a note template repository and not just a set of search scripts. It is designed to continuously turn raw material, project context, stable conclusions, and reusable patterns into a maintainable local wiki.
+它不是一个单纯的笔记模板仓库，也不是一个只会搜索的脚本集合。它的目标是把“原始资料、项目过程、稳定结论、可复用经验”持续整理成一个能长期维护、能跨会话恢复、能跨项目复用的本地 wiki。
 
 ## TL;DR
 
-- This is a local wiki system for both personal knowledge and project memory
-- It supports project attachment, source ingestion, retrieval, answer file-back, shared promotion, and ongoing governance
-- Users interact through natural language while scripts, indexing, sync, and maintenance stay inside the system
-- For daily project work, remember only three cockpit phrases first: "start work", "continue", and "close work"
-- Product UI tasks use the same cockpit: the agent classifies UI impact, controls UI Skill authority, and requires approved direction plus visual evidence when the change is material
-- It is meant for long-term use, not for leaving knowledge trapped in chat windows or scattered folders
+- 这是一个把个人知识和项目记忆统一起来的本地 wiki 系统
+- 它支持项目接入、资料摄入、知识检索、问答回写、共享提升和持续治理
+- 用户面向自然语言使用，系统内部负责脚本、索引、同步和维护
+- 项目开发时优先只记三句话：`开始工作`、`继续`、`收工`
+- UI 页面也走同一入口：Agent 自动分级、约束 UI Skill，并在重大页面改动前要求方向批准、收工前要求视觉证据
+- 它适合长期使用，不适合把知识只停留在聊天窗口或散乱目录里
 
-## Is This Project Now A Skill?
+## 这个项目现在是 Skill 吗？
 
-Not by itself. The complete product has four cooperating parts:
+不只是 Skill。完整产品由 4 个部分协同工作：
 
-1. this public repository provides the runtime, scaffold, validation, retrieval, ingestion, and upgrade tools
-2. your private vault stores personal knowledge and durable project memory
-3. the global `obsidiantowiki-manager` Skill translates natural-language requests into the correct operations
-4. each attached project keeps a small local bridge so the agent can find the right private project memory
+1. 当前公开仓库提供运行时、脚手架、校验、检索、摄入和升级工具
+2. 你的私有库保存个人知识和可持续的项目记忆
+3. 全局 `obsidiantowiki-manager` Skill 把自然语言请求转换成正确操作
+4. 每个已接入项目保留一组轻量本地桥文件，让 Agent 能找到对应的私有项目记忆
 
-Install the Manager Skill once for each AI tool environment that should operate the wiki. Attach each project once. A normal ObsidianToWiki upgrade does not require rebuilding the private vault or attaching existing projects again. Project hooks and subagents are optional adapters, not a prerequisite for daily use.
+每一种需要操作 wiki 的 AI 工具环境只需安装一次 Manager Skill；每个项目只需接入一次。常规升级 ObsidianToWiki 后，不需要重建私有库，也不需要重新接入已有项目。项目 hooks 和 subagents 是可选适配层，不是日常使用的前提。
 
-Daily use remains natural language. In an attached project, say "start work", "continue", or "close work"; for knowledge work, ask the agent to ingest, find, compare, or write back material. The agent is responsible for invoking scripts and strict checks internally.
+日常仍然使用自然语言。在已接入项目中只需说 `开始工作`、`继续`、`收工`；处理知识时直接要求 Agent 摄入、查找、比较或回写资料。脚本调用和严格检查由 Agent 在内部完成。
 
-For a material UI task, describe the page or flow normally. The agent creates project-local UI controls only when needed: local UI fixes stay within the approved system, while new flows or global visual changes require an approved direction before implementation and browser/QA/accessibility evidence before close. A named UI Skill, Figma node, or Stitch output is an executor or reference, never automatic Design Authority.
+UI 任务也不需要学习额外脚本。局部 UI 修复在项目既有系统内完成；新页面、流程重做或设计系统改变会先由 Agent 建立项目 UI task，等待你批准方向后再实现。你点名的 UI Skill、Figma 节点或 Stitch 输出只是执行器/参考，不能自行覆盖项目设计规则。
 
-## Who This Is For
+## 适合谁
 
-This system is especially useful for:
+这套系统尤其适合：
 
-- individual users who want durable long-term knowledge
-- developers who work across multiple projects and lose context between sessions
-- people who want project experience to become reusable shared knowledge
-- teams or individuals who want Codex, Claude Code, or other agents to keep using the same project memory
+- 有长期知识积累需求的个人用户
+- 同时维护多个项目、容易丢上下文的开发者
+- 想把项目经验沉淀成共享方法的人
+- 希望让 Codex / Claude Code / 其他 agent 持续使用同一套项目记忆的人
 
-## 5-Minute Start
+## 5 分钟上手
 
-For a first run, do only these four things:
+第一次使用，先做这 4 件事：
 
-1. download `ObsidianToWiki`
-2. prepare a private vault named `ObsidianToWiki-private`
-3. initialize the private vault with scaffold files, templates, scripts, and entry pages
-4. do one real usage cycle:
-   - attach one project
-   - ingest one source
+1. 下载 `ObsidianToWiki`
+2. 准备一个私有库 `ObsidianToWiki-private`
+3. 初始化私有库，让它具备入口、脚本、模板和最小目录结构
+4. 完成一次真实使用：
+   - 接入一个项目
+   - 摄入一份资料
 
-On first attach, the system now tries to find your private wiki automatically through project bridge files, user-level config, and standard vault naming conventions. If you need to confirm it once, later attaches reuse that result.
+首次接入时，系统会优先按“项目桥文件 -> 用户级配置 -> 标准私有库命名位置”的顺序自动寻找你的私有 wiki；如果第一次需要你确认一次位置，后续会长期复用。
 
-After that, use natural language requests such as:
+然后以后就主要用自然语言：
 
-- "start work"
-- "continue"
-- "close work"
-- "attach the current project to the wiki"
-- "ingest this into the current project"
-- "distill this conclusion into personal knowledge"
-- "answer based on the current project's wiki"
-- "save this conclusion into the wiki"
+- `开始工作`
+- `继续`
+- `收工`
+- `帮我把当前项目接入 wiki`
+- `把这份资料收进当前项目`
+- `把这次结论沉淀成个人知识`
+- `基于当前项目 wiki 回答这个问题`
+- `把这次结论记下来`
 
-## How To Use It Every Day
+## 以后每天怎么用
 
-For project development, daily use starts with three cockpit phrases.
+把每天的项目开发理解成 3 个按钮就够了。
 
-### 1. Start Work
+### 1. 开始工作
 
-Say: "start work".
+直接说：`开始工作`。
 
-The agent should attach the project if needed, run a strict attach check, or restore context if the project is already attached.
+系统应自动判断当前项目是否已接入 wiki。未接入就先接入并做严格检查；已接入就恢复项目上下文、读取控制文件和项目 wiki，并给出任务开始清单。
 
-### 2. Continue
+### 2. 继续
 
-Say: "continue".
+直接说：`继续`。
 
-The agent should inspect project state, tasks, current diff, and wiki binding before choosing the next action.
+系统应检查当前项目状态、本次 diff、任务文件和 wiki 绑定关系，然后继续推进当前任务或选择 `TASKS.md` 里的下一个可执行任务。
 
-### 3. Close Work
+### 3. 收工
 
-Say: "close work".
+直接说：`收工`。
 
-The agent should inspect the diff and verification, update relevant control files, and file back only durable conclusions.
+系统应查看 diff 和验证结果，更新该更新的项目控制文件，并只把长期有效结论写回 wiki。
 
-### 4. While You Work
+### 4. 开发中补充动作
 
-- When new material appears, say: "ingest this into the current project"
-- When a conclusion is worth keeping, say: "save this conclusion into the wiki"
-- If it is a long-term personal method, preference, or lesson, say: "distill this conclusion into personal knowledge"
-- If it is reusable across projects, say: "promote this into shared knowledge"
+- 来了新资料，就说：`把这份资料收进当前项目`
+- 遇到值得长期保留的结论，就说：`把这次结论记下来`
+- 如果这是对你长期有用的方法、经验、偏好，就说：`把这次结论沉淀成个人知识`
+- 如果这是跨项目可复用的做法，就说：`把这个经验提升成共享知识`
 
-### 5. When Organizing Personal Knowledge
+### 5. 整理个人知识时
 
-- You can also work directly inside the private wiki
-- Common requests are: "ingest this into personal knowledge"
-- Or: "find what I already know about this topic"
-- Or: "distill this conclusion into personal knowledge"
+- 单独打开私有 wiki 也可以直接工作
+- 这时最常用的说法是：`把这份资料收进个人知识库`
+- 或者：`帮我找一下之前关于这个主题的知识`
+- 或者：`把这次结论沉淀成个人知识`
 
-In short:
+一句话总结：
 
-- project-specific material goes to the project layer
-- long-lived personal knowledge goes to the personal layer
-- reusable cross-project experience goes to the shared layer
-- one-off analyses go to the outputs layer
+- 项目强相关内容进项目层
+- 对你长期有用的内容进个人层
+- 可跨项目复用的内容进共享层
+- 一次性分析结果进输出层
 
-## Core Capability Overview
+## 核心能力总览
 
 ```text
-Source Layer
-raw files / temporary material / project sources
+输入层
+原始文件 / 临时资料 / 项目来源
     ->
-Memory Layer
-personal knowledge / project knowledge / shared knowledge / filed-back outputs
+记忆层
+个人知识 / 项目知识 / 共享知识 / 输出沉淀
     ->
-Automation Layer
-project attachment / source ingestion / retrieval / answer file-back / governance / private vault sync
+自动化层
+项目接入 / 资料摄入 / 搜索召回 / 回写沉淀 / 治理体检 / 私有库同步
     ->
-Outcome
-context recovery in any window / durable knowledge accumulation / reusable cross-project experience
+结果
+任意窗口可恢复上下文 / 知识可持续积累 / 经验可跨项目复用
 ```
 
-You can think of it as a continuous loop:
+你可以把它理解成一个持续循环：
 
-- new material enters the system
-- the agent helps structure and link it
-- stable conclusions are filed back into the wiki
-- reusable experience is promoted into the shared layer
-- future projects keep benefiting from that knowledge
+- 新资料进入系统
+- agent 协助整理和链接
+- 稳定结论写回 wiki
+- 可复用经验提升到共享层
+- 后续项目继续复用这些知识
 
-## Product Positioning
+## 产品定位
 
-ObsidianToWiki serves two practical scopes:
+ObsidianToWiki 解决的是两个常见问题：
 
-1. long-term personal knowledge
-2. long-term software project memory
+1. 个人知识长期积累
+2. 软件项目长期记忆维护
 
-It is built to capture and maintain:
+它希望把下面这些分散内容，统一收进一个可持续演化的知识系统里：
 
-- raw files
-- temporary material
-- project context
-- architecture notes
-- decision records
-- task state
-- analyses and retrospectives
-- reusable prompts, tools, and patterns
+- 原始文件
+- 临时资料
+- 项目上下文
+- 架构说明
+- 决策记录
+- 任务推进状态
+- 复盘与分析结论
+- 可跨项目复用的方法、提示词、模式
 
-In short:
+一句话理解：
 
-the code repository holds deliverables, while the wiki holds memory, explanation, write-back, and review.
+代码仓库负责交付物，wiki 负责记忆、解释、回写和复盘。
 
-## Design Principles
+## 设计思想
 
-The system is built around six principles.
+这套系统的设计思想有 6 个核心点。
 
-### 1. Markdown is the source of truth
+### 1. Markdown 页面是事实来源
 
-Knowledge should end up in files that humans can read, edit, diff, and maintain over time.
+最终知识不是存在数据库里，也不是只存在对话里，而是落在 Markdown 页面里，便于人读、人改、人长期维护。
 
-### 2. Intake and knowledge should be separated
+### 2. 输入层和知识层分离
 
-Raw material should enter an intake layer first, then be distilled into durable knowledge. This prevents the wiki from becoming an unstructured dump.
+资料先进入输入层，再逐步沉淀到正式知识层，避免“所有东西都直接进知识库”导致结构失控。
 
-### 3. Personal and project knowledge should coexist
+### 3. 项目记忆和个人知识并存
 
-The system supports both long-term personal knowledge and project-specific memory without flattening them into a single note pile.
+它既服务个人知识积累，也服务项目级长期记忆，不把两者混成一个扁平笔记堆。
 
-### 4. Users express needs, not low-level commands
+### 4. 用户只表达需求，不记技术命令
 
-The intended user interface is natural language. Scripts, indexing, sync, and governance are implementation details.
+用户面向自然语言使用系统，脚本、规则、索引重建和日志维护属于系统内部能力。
 
-### 5. Any coding window should recover project context
+### 5. 项目可以在任意窗口恢复上下文
 
-A project only needs one attach step. After that, any future coding window can recover the right project wiki context.
+项目只要接入一次，后续在任意编码窗口打开项目时，都可以通过项目根目录的上下文文件自动回到对应项目 wiki。
 
-### 6. Knowledge should be promotable and reusable
+### 6. 知识要能提升和复用
 
-Useful experience discovered in one project should be able to move into the shared layer and help future projects.
+项目中的好经验，不应该永远困在项目目录里，而应该能提升到共享层，服务后续项目。
 
-## Functional Modules
+## 功能模块
 
-From a product perspective, the system consists of eight functional modules.
+从产品视角看，这套系统主要有 8 个功能模块。
 
-### 1. Project attachment
+### 1. 项目接入
 
-Attach an existing project to the wiki and establish a stable bridge between the code repository and its project sub-wiki.
+把一个现成项目正式接入 wiki，建立项目仓库和知识库之间的绑定关系。
 
-### 2. Source ingestion
+接入后会生成：
 
-Ingest documents, PDFs, meeting notes, design files, screenshots, and other material while preserving originals and generating source notes.
+- 项目仓库里的 AI 工具入口
+- 项目仓库里的项目控制面
+- 对应的项目子 wiki
 
-Common file types that can be brought into the system include:
+如果项目里已经有自己的规则文件，接入脚本会保留原内容，只做兼容更新，不覆盖既有项目规则。
 
-- text and code: `md`, `markdown`, `txt`, `py`, `js`, `ts`, `json`, `yaml`, `yml`, `html`, `css`, `java`, `go`, `rs`, `sql`
-- document formats: `docx`, `pptx`, `pdf`
-- image formats: `png`, `jpg`, `jpeg`, `webp`, `bmp`, `gif`, `tif`, `tiff`
-- audio formats: `mp3`, `wav`, `m4a`, `aac`, `flac`, `ogg`, `opus`
-- video formats: `mp4`, `mov`, `avi`, `mkv`, `webm`, `wmv`, `m4v`
+### 2. 资料摄入
 
-Notes:
+把文档、PDF、会议纪要、方案、截图等资料接进系统，保存原始文件，并生成来源笔记。
 
-- text, `docx`, `pptx`, and `pdf` support direct extraction with pass/review/blocked quality gates
-- blocked extraction preserves the original and source note but creates no weak derivatives; scanned PDFs are marked `needs_ocr`
-- long documents create a document map before section notes, preserve page/slide/heading refs, and never auto-promote formal knowledge pages
-- images, audio, and video can already be formally ingested and registered as media sources
-- their semantic understanding should, by default, be delegated to the user's own multimodal LLM / API
+文档类资料不会只压缩成一篇摘要。当前会优先生成：
 
-### 3. Project memory maintenance
+- 来源笔记：记录原文件、hash、摄入状态和派生页面
+- 文档地图：记录结构索引、引用粒度、章节列表和路由建议
+- 章节笔记：按页码、slide 或 heading 拆成可阅读单元
+- 完整提取文本：保存到 `01_inbox/scratch/extracted/`
+- 资料沉淀候选报告：从章节笔记列出待进入项目、个人、共享或输出层的候选
 
-Maintain project pages for:
+生成派生页前会先执行抽取质量门禁：
 
-- overview
-- architecture
-- decisions
-- tasks
-- sources
-- risks
-- timeline
-- runtime memory
+- `pass`：覆盖率和文本质量达标，生成文档地图和章节笔记
+- `review`：仍生成可追溯结构，但明确标记需要人工复核
+- `blocked`：只保存原件和来源记录，不生成弱章节；扫描 PDF 会标记 `needs_ocr`
 
-### 4. Personal knowledge distillation
+PDF 会保留页码引用、按章节/页范围索引，并规范化常见中文字符间异常空格。章节摘录包含截断提示在内不超过 1200 字符，正式知识页仍需逐节显式提升。
 
-Distill long-lived personal insights, methods, workflows, and preferences into a durable personal layer.
+当前可直接纳入系统的常见文件类型包括：
 
-Personal pages now begin to support a minimal relationship model:
+- 文本与代码：`md`、`markdown`、`txt`、`py`、`js`、`ts`、`json`、`yaml`、`yml`、`html`、`css`、`java`、`go`、`rs`、`sql`
+- 文档类：`docx`、`pptx`、`pdf`
+- 图片类：`png`、`jpg`、`jpeg`、`webp`、`bmp`、`gif`、`tif`、`tiff`
+- 音频类：`mp3`、`wav`、`m4a`、`aac`、`flac`、`ogg`、`opus`
+- 视频类：`mp4`、`mov`、`avi`、`mkv`、`webm`、`wmv`、`m4v`
+
+说明：
+
+- 文本、`docx`、`pptx`、`pdf` 目前支持直接提取正文并生成结构化派生产物
+- 图片、语音、视频目前已经可以正式入库并登记为媒体来源
+- 它们的内容理解，默认应优先走用户自己的多模态 LLM / API
+
+### 3. 项目记忆维护
+
+围绕项目维护：
+
+- 概览
+- 架构
+- 决策
+- 任务
+- 来源
+- 风险
+- 时间线
+- 运行记忆
+
+### 4. 个人知识沉淀
+
+把对个人长期有效的认知、方法论、工作流和经验沉淀到个人知识层。
+
+个人知识页现在开始支持最小关系字段：
 
 - `related_to`
 - `builds_on`
 
-In the first stage, these fields are used only to express "topically related" and "built on prior knowledge" links without introducing a heavier graph layer.
+第一阶段先用它们表达“主题相关”和“建立在旧知识之上”的关系，不引入更重的关系系统。
 
-### 5. Shared knowledge promotion
+### 5. 共享知识提升
 
-Promote cross-project reusable content into the shared layer, including patterns, prompts, architecture notes, and tool usage knowledge.
+把可跨项目复用的内容提升到共享层，例如：
 
-### 6. Search and answer file-back
+- 架构模式
+- 工作模式
+- 提示词
+- 工具使用经验
 
-The system not only retrieves knowledge, it can also file useful answers back into the wiki so knowledge does not remain trapped in chat sessions.
+### 6. 搜索与问答回写
 
-Retrieval now incrementally projects Markdown into a local SQLite FTS5 cache. Searches check created, changed, and deleted pages by default and can return human-readable text, stable JSON, or a bounded context pack with paths, headings, and `source_refs`. The cache is disposable and never replaces Markdown as source of truth.
+系统不仅支持找知识，还支持把高价值回答反过来写回 wiki，避免知识只停留在聊天窗口。
 
-### 7. Governance and linting
+当前检索会把 Markdown 增量写入本地 SQLite FTS5 派生索引。查询前默认检查新建、修改和删除，结果可以输出为人类可读文本、稳定 JSON，或带路径、章节和 `source_refs` 的有限预算 context pack。索引可以随时删除重建，不会替代 Markdown 事实源。
 
-The system continuously checks for issues such as:
+### 7. 治理与体检
 
-- orphan pages
-- stale pages
-- duplicate topics
-- undistilled sources
-- structural gaps
+系统会持续检查：
 
-### 8. Private vault sync
+- 孤儿页
+- 过期页
+- 重复主题
+- 未沉淀来源
+- 结构问题
 
-Scaffold updates can be synced into the private vault so the real working environment stays aligned with the public system.
+### 8. 私有库同步
 
-## Architecture
+公开脚手架更新后，可以把脚手架层内容同步到私有知识库，保证真实使用环境和当前系统保持一致。
 
-The system can be understood as a three-layer architecture.
+## 架构设计
 
-### 1. Source layer
+这套系统可以理解成三层架构。
 
-This layer receives raw input:
+### 1. 输入层
 
-- raw files
-- clips
-- temporary working artifacts
-- project source files
+这一层负责接住原始输入：
 
-Primary locations:
+- 原始文件
+- 剪藏资料
+- 临时中间产物
+- 项目来源文件
+
+对应目录：
 
 - `01_inbox/`
-- project `sources/`
-- project `source-notes/`
+- 项目内 `sources/`
+- 项目内 `source-notes/`
 
-### 2. Memory layer
+### 2. 记忆层
 
-This layer contains durable structured knowledge:
+这一层负责沉淀长期结构化知识：
 
 - `10_personal/`
 - `20_projects/`
 - `30_shared/`
 - `40_outputs/`
 
-This is the actual knowledge body of the system.
+这是系统真正的知识主体。
 
-### 3. Automation layer
+### 3. 自动化层
 
-This layer keeps the system operational:
+这一层负责让系统持续运转：
 
-- page creation
-- source ingestion
-- project attachment
-- retrieval
-- answer file-back
-- relation sync
-- source sync
-- governance
-- private vault sync
+- 页面创建
+- 资料摄入
+- 项目接入
+- 搜索召回
+- 问答回写
+- 关系同步
+- 来源同步
+- 体检治理
+- 私有库同步
 
-Primary locations:
+对应目录：
 
 - `00_system/scripts/`
 - `00_system/templates/`
 - `00_system/registry/`
 
-## Repository Structure
+## 仓库结构
 
 ```text
 ObsidianToWiki/
@@ -339,91 +368,103 @@ ObsidianToWiki/
 ├─ 90_archive/
 ├─ docs/
 ├─ Home.md
-├─ README.md
-├─ README-zh.md
+├─ README.md                     # 中文主文档
+├─ README-EN.md                  # English guide
 ├─ 快速开始.md
 ├─ 使用手册.md
 ├─ 标准自然语言话术清单.md
 └─ 会话启动页.md
 ```
 
-## Installation And Usage
+## 安装与使用
 
-The product consists of a public runtime, a private vault, a global Manager Skill, and a small local bridge in each attached project. A new user clones the public repository and runs one root installer. The installer creates `.venv`, installs dependencies, creates or discovers the private vault, seeds private entry files and policy, synchronizes managed assets, migrates schemas, installs the selected provider Skill, and runs strict diagnostics.
+产品仍由“公开运行时 + 私有库 + 全局 Manager Skill + 项目本地桥”组成。首次使用需要下载公开仓库，但只执行一次根安装器；安装器会创建仓库内 `.venv`、安装依赖、创建或发现私有库、写入隐私策略、同步托管脚手架、迁移 Schema、安装所选 Provider 的 Manager Skill，并执行严格诊断。
 
-Windows:
+Windows：
 
 ```powershell
 .\install.ps1
 ```
 
-macOS / Linux:
+macOS / Linux：
 
 ```bash
 chmod +x install.sh
 ./install.sh
 ```
 
-The two installers intentionally live at repository root because they are the only bootstrap entrypoints a new user should need to find. `00_system/scripts/` contains internal operations rather than onboarding steps.
+两个安装器刻意放在仓库根目录：它们是用户下载后唯一需要看到的启动入口；`00_system/scripts/` 保存系统内部命令，不应成为新用户的导航起点。
 
-The default private vault is a sibling named `<public-repository-name>-private`. Use `-PrivateRoot` on PowerShell or `--private-root` on shell to choose another location. Providers are `agents`, `claude`, or `all`.
+默认私有库位于公开仓库同级目录，名称为 `<公开仓库名>-private`。需要自定义时使用 `-PrivateRoot`（PowerShell）或 `--private-root`（shell）；Provider 可选 `agents`、`claude`、`all`。普通用户不需要手工创建私有目录，也不需要依次执行同步、迁移和 doctor。
 
-After installation, normal use is natural language: "start work", "continue", "close work", "attach this project to the wiki", "ingest this source", or "answer from this project's wiki". The agent owns script execution and checks.
+安装后只用自然语言：
 
-### Existing User Upgrade
+- `开始工作`：项目未接入时自动接入，已接入时恢复上下文
+- `继续`：检查任务、diff 和 wiki 绑定后继续
+- `收工`：验证、更新控制文件并处理回写候选
+- `把这份资料收进当前项目` / `把这份资料收进个人知识库`
+- `基于当前项目 wiki 回答这个问题`
 
-Tell an agent with the Manager Skill: "update ObsidianToWiki". The update workflow performs Git fast-forward preflight, records pre-update baselines, updates dependencies and Skills, safely synchronizes the private scaffold, migrates the vault, upgrades every registered core project bridge, upgrades only optional adapters already installed, rebuilds indexes, and runs strict doctor. Existing projects are not reattached.
+### 已有用户升级
 
-Updates stop on a dirty public repository, diverged history, or missing upstream. They never stash, reset, or force overwrite. A private managed file is updated only when its recorded hash proves it is unchanged; otherwise the original remains, the new file is staged under `40_outputs/upgrade-candidates/private-scaffold/`, and a timestamped backup is written.
-
-Advanced equivalents are `00_system/scripts/otw.ps1 update` and `00_system/scripts/otw.sh update`; add `--check` for report-only behavior. Internal scripts remain diagnostics and development interfaces, not onboarding steps.
-
-## How Projects Use The System
-
-This is one of the most important use cases.
-
-### Attach once
-
-Each project only needs one formal attach step. After that, the project repo root will contain:
-
-- AI tool entrypoints
-- a local project control plane
-- the matching project wiki area
-
-Together, these form the bridge from the project repository to the project wiki and the local execution control plane.
-
-Tool entrypoints are peers, not parent/child files. Shared project facts should live in the project control plane and project wiki, not only in one tool-specific entry file.
-
-If the project already has entrypoint or control files, the attach script preserves existing content and only updates its managed block. Re-running attach is safe.
-
-When attaching a completely new project for the first time, the system tries this order:
-
-1. existing wiki binding information in the project
-2. user-level wiki defaults in the local environment
-3. a sibling `ObsidianToWiki-private` next to the scaffold
-
-Only if all of those fail does the user need to specify the private wiki location explicitly.
-
-### Work in any window
-
-In any future coding window, just say:
+直接对已安装 Manager Skill 的 Agent 说：
 
 ```text
-work according to the current project rules
+更新 ObsidianToWiki
 ```
 
-The agent should automatically restore project context, read the required rules, locate the project wiki, and continue from the current task.
+系统会自动执行 Git fast-forward 预检、更新前基线记录、依赖更新、Skill 安全升级、私有脚手架同步、Vault 迁移、全部已登记项目核心桥升级、已安装可选适配器升级、索引重建和严格 doctor。已有项目不需要重新接入。
 
-### Accumulate knowledge during development
+自动更新遇到公开仓库未提交改动、Git 分叉或未知上游时会停止，不会 stash、reset 或强制覆盖。私有托管文件只有在哈希证明用户未修改时才更新；否则原文件保留，新版本进入 `40_outputs/upgrade-candidates/private-scaffold/`，原文件同时写入带时间戳的更新备份。
 
-Recommended pattern:
+高级用户的等价入口是 `00_system/scripts/otw.ps1 update` 或 `00_system/scripts/otw.sh update`；`update --check` 只检查，不应用。内部脚本是诊断和开发接口，不是日常使用步骤。
 
-1. read project memory before work
-2. ingest new source material during work
-3. file stable conclusions back after work
-4. if the outcome is a durable method, habit, preference, or workflow, say "distill this conclusion into personal knowledge" directly in the project window
+## 项目怎么使用这套系统
 
-The main write-back targets are usually:
+这是系统最重要的使用场景之一。
+
+### 项目只接入一次
+
+每个项目只需要正式接入一次。接入后，项目仓库根目录会生成：
+
+- AI 工具入口
+- 项目控制面
+- 对应的项目 wiki
+
+这些内容共同组成“项目仓库 -> 项目 wiki -> 项目执行控制面”的桥。
+
+工具入口是并列关系，不是上下级文件。共享项目事实应写入项目控制面和项目 wiki，而不是只写在某一个工具入口里。
+
+重复执行接入命令是安全的：已有文件会保留，系统只更新受控区块，不会重复追加。
+
+在第一次接入一个全新项目时，系统会优先尝试：
+
+1. 项目已有的 wiki 绑定信息
+2. 用户环境中的 wiki 默认配置
+3. 当前脚手架同级的 `ObsidianToWiki-private`
+
+只有这些都失败时，才需要用户显式告诉系统私有 wiki 在哪里。
+
+### 任意窗口都能继续使用
+
+以后无论从哪个窗口打开这个项目，只要窗口能访问项目根目录，你只需要说：
+
+```text
+开始工作。
+```
+
+Agent 会自动判断项目是否已接入；未接入就接入并严格检查，已接入就恢复项目上下文、读取必要规则、定位项目 wiki，并继续执行当前任务。
+
+### 开发过程中怎么沉淀知识
+
+推荐工作方式：
+
+1. 做任务前让 agent 自动恢复项目记忆
+2. 做任务时如有新资料，先进入项目来源层
+3. 做任务后把稳定结论写回项目 wiki
+4. 如果是长期有效的方法、经验、偏好或工作流，可以直接在项目窗口里说“把这次结论沉淀成个人知识”
+
+回写重点通常是：
 
 - `概览.md`
 - `架构.md`
@@ -431,213 +472,218 @@ The main write-back targets are usually:
 - `任务.md`
 - `来源.md`
 
-If you explicitly route a conclusion to the personal layer, the system should write it into `10_personal/` while keeping a backlink to the originating project instead of forcing everything back into the project layer.
+如果你明确说要沉淀到个人层，系统会优先写入 `10_personal/`，同时保留来源项目线索，而不是默认只回到项目层。
 
-### Skill and MCP configuration
+### Skill 和 MCP 怎么配置
 
-- The global manager Skill is installed once per agent configuration root and safely upgraded by the installer. It maps natural language to the unified `otw.py` runtime.
-- Project retrieval Skills and hook/subagent helpers remain opt-in. Only `--install-ai-adapters` places them under `.agents/skills/`, `.claude/skills/`, and `scripts/ai/`; normal upgrades do not force-enable them.
-- MCP belongs to the AI tool capability layer. Configure it once per Codex, Claude Code, Cursor, or compatible tool when the tool launches it from the active project.
-- Without MCP or project adapters, the global manager Skill uses the public runtime directly.
-- MCP exposes only read-only `search_wiki` and `get_wiki_context` tools.
+- 全局管理 Skill 每台机器、每个 Agent 配置根目录安装一次；`install.ps1` / `install.sh` 会安全安装或升级。它负责理解自然语言并调用统一 `otw.py` 入口。
+- 项目检索 Skill、hook/subagent 属于可选项目适配器：只有显式 `--install-ai-adapters` 才进入项目 `.agents/skills/`、`.claude/skills/` 和 `scripts/ai/`。普通升级不会把它强制装进所有项目。
+- MCP 属于工具能力：通常在 Codex、Claude Code、Cursor 等每个工具中配置一次即可，运行时会从当前项目的 `wiki.context.json` 或用户级 wiki 配置发现私有库。
+- 不使用 MCP 或项目适配器也可以工作；全局管理 Skill 会调用公开运行时。
+- MCP 只暴露只读 `search_wiki` 和 `get_wiki_context`，不会自动修改知识页。
 
-See `docs/agent-retrieval.md` for the boundary and setup details.
+详细边界见 `docs/agent-retrieval.md`。
 
-## Multimodal Support
+## 多模态支持
 
-Current stable support includes:
+当前稳定支持：
 
-- text
-- markdown
-- code
+- 文本
+- Markdown
+- 代码
 - `docx`
 - `pptx`
 - `pdf`
 
-Images, audio, and video should be added in stages:
+图片、语音、视频建议分阶段支持：
 
-1. ingest and register them as sources
-2. connect the user's own multimodal LLM / API parsing
-3. automatically distill them into project or personal pages
+1. 先完成入库和来源登记
+2. 再接用户自己的多模态 LLM / API 解析链路
+3. 最后再自动沉淀到项目页或个人页
 
-P0 first pass is now in place:
+当前已经完成 P0 第一版：
 
-- images, audio, and video can be formally ingested
-- source notes record `media_type` and `parse_status`
-- governance can surface media sources that are still waiting for processing
+- 图片、语音、视频可以正式入库
+- 来源笔记会记录 `media_type` 和 `parse_status`
+- 体检会提示哪些媒体来源仍处于待处理状态
 
-Current directory conventions:
+当前目录约定：
 
-- personal images: `01_inbox/raw/personal/images/`
-- personal audio: `01_inbox/raw/personal/audio/`
-- personal video: `01_inbox/raw/personal/video/`
-- OCR scratch: `01_inbox/scratch/ocr/`
-- transcript scratch: `01_inbox/scratch/transcripts/`
-- keyframe scratch: `01_inbox/scratch/keyframes/`
-- summary scratch: `01_inbox/scratch/summaries/`
+- 个人图片：`01_inbox/raw/personal/images/`
+- 个人语音：`01_inbox/raw/personal/audio/`
+- 个人视频：`01_inbox/raw/personal/video/`
+- OCR 中间产物：`01_inbox/scratch/ocr/`
+- 转写中间产物：`01_inbox/scratch/transcripts/`
+- 关键帧中间产物：`01_inbox/scratch/keyframes/`
+- 摘要中间产物：`01_inbox/scratch/summaries/`
 
-The recommended multimodal direction is now:
+当前推荐的多模态方向是：
 
-- use the user's own multimodal LLM / API for image, audio, and video understanding
-- keep the wiki system responsible for intake, source registration, file-back, indexing, and governance
-- do not require users to install local OCR / ASR / video-processing tools
-- do not require extra provider / adapter configuration files for multimodal use
+- 默认由用户自己的多模态 LLM / API 来识别图片、语音、视频
+- wiki 系统负责原件入库、来源登记、解析结果回写、索引和治理
+- 不要求用户安装本地 OCR / ASR / 视频处理工具
+- 不要求用户额外配置多模态 provider、adapter 或 API key 配置文件
 
-Multimodal use now keeps only one recommended route:
+多模态现在只保留一条主路径：
 
-### In-session parsing, the default and only recommended path
+### 会话内解析，默认也是唯一推荐路径
 
-Use this when:
+适用场景：
 
-- you are already inside Codex or Claude Code
-- or tools such as Cursor, Trae, QClaw, WorkBuddy, Hermes Agent, or OpenClaw that already integrate third-party model access
-- you give the current AI a file path
-- you want the AI to understand the file and file the result back into the wiki
+- 你正在 Codex / Claude Code 里工作
+- 或者使用 Cursor、Trae、QClaw、WorkBuddy、Hermes Agent、OpenClaw 等已经集成第三方模型能力的工具
+- 直接把图片、语音、视频文件路径交给当前 AI
+- 让 AI 当场解析并沉淀到 wiki
 
-Characteristics:
+特点：
 
-- no extra API key setup
-- no `~/.obsidiantowiki-multimodal.json`
-- best fit for day-to-day usage
-- directly reuses the multimodal ability that your current tool has already integrated
+- 不需要额外配置 key
+- 不需要 `~/.obsidiantowiki-multimodal.json`
+- 最符合日常使用习惯
+- 直接复用你当前工具已经接好的模型能力
 
-Related design plans for the current evolution:
+详细落地方案见 [2026-04-17-multimodal-support-plan.md](docs/plans/2026-04-17-multimodal-support-plan.md)。
 
-- [2026-04-17-multimodal-support-plan.md](docs/plans/2026-04-17-multimodal-support-plan.md)
+当前项目演进中的另外两份关键方案：
+
 - [2026-04-22-user-wiki-discovery-design.md](docs/plans/2026-04-22-user-wiki-discovery-design.md)
 - [2026-04-22-personal-knowledge-routing-design.md](docs/plans/2026-04-22-personal-knowledge-routing-design.md)
 
-## Inbox Policy
+## Inbox 分类标准
 
-Keep the inbox role-based:
+当前建议按作用分类：
 
-- `raw`: original files
-- `clips`: source notes not yet fully distilled
-- `scratch`: temporary working artifacts
+- `raw`：原始文件
+- `clips`：尚未完全沉淀的来源笔记
+- `scratch`：临时中间产物
 
-## Documentation Entry Points
+## 文档入口
 
-If you are new to the system, start here:
+如果你是第一次使用，优先看：
 
 1. [Home.md](Home.md)
 2. [快速开始.md](快速开始.md)
 3. [使用手册.md](使用手册.md)
 4. [标准自然语言话术清单.md](标准自然语言话术清单.md)
 
-Document roles:
+各文档职责：
 
-- `README.md` / `README-zh.md`
-  product overview, design principles, architecture, and usage
+- `README.md`（中文）/ `README-EN.md`（English）
+  产品介绍、设计思想、架构设计、使用方式
 - `Home.md`
-  main entry page
+  首页入口
 - `快速开始.md`
-  shortest onboarding path
+  第一次上手
 - `使用手册.md`
-  day-to-day usage guide
+  日常使用
 - `标准自然语言话术清单.md`
-  fixed list of common user requests
+  最常用自然语言说法
 - `会话启动页.md`
-  copyable prompts for agents
+  给 agent 的复制模板
 
-## Core Scripts
+## 核心脚本说明
 
-If you want to understand which scripts matter most, start with these.
+如果你想理解系统到底靠哪些脚本在运转，只需要先记住下面这些。
 
-### Attachment
+### 接入类
 
 - `attach_project.py`
-  attaches a project to the wiki, writes safe bridge blocks, creates missing project control files, and creates the project memory area. Optional hook/subagent adapters are installed only with `--install-ai-adapters`
+  把一个项目正式接入 wiki，安全更新桥接区块，创建缺失项目控制文件，并建立项目知识区。默认不安装 hook/subagent 适配层；需要时显式加 `--install-ai-adapters`
 
 - `project_session.py`
-  generates AI coding lifecycle `check/start/close` checklists and control-file update candidates. By default it only reports suggestions and does not write project files or sync the private wiki
+  为 AI coding 生命周期生成 `check/start/close` 检查清单和控制文件更新候选。它默认只输出建议，不直接改项目文件或同步个人 wiki
 
-### Ingestion
+### 摄入类
 
 - `ingest_source.py`
-  ingests material, stores the original file, and creates a source note
+  把资料收进系统，保存原始文件，创建来源笔记
+- `source_promotion_candidates.py`
+  从章节笔记生成资料沉淀候选报告，不自动创建正式知识页
+- `promote_source_section.py`
+  把明确选中的单个章节笔记提升为项目、个人、共享或输出层正式知识页
 
-### Retrieval and file-back
+### 检索与回写类
 
 - `search_wiki.py`
-  refreshes the local retrieval cache, preserves page weighting and relation summaries, and returns text, JSON, or bounded context packs
+  搜索 wiki；查询前增量刷新本地检索缓存，保留页面权重和关系摘要，并支持 text、JSON 和 context pack 输出
 - `build_retrieval_index.py`
-  incrementally builds or fully refreshes the disposable SQLite FTS5 retrieval cache
+  显式增量构建或完全重建可删除的 SQLite FTS5 检索缓存
 - `evaluate_retrieval.py`
-  gates path, heading, provenance, pass rate, MRR, and separate synonym probes
+  用固定用例检查路径、章节、出处、通过率、MRR 和同义表达探针
 - `mcp_retrieval_server.py`
-  exposes structured search and bounded context as read-only MCP stdio tools
+  通过只读 MCP stdio 工具向 Codex、Claude Code、Cursor 等暴露结构化检索和 context pack
 - `migrate_provenance.py`
-  audits legacy knowledge pages and migrates only explicit source links and page references
+  审计旧知识页并只迁移正文里已经明确存在的来源链接和页码
 - `file_back_query.py`
-  files an answer or analysis back into the wiki
+  把问答或分析沉淀为正式页面
 - `handle_nl_request.py`
-  natural-language request router
+  自然语言入口分发器
 
-### Sync
+### 同步类
 
 - `sync_source_notes.py`
-  backfills source status and derived-page links
+  回填来源状态和衍生页面
 - `sync_project_relations.py`
-  syncs project relations
+  同步项目关系
 - `sync_personal_relations.py`
-  syncs personal-page relation fields
+  同步个人知识页的关系字段
 - `sync_private_vault.py`
-  syncs only manifest-managed public scaffold files and protects private runtime state
+  只把 manifest 管理的公开脚手架同步到私有库，并阻止覆盖私有运行状态
 
-### Governance
+### 治理类
 
 - `lint_wiki.py`
-  runs governance and health checks
+  体检和治理检查
 - `schema_lib.py`
-  validates page schema
+  页面 schema 校验
 - `wiki_lib.py`
-  shared low-level utilities
+  公共底层能力
 
-### Learning and promotion
+### 学习与提升类
 
 - `record_learning_candidate.py`
-  records learning candidates
+  记录学习候选
 - `discover_learning_candidates.py`
-  discovers candidates automatically
+  自动发现候选
 - `curate_learning_candidates.py`
-  archives low-score stale learning candidates
+  归档低分且过期的学习候选
 - `review_learning_candidates.py`
-  batch-approves, archives, or reopens learning candidates
+  对学习候选做批量批准、归档或重新打开
 - `promote_learning_candidate.py`
-  promotes a candidate into a formal asset
+  把候选升级成正式资产
 - `recommend_source_promotions.py`
-  recommends promotion targets for source notes
+  给来源页推荐沉淀目标
 
-Learning candidates now begin to carry:
+当前学习候选已经开始支持：
 
-- `candidate_risk_level`
-- `candidate_upgrade_mode`
-- `candidate_repeat_count`
-- `candidate_freshness`
-- `candidate_domain`
+- 风险等级 `candidate_risk_level`
+- 升级方式 `candidate_upgrade_mode`
+- 重复次数 `candidate_repeat_count`
+- 新鲜度 `candidate_freshness`
+- 领域 `candidate_domain`
 
-This means the system is moving from simple candidate discovery toward controlled handling of:
+也就是说，系统不再只是“发现候选”，而是开始把候选分成：
 
-- low-risk candidates that can be treated semi-automatically
-- high-risk candidates that still require human review
+- 可半自动处理的低风险候选
+- 仍需人工审批的高风险候选
 
-This stage also adds:
+当前还补上了：
 
 - `40_outputs/学习候选审批视图.md`
-- explicit approval before promoting high-risk or manual-review candidates
+- 显式批准后再提升高风险 / 手工审批候选
 
-### Indexes and status
+### 索引与状态类
 
 - `rebuild_indexes.py`
-  rebuilds indexes
+  重建索引
 - `log_event.py`
-  writes logs
+  写日志
 - `version_status.py`
-  reports version state
+  看当前版本状态
 - `version_closure_report.py`
-  generates a closure report
+  生成收官报告
 
-If you only remember six scripts, remember these:
+如果你只想记最重要的 6 个，就记：
 
 - `attach_project.py`
 - `project_session.py`
@@ -646,69 +692,69 @@ If you only remember six scripts, remember these:
 - `search_wiki.py`
 - `file_back_query.py`
 
-## Personal Knowledge Graph P0
+## 个人知识关系网络 P0
 
-The personal knowledge layer now supports a minimal first-step relationship model:
+当前个人知识层已经支持第一版最小关系字段：
 
 - `related_to`
 - `builds_on`
 
-Use them like this:
+使用原则很简单：
 
 - `related_to`
-  marks pages that are topically related and should be read together
+  用来表示主题相关、适合一起阅读的页面
 - `builds_on`
-  marks pages that build on prior concepts, methods, or knowledge pages
+  用来表示这页内容建立在哪些旧知识、旧方法、旧概念之上
 
-At this stage, the system only does:
+当前阶段先做到：
 
-- template support
-- schema validation
-- personal relation index generation
-- personal relation summaries in retrieval results
+- 模板支持填写
+- schema 校验字段类型
+- 个人关系索引生成
+- 检索结果展示个人关系摘要
 
-At this stage, it does not yet do:
+当前阶段暂时不做：
 
-- automatic relation extraction
-- deeper semantic relation inference
+- 自动关系抽取
+- 复杂语义关系推断
 
-The first P2 pass now follows a conservative automation path:
+P2 第一版现在的方向是保守自动化：
 
-- infer relations from explicit personal-page links
-- use shared tags and shared source projects as low-risk supplements
-- avoid heavier semantic graph inference for now
+- 从个人页里的显式链接自动建议关系
+- 用共现标签和共同来源项目做低风险补充
+- 继续避免重语义推断和复杂图谱化
 
-It is now concretely wired into:
+当前已经落地到：
 
 - `10_personal/关系索引.md`
-- personal relation summaries in retrieval results
-- the `sync_personal_relations.py` sync script
+- 检索结果中的个人关系摘要
+- 个人关系同步脚本 `sync_personal_relations.py`
 
-## Retrieval Scaling P1
+## 检索升级 P1
 
-The current stage still stays on lightweight retrieval instead of heavier infrastructure.
+当前阶段继续坚持轻量检索，不引入重型基础设施。
 
-What is already added:
+已经补上的能力包括：
 
-- page-type weighting
-- stronger downranking for stale output pages, reflection candidates, and source pages
-- relation summaries for personal and shared pages
-- failure logging for zero-result queries
-- disposable local SQLite FTS5 derived index
-- incremental freshness checks for created, changed, and deleted Markdown pages
-- stable JSON result contract
-- best matching heading and bounded snippet localization
-- bounded context packs for agents
-- query-coverage ranking and Chinese short-term chunk localization
-- inspectable local topic-alias hybrid recall
-- fixed retrieval gates with MRR and semantic probes
-- project Agent Skills and optional read-only MCP stdio tools
-- `source_notes` / `source_refs` output plus conservative legacy migration
+- 页面类型权重
+- 对过期输出页、反思候选页、来源页的进一步降权
+- 个人层与共享层的关系摘要补充
+- 对零结果查询的失败记录
+- 可删除重建的本地 SQLite FTS5 派生索引
+- 查询前对新建、修改和删除页面做增量新鲜度检查
+- 稳定 JSON 检索契约
+- 返回最佳命中章节和有限长度片段
+- 面向 Agent 的有限预算 context pack
+- 查询词覆盖率优先排序和中文短词章节定位
+- 可审计的本地主题别名混合召回
+- 固定检索评测门禁与 MRR / 语义探针
+- 项目级 Agent Skill 和可选只读 MCP stdio 工具
+- `source_notes` / `source_refs` 出处输出与旧页保守迁移
 
-What this stage still does not do:
+当前阶段暂时不做：
 
-- vector retrieval
-- semantic reranking
-- background file watching
+- 向量检索
+- 语义重排
+- 后台文件监听
 
-The current fixed evaluation reports a `1.0` gate pass rate, `1.00` MRR, and `1.0` semantic-probe pass rate, so embeddings and vector infrastructure are not justified yet.
+当前固定评测结果为：门禁通过率 `1.0`、MRR `1.00`、同义表达探针通过率 `1.0`，因此暂不引入 embedding 或向量数据库。

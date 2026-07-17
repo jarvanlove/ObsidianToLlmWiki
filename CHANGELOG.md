@@ -45,6 +45,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Changed
 
+- `README.md` is now the Chinese GitHub landing page; the English guide is `README-EN.md`, while `README-zh.md` remains a compatibility redirect
 - Documentation tightened for open-source publication
 - Project entrypoint wording clarified: Codex uses `AGENTS.md`, Claude Code/compatible tools use `CLAUDE.md`, and shared project facts live in project control files
 - Source promotion sync now treats document maps and section notes as parsed source structure instead of final knowledge deposition
