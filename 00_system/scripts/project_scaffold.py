@@ -25,6 +25,7 @@ SCHEMA_PATH = SOURCE_ROOT / "00_system" / "registry" / "project_scaffold_schema.
 STATE_REL_PATH = Path(".obsidiantowiki/project-scaffold-state.json")
 CANDIDATE_REL_ROOT = Path(".obsidiantowiki/upgrade-candidates/project-scaffold")
 LIFECYCLE_PATH = Path("docs/ai-workflows/AI_CODING_LIFECYCLE.md")
+RESOLUTION_VALUES = {"merged", "keep-local"}
 
 
 def file_sha256(path: Path) -> str:
@@ -112,12 +113,33 @@ def safe_update_lifecycle(repo_root: Path, source_root: Path, state: dict[str, o
     current_hash = file_sha256(destination) if destination.exists() else ""
     current_text_hash = normalized_text_hash(destination.read_text(encoding="utf-8")) if destination.exists() else ""
     known_hashes = known_lifecycle_hashes(source_root)
+    resolutions = state.setdefault("resolutions", {})
+    assert isinstance(resolutions, dict)
+    resolution = resolutions.get(LIFECYCLE_PATH.as_posix())
+    resolution = resolution if isinstance(resolution, dict) else {}
+    resolution_matches = (
+        str(resolution.get("resolution") or "") in RESOLUTION_VALUES
+        and str(resolution.get("template_hash") or "") == desired_text_hash
+        and str(resolution.get("local_hash") or "") == current_text_hash
+    )
 
     if current_hash == desired_hash or current_text_hash == desired_text_hash:
         action = "current"
+        resolutions.pop(LIFECYCLE_PATH.as_posix(), None)
+    elif resolution_matches:
+        result = {
+            "path": LIFECYCLE_PATH.as_posix(),
+            "action": "resolved_local",
+            "resolution": str(resolution["resolution"]),
+        }
+        if candidate.exists():
+            candidate.unlink()
+            result["stale_candidate"] = "removed"
+        return result
     elif not destination.exists() or current_hash == previous_hash or current_text_hash.lower() in known_hashes:
         write_atomic(destination, desired)
         action = "created" if not current_hash else "updated"
+        resolutions.pop(LIFECYCLE_PATH.as_posix(), None)
     else:
         if not candidate.exists() or candidate.read_bytes() != desired:
             write_atomic(candidate, desired)
@@ -129,6 +151,59 @@ def safe_update_lifecycle(repo_root: Path, source_root: Path, state: dict[str, o
         candidate.unlink()
         result["stale_candidate"] = "removed"
     return result
+
+
+def resolve_lifecycle_candidate(
+    repo_root: Path,
+    resolution: str,
+    source_root: Path = SOURCE_ROOT,
+) -> dict[str, object]:
+    if resolution not in RESOLUTION_VALUES:
+        raise ValueError(f"unsupported project lifecycle resolution: {resolution}")
+    repo_root = repo_root.expanduser().resolve()
+    source_root = source_root.expanduser().resolve()
+    if not load_context(repo_root):
+        raise ValueError(f"project is not attached: {repo_root}")
+
+    destination = repo_root / LIFECYCLE_PATH
+    candidate = repo_root / CANDIDATE_REL_ROOT / Path(LIFECYCLE_PATH.as_posix() + ".new")
+    desired = render_template("AI_CODING_LIFECYCLE.md", {}).rstrip() + "\n"
+    if not destination.exists() or not candidate.exists():
+        raise ValueError("lifecycle resolution requires both the local file and current candidate")
+    if normalized_text_hash(candidate.read_text(encoding="utf-8")) != normalized_text_hash(desired):
+        raise ValueError("lifecycle candidate does not match the current template")
+
+    state = load_json(repo_root / STATE_REL_PATH)
+    resolutions = state.setdefault("resolutions", {})
+    assert isinstance(resolutions, dict)
+    resolutions[LIFECYCLE_PATH.as_posix()] = {
+        "resolution": resolution,
+        "template_hash": normalized_text_hash(desired),
+        "local_hash": normalized_text_hash(destination.read_text(encoding="utf-8")),
+        "resolved_at": datetime.now().replace(microsecond=0).isoformat(),
+    }
+    state.update(
+        {
+            "schema_version": 1,
+            "project_scaffold_version": current_version(source_root),
+            "runtime_root": str(source_root),
+            "updated_at": datetime.now().replace(microsecond=0).isoformat(),
+        }
+    )
+    write_atomic(repo_root / STATE_REL_PATH, (json.dumps(state, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    candidate.unlink()
+    return {
+        "repo_root": str(repo_root),
+        "status": "resolved_local",
+        "version": current_version(source_root),
+        "actions": [
+            {
+                "path": LIFECYCLE_PATH.as_posix(),
+                "action": "resolved_local",
+                "resolution": resolution,
+            }
+        ],
+    }
 
 
 def apply_project_scaffold(repo_root: Path, source_root: Path = SOURCE_ROOT) -> dict[str, object]:
@@ -216,10 +291,15 @@ def main() -> None:
     parser.add_argument("--wiki-root", default="")
     parser.add_argument("--source-root", default=str(SOURCE_ROOT))
     parser.add_argument("--all-projects", action="store_true")
+    parser.add_argument("--resolve-lifecycle", choices=sorted(RESOLUTION_VALUES), default="")
     parser.add_argument("--format", choices=["text", "json"], default="text")
     args = parser.parse_args()
     source_root = Path(args.source_root)
-    if args.all_projects:
+    if args.resolve_lifecycle:
+        if args.all_projects:
+            raise SystemExit("--resolve-lifecycle cannot be combined with --all-projects")
+        reports = [resolve_lifecycle_candidate(Path(args.repo_root), args.resolve_lifecycle, source_root)]
+    elif args.all_projects:
         if not args.wiki_root:
             raise SystemExit("--wiki-root is required with --all-projects")
         reports = upgrade_registered_projects(Path(args.wiki_root).expanduser().resolve(), source_root)

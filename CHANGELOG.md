@@ -39,6 +39,7 @@ All notable changes to this repository should be documented in this file.
 - Natural-language whole-product update with clean fast-forward Git preflight and update receipts
 - Hash-baselined private scaffold sync with staged candidates and timestamped backups
 - Safe all-project core bridge upgrades independent from optional hooks/subagents
+- Hash-bound `merged`/`keep-local` decisions for reviewed shared-asset and project-lifecycle candidates
 
 ### Changed
 
@@ -60,6 +61,7 @@ All notable changes to this repository should be documented in this file.
 - Manager and optional project adapters prefer the repository-managed `.venv`
 - Existing projects no longer require `scripts/ai` unless optional adapters are explicitly installed
 - Onboarding and update documentation now presents one installer followed by natural-language operation
+- Reviewed local customizations no longer restage the same `.new` candidate until either the public template or local file changes
 
 ### Removed
 

@@ -31,6 +31,7 @@
 | OTW-UX-002 | Add safe whole-product update | P0 | Natural-language update enforces clean fast-forward Git, hash-safe private sync, all-project core bridge upgrades, installed-adapter upgrades, and a receipt | Done |
 | OTW-UX-003 | Version core project bridges separately from optional adapters | P0 | Existing projects update managed entry blocks/context/missing controls without reattachment; customized lifecycle files stage candidates | Done |
 | OTW-UX-004 | Align onboarding and maintenance documentation | P1 | README/manual/quick start/templates/operations/deployment/security/testing describe one setup and natural-language update contract | Done |
+| OTW-COMPAT-002 | Persist reviewed local candidate resolutions | P0 | Shared assets and customized lifecycle files accept explicit `merged` or `keep-local`, stop restaging unchanged candidates, and reopen review when public or local content changes | Done |
 
 ## Next
 
@@ -58,3 +59,4 @@
 - 2026-07-16: Added protected/idempotent private sync, fixed retrieval evaluation gates, provider-neutral Skills/MCP adapters, conservative provenance migration, and local topic-alias hybrid recall.
 - 2026-07-16: Added safe compatibility ledgers, global manager runtime, privacy exclusions, close receipts, cross-platform install/doctor/CI, and source extraction quality gates.
 - 2026-07-16: Added one-command setup, natural-language whole-product update, private seed migration, hash-safe private backups/candidates, and versioned all-project core bridge upgrades.
+- 2026-07-17: Added hash-bound `merged`/`keep-local` resolutions for shared assets and customized project lifecycle files.

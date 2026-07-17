@@ -73,6 +73,7 @@ Daily project work is exposed through the project cockpit:
 - `vault_schema.json` versions knowledge-vault metadata migrations.
 - `private_scaffold_state.json` records hashes for manifest-managed private files.
 - `.obsidiantowiki/project-scaffold-state.json` records an attached project's managed lifecycle baseline.
+- Shared-asset and project-scaffold state may also record an explicit `merged` or `keep-local` resolution against both the current public template hash and reviewed local hash.
 - `project_adapter_schema.json` versions optional hooks/subagents/Skills separately from the core bridge.
 - `shared_assets.json` versions reusable private shared assets independently.
 
@@ -89,6 +90,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Real machine paths live in ignored `wiki.context.json` or user config, never in public/project scaffold bridge text.
 - `wiki.context.json` records both canonical public `runtime_root` and private `wiki_root`; copied private scripts are compatibility assets, not the primary runtime.
 - Vault migrations update a metadata ledger only. Shared/project managed files use recorded hashes; local edits produce candidates instead of overwrite.
+- A reviewed local resolution suppresses the same candidate only while both public and local hashes remain unchanged; either side changing invalidates the resolution and stages a fresh candidate.
 - Public updates are clean-worktree, upstream-known, fast-forward-only operations. They never stash, reset, or force overwrite.
 - Private root entry files and knowledge are seed-only/protected. Managed scaffold files update only from a recorded unchanged hash; otherwise a candidate and backup are required.
 - Core project scaffold upgrades run for every registered project. Optional adapters remain opt-in and update only when already installed.

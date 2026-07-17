@@ -65,6 +65,52 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
             self.assertEqual(lifecycle.read_text(encoding="utf-8"), "# User lifecycle\n")
             self.assertTrue(candidate.exists())
 
+            accepted = subprocess.run(
+                [
+                    sys.executable,
+                    str(UPGRADER),
+                    "--repo-root",
+                    str(repo),
+                    "--resolve-lifecycle",
+                    "keep-local",
+                    "--format",
+                    "json",
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(accepted.returncode, 0, accepted.stderr)
+            self.assertFalse(candidate.exists())
+            accepted_again = subprocess.run(
+                [sys.executable, str(UPGRADER), "--repo-root", str(repo), "--format", "json"],
+                cwd=REPO_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(accepted_again.returncode, 0, accepted_again.stderr)
+            lifecycle_action = json.loads(accepted_again.stdout)["reports"][0]["actions"][-1]
+            self.assertEqual(lifecycle_action["action"], "resolved_local")
+
+            lifecycle.write_text("# Changed after review\n", encoding="utf-8")
+            invalidated = subprocess.run(
+                [sys.executable, str(UPGRADER), "--repo-root", str(repo), "--format", "json"],
+                cwd=REPO_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(invalidated.returncode, 0, invalidated.stderr)
+            self.assertTrue(candidate.exists())
+
             lifecycle.write_bytes(candidate.read_bytes())
             resolved = subprocess.run(
                 [sys.executable, str(UPGRADER), "--repo-root", str(repo), "--format", "json"],
