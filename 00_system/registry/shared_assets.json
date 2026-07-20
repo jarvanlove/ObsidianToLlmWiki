@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "release_version": 4,
+  "release_version": 5,
   "assets": [
     {"path": "30_shared/索引.md", "version": 1},
     {"path": "30_shared/architectures/AI-coding生命周期控制协议.md", "version": 3},
     {"path": "30_shared/architectures/AI模块测试验收证据协议.md", "version": 2},
     {"path": "30_shared/architectures/AI项目级约束文件结构.md", "version": 2},
-    {"path": "30_shared/architectures/AI产品UI设计治理协议.md", "version": 1},
+    {"path": "30_shared/architectures/AI产品UI设计治理协议.md", "version": 2},
     {"path": "30_shared/architectures/资料摄入质量协议.md", "version": 2},
     {"path": "30_shared/patterns/AI团队协作项目工作流.md", "version": 1},
     {"path": "30_shared/patterns/AI项目从想法到落地标准工作流.md", "version": 1},
     {"path": "30_shared/patterns/独立开发者AI项目实操工作流.md", "version": 1},
-    {"path": "30_shared/patterns/AI产品UI设计交付工作流.md", "version": 1},
+    {"path": "30_shared/patterns/AI产品UI设计交付工作流.md", "version": 2},
     {"path": "30_shared/patterns/Figma与Stitch协作适配规范.md", "version": 1},
     {"path": "30_shared/tools/AI协作工作流可视化.html", "version": 1}
   ]

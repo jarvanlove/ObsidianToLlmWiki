@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "updated": "2026-07-20",
+  "fallback_direction_id": "mist-teal-ink",
+  "selection_policy": {
+    "default_behavior": "Use the fallback direction when a project has no approved visual baseline. Do not randomize a direction.",
+    "controlled_behavior": "Controlled directions require an explicit user selection recorded on the UI task.",
+    "reference_behavior": "Reference-only directions are inspiration assets. They cannot become a production baseline until a later approved token profile exists."
+  },
+  "shared_tokens": {
+    "surface_canvas": "#F8FAFC",
+    "surface_raised": "#FFFFFF",
+    "text_primary": "#17212B",
+    "text_secondary": "#52616B",
+    "border_subtle": "#D8E0E8",
+    "focus_ring": "#1660AB"
+  },
+  "directions": [
+    {"id": "prussian-copper", "source_number": 1, "name": "深海铜", "primary": {"name": "普鲁士蓝", "hex": "#0B3868"}, "accent": {"name": "浮光", "hex": "#B89076"}, "pair_contrast": 4.10, "tier": "default", "tags": ["金融", "专业服务", "管理后台"], "notes": "浮光只作强调或大字；不可作为浅底小文字。"},
+    {"id": "mist-teal-ink", "source_number": 2, "name": "雾青玄", "primary": {"name": "玄青", "hex": "#3C4252"}, "accent": {"name": "蒂芙尼蓝", "hex": "#66D3C0"}, "pair_contrast": 5.56, "tier": "default", "tags": ["SaaS", "协作", "工具产品"], "notes": "全局回退方向；清爽而克制。"},
+    {"id": "ember-charcoal", "source_number": 3, "name": "橙炭", "primary": {"name": "深灰色", "hex": "#2B2A2A"}, "accent": {"name": "爱马仕橙", "hex": "#FC8416"}, "pair_contrast": 5.76, "tier": "default", "tags": ["消费产品", "转化", "行动导向"], "notes": "橙色用于 CTA 和重点，不用于大面积底色。"},
+    {"id": "parchment-umber", "source_number": 6, "name": "纸本棕", "primary": {"name": "凡戴克棕", "hex": "#492D22"}, "accent": {"name": "米色", "hex": "#F1E3C8"}, "pair_contrast": 9.85, "tier": "default", "tags": ["阅读", "知识库", "文化内容"], "notes": "适合内容密度较低、强调阅读体验的页面。"},
+    {"id": "burgundy-paper", "source_number": 9, "name": "酒红暖白", "primary": {"name": "勃良第红", "hex": "#470125"}, "accent": {"name": "暖白", "hex": "#F2EBD9"}, "pair_contrast": 13.60, "tier": "default", "tags": ["高端品牌", "编辑感", "内容展示"], "notes": "保留大面积留白，避免与高饱和 CTA 叠加。"},
+    {"id": "paper-iris", "source_number": 14, "name": "宣纸鸢尾", "primary": {"name": "鸢尾蓝", "hex": "#1660AB"}, "accent": {"name": "宣纸白", "hex": "#F9F2E0"}, "pair_contrast": 5.71, "tier": "default", "tags": ["教育", "研究", "正式信息"], "notes": "适合正式信息层级和知识产品。"},
+    {"id": "tiziano-celestial", "source_number": 4, "name": "提香绀宇", "primary": {"name": "提香红", "hex": "#D34947"}, "accent": {"name": "绀宇", "hex": "#023270"}, "pair_contrast": 2.84, "tier": "reference_only", "tags": ["品牌活动", "海报"], "notes": "直接配对未达到常规 UI 文字对比度，不能成为生产基线。"},
+    {"id": "klein-gold", "source_number": 5, "name": "克莱因金", "primary": {"name": "克莱因蓝", "hex": "#022A99"}, "accent": {"name": "靛丽黄", "hex": "#FBCD08"}, "pair_contrast": 7.71, "tier": "controlled", "tags": ["营销", "数据强调", "年轻化"], "notes": "需显式选择；黄色只作强调，不能替代中性色。"},
+    {"id": "china-red-orpiment", "source_number": 7, "name": "中国红雌黄", "primary": {"name": "中国红", "hex": "#C8161D"}, "accent": {"name": "雌黄", "hex": "#FAC03D"}, "pair_contrast": 3.53, "tier": "controlled", "tags": ["节庆", "警示", "活动"], "notes": "适合大字、控件和节庆活动；常规正文需另用安全文字 token。"},
+    {"id": "schonbrunn-midnight", "source_number": 8, "name": "申布伦午夜", "primary": {"name": "午夜蓝", "hex": "#2D436F"}, "accent": {"name": "申布伦黄", "hex": "#F9D46C"}, "pair_contrast": 6.84, "tier": "controlled", "tags": ["教育", "知识", "图表"], "notes": "适合教育和信息展示，黄色只用于重点。"},
+    {"id": "mars-tigerlily", "source_number": 10, "name": "马尔斯虎皮百合", "primary": {"name": "马尔斯绿", "hex": "#01847E"}, "accent": {"name": "虎皮百合", "hex": "#E45A40"}, "pair_contrast": 1.27, "tier": "reference_only", "tags": ["插画", "活动视觉"], "notes": "直接配对对比度过低，仅作装饰灵感。"},
+    {"id": "litmus-amaranth", "source_number": 11, "name": "石蕊苋菜", "primary": {"name": "苋菜红", "hex": "#A61B29"}, "accent": {"name": "石蕊红", "hex": "#F7ECE7"}, "pair_contrast": 6.44, "tier": "controlled", "tags": ["温暖品牌", "女性消费", "内容"], "notes": "需显式选择；保持克制的红色使用面积。"},
+    {"id": "seafoam-camellia", "source_number": 12, "name": "海沫茶花", "primary": {"name": "茶花红", "hex": "#EE3F4D"}, "accent": {"name": "海沫绿", "hex": "#F9FFD3"}, "pair_contrast": 3.72, "tier": "controlled", "tags": ["活动", "生活方式", "插画"], "notes": "仅用于大字和控件；正文必须使用共享深色文字 token。"},
+    {"id": "chrysanthemum-ravine", "source_number": 13, "name": "嫩菊幽谷", "primary": {"name": "幽谷灰", "hex": "#2B313F"}, "accent": {"name": "嫩菊绿", "hex": "#E2E7BF"}, "pair_contrast": 10.17, "tier": "controlled", "tags": ["沉静", "内容", "可持续"], "notes": "需显式选择；适合低饱和、内容优先产品。"},
+    {"id": "soy-violet", "source_number": 15, "name": "豆汁董紫", "primary": {"name": "董紫", "hex": "#A48CE6"}, "accent": {"name": "豆汁黄", "hex": "#FAFBE6"}, "pair_contrast": 2.68, "tier": "reference_only", "tags": ["插画", "生活方式"], "notes": "直接配对对比度不足，不能成为生产基线。"},
+    {"id": "sea-sky-scallion", "source_number": 16, "name": "海天葱油", "primary": {"name": "葱油绿", "hex": "#373834"}, "accent": {"name": "海天蓝", "hex": "#C6E6E8"}, "pair_contrast": 8.94, "tier": "controlled", "tags": ["工具产品", "环保", "克制"], "notes": "需显式选择；以深色文本和浅色面为主。"},
+    {"id": "ash-copper", "source_number": 17, "name": "灰食青矾", "primary": {"name": "青矾绿", "hex": "#2C9678"}, "accent": {"name": "灰食白", "hex": "#F5F4F7"}, "pair_contrast": 3.34, "tier": "controlled", "tags": ["健康", "生活方式", "清新"], "notes": "原图色名与色号位置对调；此处按实际填充颜色校正，需显式选择。"},
+    {"id": "rain-violet", "source_number": 18, "name": "烟雨紫幽", "primary": {"name": "紫幽兰", "hex": "#707899"}, "accent": {"name": "烟雨白", "hex": "#E3E3E5"}, "pair_contrast": 3.39, "tier": "controlled", "tags": ["文艺", "内容", "柔和"], "notes": "仅用于大字和控件；正文使用共享深色文字 token。"},
+    {"id": "lake-glaze", "source_number": 19, "name": "湖水釉蓝", "primary": {"name": "釉蓝", "hex": "#1781B5"}, "accent": {"name": "湖水蓝", "hex": "#C9F4FF"}, "pair_contrast": 3.69, "tier": "controlled", "tags": ["数据", "清爽", "教育"], "notes": "需显式选择；浅蓝只作面色和图表辅助。"}
+  ]
+}

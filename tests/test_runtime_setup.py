@@ -55,7 +55,7 @@ class RuntimeSetupTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             payload = json.loads(result.stdout)
             self.assertEqual(payload["status"], "complete")
-            self.assertEqual(payload["runtime_version"], "1.1.3")
+            self.assertEqual(payload["runtime_version"], "1.2.0")
             self.assertTrue((private / "00_system/registry/runtime_update_receipt.json").exists())
             self.assertTrue((home / ".agents/skills/obsidiantowiki-manager/SKILL.md").exists())
             self.assertFalse((home / ".claude/skills/obsidiantowiki-manager/SKILL.md").exists())

@@ -42,6 +42,7 @@ All notable changes to this repository should be documented in this file.
 - Hash-bound `merged`/`keep-local` decisions for reviewed shared-asset and project-lifecycle candidates
 - Project-local UI governance runtime with U0-U3 task classification, UI Contract, Skill Registry, direction/RFC approval, and visual evidence gates
 - Optional Figma/Stitch workflow rules that keep design tools and named Skills below project Design Authority
+- Governed 19-palette visual-direction registry, six stable defaults, controlled palette selection, and locked project UI baselines
 
 ### Changed
 

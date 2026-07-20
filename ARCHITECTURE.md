@@ -44,7 +44,7 @@ Daily project work is exposed through the project cockpit:
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
-| `ui_governance.py` | Create and validate project-local UI task records, Design Authority approvals, and visual close evidence |
+| `ui_governance.py` | Create and validate project-local UI task records, locked visual baselines, Design Authority approvals, and visual close evidence |
 | `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
 | `runtime_manager.py` | Orchestrate one-command setup and Git-safe whole-product updates |
 | `private_vault.py` | Seed private-only entry files and initialize a missing private vault |
@@ -64,6 +64,7 @@ Daily project work is exposed through the project cockpit:
 - `docs/templates/project-CLAUDE.md` defines Claude Code / compatible tool bridge behavior.
 - `docs/templates/project-control/` defines project control file templates used during project attach.
 - `docs/templates/project-ui/` defines UI Contract, Skill Registry, task evidence, QA, and RFC files created only on a project's first U1+ UI task.
+- `00_system/registry/ui_visual_directions.json` holds the auditable 19-palette visual-direction library, its six default directions, and controlled/reference-only selection boundaries.
 - `docs/templates/project-adapters/` defines optional hook/subagent adapter templates; these are only installed with an explicit attach flag.
 - `docs/templates/global-skills/obsidiantowiki-manager/` defines the once-per-provider natural-language manager Skill.
 - `00_system/templates/` defines wiki page schemas, not project repo control files.
@@ -101,6 +102,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Private vault contains real user/project knowledge.
 - ObsidianToWiki defines the AI coding lifecycle protocol; attached projects execute it through local control files.
 - UI governance is a lifecycle subprotocol: the Agent classifies U0-U3 semantically, `ui_governance.py` validates only artifacts and approvals, and independent Visual QA/human Design Authority judge design quality.
+- Visual direction is project-owned: no-reference UI tasks use a fixed fallback, controlled palettes need a user selection record, and `UI_VISUAL_BASELINE.json` remains fixed until an approved U3 RFC changes it.
 - Figma, Stitch, hooks, subagents, and named third-party Skills are optional executors; they cannot override a project's Design Authority or silently modify user-global Skill configuration.
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Natural-language project attach must be followed by a strict project session check before reporting success.

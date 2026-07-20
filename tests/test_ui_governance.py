@@ -220,6 +220,88 @@ class UiGovernanceTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)["ui_level"], "U1")
 
+    def test_visual_direction_registry_has_six_defaults_and_nineteen_sources(self) -> None:
+        result = run(SCRIPT, ["list-directions"], REPO_ROOT)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        directions = payload["directions"]
+        self.assertEqual(len(directions), 19)
+        self.assertEqual(sum(item["tier"] == "default" for item in directions), 6)
+        self.assertEqual(payload["fallback_direction_id"], "mist-teal-ink")
+        corrected = next(item for item in directions if item["source_number"] == 17)
+        self.assertEqual(corrected["primary"], {"name": "青矾绿", "hex": "#2C9678"})
+        self.assertEqual(corrected["accent"], {"name": "灰食白", "hex": "#F5F4F7"})
+
+    def test_u1_uses_a_stable_fallback_baseline_and_controlled_direction_needs_user_note(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            self.initialize(repo, "U1", "first-screen")
+            baseline = json.loads((repo / "docs/design/UI_VISUAL_BASELINE.json").read_text(encoding="utf-8"))
+            self.assertEqual(baseline["direction"]["id"], "mist-teal-ink")
+
+            locked = run(
+                SCRIPT,
+                [
+                    "init",
+                    "--repo-root",
+                    str(repo),
+                    "--task-id",
+                    "second-screen",
+                    "--task",
+                    "Add a dashboard screen",
+                    "--level",
+                    "U1",
+                    "--visual-direction",
+                    "ember-charcoal",
+                ],
+                REPO_ROOT,
+            )
+            self.assertNotEqual(locked.returncode, 0)
+            self.assertIn("baseline is locked", locked.stderr)
+
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            missing_note = run(
+                SCRIPT,
+                [
+                    "init",
+                    "--repo-root",
+                    str(repo),
+                    "--task-id",
+                    "campaign-screen",
+                    "--task",
+                    "Create a campaign screen",
+                    "--level",
+                    "U1",
+                    "--visual-direction",
+                    "klein-gold",
+                ],
+                REPO_ROOT,
+            )
+            self.assertNotEqual(missing_note.returncode, 0)
+            self.assertIn("explicit user selection note", missing_note.stderr)
+
+            selected = run(
+                SCRIPT,
+                [
+                    "init",
+                    "--repo-root",
+                    str(repo),
+                    "--task-id",
+                    "campaign-screen",
+                    "--task",
+                    "Create a campaign screen",
+                    "--level",
+                    "U1",
+                    "--visual-direction",
+                    "klein-gold",
+                    "--approval-note",
+                    "User selected the energetic campaign direction",
+                ],
+                REPO_ROOT,
+            )
+            self.assertEqual(selected.returncode, 0, selected.stderr)
+
     def test_project_close_rejects_ui_task_without_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repo = Path(temp)

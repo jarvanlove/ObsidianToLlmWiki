@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%233C4252'/%3E%3C/svg%3E">
+  <title>受控视觉方向色库</title>
+  <style>
+    :root { --ink: #17212B; --paper: #F8FAFC; --line: #D8E0E8; --muted: #52616B; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: "Songti SC", "STSong", Georgia, serif; }
+    main { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 48px 0 64px; }
+    header { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: end; border-bottom: 1px solid var(--ink); padding-bottom: 24px; }
+    .eyebrow, .number, .tag { font-family: "Aptos", "Microsoft YaHei", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow { font-size: 12px; color: var(--muted); margin: 0 0 16px; }
+    h1 { max-width: 760px; margin: 0; font-size: clamp(38px, 6vw, 76px); font-weight: 600; line-height: .98; letter-spacing: -.06em; }
+    .summary { max-width: 360px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.65; }
+    .rule { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 32px 0 40px; border: 1px solid var(--line); background: var(--line); }
+    .rule div { background: #fff; padding: 18px 20px; }
+    .rule strong { display: block; font-size: 14px; margin-bottom: 7px; }
+    .rule span { color: var(--muted); font: 13px/1.5 "Microsoft YaHei", sans-serif; }
+    h2 { margin: 0 0 18px; font-size: 24px; letter-spacing: -.03em; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { min-height: 250px; position: relative; overflow: hidden; border-radius: 3px; padding: 20px; background: var(--primary); color: var(--on-primary); display: flex; flex-direction: column; justify-content: space-between; }
+    .card::after { content: ""; position: absolute; width: 170px; height: 170px; border: 1px solid currentColor; border-radius: 50%; right: -44px; top: -58px; opacity: .5; }
+    .card > * { position: relative; z-index: 1; }
+    .number { font: 11px "Microsoft YaHei", sans-serif; opacity: .72; }
+    .card h3 { margin: 0; font-size: 34px; letter-spacing: -.05em; }
+    .card p { margin: 7px 0 0; font: 13px/1.5 "Microsoft YaHei", sans-serif; opacity: .82; }
+    .swatch { height: 54px; margin-top: 20px; background: var(--accent); color: var(--accent-text); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font: 12px "Microsoft YaHei", sans-serif; }
+    .swatch b { font-weight: 600; }
+    .catalog { margin-top: 46px; border-top: 1px solid var(--ink); }
+    .catalog-row { display: grid; grid-template-columns: 56px 1.2fr 1fr 1.4fr; gap: 16px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); font-family: "Microsoft YaHei", sans-serif; }
+    .catalog-row > span { font-size: 13px; }
+    .catalog-row .tier { color: var(--muted); }
+    .chips { display: flex; gap: 7px; }
+    .chip { width: 24px; height: 24px; border: 1px solid rgba(23,33,43,.16); border-radius: 50%; }
+    footer { margin-top: 26px; color: var(--muted); font: 12px/1.6 "Microsoft YaHei", sans-serif; }
+    @media (max-width: 760px) { main { width: min(100% - 28px, 560px); padding-top: 28px; } header { grid-template-columns: 1fr; gap: 20px; } .rule, .cards { grid-template-columns: 1fr; } .card { min-height: 210px; } .catalog-row { grid-template-columns: 38px 1fr auto; gap: 10px; } .catalog-row .tier { grid-column: 2 / -1; } .catalog-row .chips { grid-column: 3; grid-row: 1; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><p class="eyebrow">ObsidianToWiki · Visual Direction Registry</p><h1>不随机的<br>视觉起点</h1></div>
+      <p class="summary">19 组来源色卡完整保留。没有设计参考时，系统使用固定回退方向；其余方向必须由人按产品气质选择。</p>
+    </header>
+    <section class="rule" aria-label="色库规则">
+      <div><strong>6 个默认方向</strong><span>用于无参考 UI，不进行随机抽选。</span></div>
+      <div><strong>10 个受控方向</strong><span>保留完整风格，但需要记录用户选择。</span></div>
+      <div><strong>3 个参考方向</strong><span>只作活动、插画和后续 token 研究来源。</span></div>
+    </section>
+    <section aria-labelledby="defaults"><h2 id="defaults">默认方向 / production-safe</h2>
+      <div class="cards">
+        <article class="card" style="--primary:#0B3868;--accent:#B89076;--on-primary:#FFFFFF;--accent-text:#17212B"><span class="number">01 · FINANCE / OPS</span><div><h3>深海铜</h3><p>普鲁士蓝 #0B3868<br>浮光 #B89076</p></div><div class="swatch"><b>强调色仅用于重点</b><span>#B89076</span></div></article>
+        <article class="card" style="--primary:#3C4252;--accent:#66D3C0;--on-primary:#FFFFFF;--accent-text:#17212B"><span class="number">02 · SAAS / TOOLS</span><div><h3>雾青玄</h3><p>玄青 #3C4252<br>蒂芙尼蓝 #66D3C0</p></div><div class="swatch"><b>固定全局回退</b><span>#66D3C0</span></div></article>
+        <article class="card" style="--primary:#2B2A2A;--accent:#FC8416;--on-primary:#FFFFFF;--accent-text:#17212B"><span class="number">03 · ACTION / RETAIL</span><div><h3>橙炭</h3><p>深灰色 #2B2A2A<br>爱马仕橙 #FC8416</p></div><div class="swatch"><b>CTA 与行动重点</b><span>#FC8416</span></div></article>
+        <article class="card" style="--primary:#492D22;--accent:#F1E3C8;--on-primary:#FFFFFF;--accent-text:#492D22"><span class="number">06 · READING / CULTURE</span><div><h3>纸本棕</h3><p>凡戴克棕 #492D22<br>米色 #F1E3C8</p></div><div class="swatch"><b>阅读优先</b><span>#F1E3C8</span></div></article>
+        <article class="card" style="--primary:#470125;--accent:#F2EBD9;--on-primary:#FFFFFF;--accent-text:#470125"><span class="number">09 · EDITORIAL / PREMIUM</span><div><h3>酒红暖白</h3><p>勃良第红 #470125<br>暖白 #F2EBD9</p></div><div class="swatch"><b>高留白、低噪声</b><span>#F2EBD9</span></div></article>
+        <article class="card" style="--primary:#1660AB;--accent:#F9F2E0;--on-primary:#FFFFFF;--accent-text:#17212B"><span class="number">14 · RESEARCH / LEARNING</span><div><h3>宣纸鸢尾</h3><p>鸢尾蓝 #1660AB<br>宣纸白 #F9F2E0</p></div><div class="swatch"><b>正式知识界面</b><span>#F9F2E0</span></div></article>
+      </div>
+    </section>
+    <section class="catalog" aria-labelledby="catalog"><h2 id="catalog" style="margin-top:28px">完整来源目录 / 19 pairs</h2>
+      <div class="catalog-row"><span>04</span><span>提香红 × 绀宇</span><span class="chips"><i class="chip" style="background:#D34947"></i><i class="chip" style="background:#023270"></i></span><span class="tier">参考：品牌活动 / 海报</span></div>
+      <div class="catalog-row"><span>05</span><span>克莱因蓝 × 靛丽黄</span><span class="chips"><i class="chip" style="background:#022A99"></i><i class="chip" style="background:#FBCD08"></i></span><span class="tier">受控：营销 / 数据强调</span></div>
+      <div class="catalog-row"><span>07</span><span>中国红 × 雌黄</span><span class="chips"><i class="chip" style="background:#C8161D"></i><i class="chip" style="background:#FAC03D"></i></span><span class="tier">受控：节庆 / 活动</span></div>
+      <div class="catalog-row"><span>08</span><span>申布伦黄 × 午夜蓝</span><span class="chips"><i class="chip" style="background:#F9D46C"></i><i class="chip" style="background:#2D436F"></i></span><span class="tier">受控：教育 / 图表</span></div>
+      <div class="catalog-row"><span>10</span><span>马尔斯绿 × 虎皮百合</span><span class="chips"><i class="chip" style="background:#01847E"></i><i class="chip" style="background:#E45A40"></i></span><span class="tier">参考：插画 / 活动视觉</span></div>
+      <div class="catalog-row"><span>11</span><span>石蕊红 × 苋菜红</span><span class="chips"><i class="chip" style="background:#F7ECE7"></i><i class="chip" style="background:#A61B29"></i></span><span class="tier">受控：温暖品牌 / 内容</span></div>
+      <div class="catalog-row"><span>12</span><span>海沫绿 × 茶花红</span><span class="chips"><i class="chip" style="background:#F9FFD3"></i><i class="chip" style="background:#EE3F4D"></i></span><span class="tier">受控：活动 / 生活方式</span></div>
+      <div class="catalog-row"><span>13</span><span>嫩菊绿 × 幽谷灰</span><span class="chips"><i class="chip" style="background:#E2E7BF"></i><i class="chip" style="background:#2B313F"></i></span><span class="tier">受控：沉静内容 / 可持续</span></div>
+      <div class="catalog-row"><span>15</span><span>豆汁黄 × 董紫</span><span class="chips"><i class="chip" style="background:#FAFBE6"></i><i class="chip" style="background:#A48CE6"></i></span><span class="tier">参考：插画 / 生活方式</span></div>
+      <div class="catalog-row"><span>16</span><span>海天蓝 × 葱油绿</span><span class="chips"><i class="chip" style="background:#C6E6E8"></i><i class="chip" style="background:#373834"></i></span><span class="tier">受控：工具 / 环保</span></div>
+      <div class="catalog-row"><span>17</span><span>灰食白 × 青矾绿</span><span class="chips"><i class="chip" style="background:#F5F4F7"></i><i class="chip" style="background:#2C9678"></i></span><span class="tier">受控：色号按实际填充校正</span></div>
+      <div class="catalog-row"><span>18</span><span>烟雨白 × 紫幽兰</span><span class="chips"><i class="chip" style="background:#E3E3E5"></i><i class="chip" style="background:#707899"></i></span><span class="tier">受控：柔和内容</span></div>
+      <div class="catalog-row"><span>19</span><span>湖水蓝 × 釉蓝</span><span class="chips"><i class="chip" style="background:#C9F4FF"></i><i class="chip" style="background:#1781B5"></i></span><span class="tier">受控：数据 / 教育</span></div>
+    </section>
+    <footer>使用语义 token，而不是从本页复制任意色号。对比度必须在实际前景/背景组合中重新验证。</footer>
+  </main>
+</body>
+</html>

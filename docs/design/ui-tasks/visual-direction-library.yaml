@@ -1,0 +1,66 @@
+schema_version: 1
+id: visual-direction-library
+title: 内置受控视觉方向色库：19 组来源色卡、6 组默认方向和无障碍 token 治理
+ui_level: U3
+stage: closed
+created_at: '2026-07-20T11:56:37+08:00'
+updated_at: '2026-07-20T12:17:15+08:00'
+scope:
+  routes: []
+  states:
+  - default
+  - loading
+  - empty
+  - error
+  viewports:
+  - 1440x900
+  - 390x844
+design_authority:
+  owner: ObsidianToWiki product maintainer
+  sources:
+  - User-provided 19-palette image set, reviewed in the task conversation on 2026-07-20;
+    images are not copied into the public repository.
+  approved_direction: mist-teal-ink
+  approval_note: 产品负责人已批准：19 组全量入库，6 组作为无参考可靠默认值，其余按用户气质选择，项目基线受 U3 RFC 约束。
+  approved_at: '2026-07-20T12:10:31+08:00'
+  rfc_approval_note: 产品负责人已批准视觉方向库 RFC 与项目基线锁定规则。
+  rfc_approved_at: '2026-07-20T12:10:32+08:00'
+visual_direction:
+  id: mist-teal-ink
+  name: 雾青玄
+  tier: default
+  selection: fallback
+  selection_note: The approved system decision is 19 retained source palettes, six
+    stable defaults, controlled user selection, and a locked project baseline.
+  baseline_change: false
+skill_governance:
+  requested_skill: ''
+  automatic_skills:
+  - project-ui-rules
+  - ui-visual-direction-registry
+  - ui-accessibility-check
+  - ui-screenshot-check
+  explicit_skills: []
+constraints:
+  allow_new_dependencies: false
+  baseline_update_requires_approval: true
+approvals:
+  visual_direction: approved
+  design_rfc: approved
+  release: approved
+evidence:
+  screenshots:
+  - output/playwright/visual-direction-library/.playwright-cli/page-2026-07-20T04-07-00-896Z.png
+  - output/playwright/visual-direction-library/.playwright-cli/page-2026-07-20T04-07-07-033Z.png
+  visual_qa_report: docs/design/qa/visual-direction-library.md
+  accessibility_reports:
+  - docs/design/qa/visual-direction-library-accessibility.md
+  notes:
+  - at: '2026-07-20T12:10:42+08:00'
+    note: Desktop and mobile browser review completed with zero console errors.
+requirements:
+  requires_ui_contract: true
+  requires_direction_approval: true
+  requires_visual_evidence: true
+  description: Design-system or global visual change. Requires an approved Design
+    RFC and direction.

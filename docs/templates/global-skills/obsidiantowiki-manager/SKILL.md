@@ -41,7 +41,9 @@ For a task that changes a user-facing screen, interaction, layout, visual system
 - `U2`: new or materially redesigned user flow. Produce a direction candidate and obtain explicit Design Authority approval before implementation.
 - `U3`: design-system or global visual change. Require an approved direction and Design RFC before implementation.
 
-For U1+ use `otw.py ui assess`, then `otw.py ui init` with a stable task id. Read `docs/design/UI_CONTRACT.md` and the generated task file before using a UI Skill. Record a user-named Skill as `--requested-skill`; it is an executor, never design authority. Generic "make it prettier" Skills are candidate-only unless the project registry grants a narrower role.
+For U1+ use `otw.py ui assess`, then `otw.py ui init` with a stable task id. Read `docs/design/UI_CONTRACT.md`, `docs/design/UI_VISUAL_BASELINE.json` when present, and the generated task file before using a UI Skill. Record a user-named Skill as `--requested-skill`; it is an executor, never design authority. Generic "make it prettier" Skills are candidate-only unless the project registry grants a narrower role.
+
+When the task lacks an approved visual reference, use the runtime visual-direction registry. Its fallback is fixed, not random. A controlled direction must be explicitly selected by the user and recorded on the UI task; a reference-only palette cannot become a production baseline. Keep the existing project baseline for U1/U2 work. A U3 task may change it only after its Design RFC is approved.
 
 Use Stitch only for visual exploration or prototype candidates. Use Figma nodes as authority only when the task records them as approved. Do not copy generated design-tool code directly into production without the project component/token constraints.
 

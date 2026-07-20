@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-07-20T12:10:32+08:00",
+  "registry_schema_version": 1,
+  "direction": {
+    "id": "mist-teal-ink",
+    "source_number": 2,
+    "name": "雾青玄",
+    "primary": {
+      "name": "玄青",
+      "hex": "#3C4252"
+    },
+    "accent": {
+      "name": "蒂芙尼蓝",
+      "hex": "#66D3C0"
+    },
+    "pair_contrast": 5.56,
+    "tier": "default",
+    "tags": [
+      "SaaS",
+      "协作",
+      "工具产品"
+    ],
+    "notes": "全局回退方向；清爽而克制。"
+  },
+  "shared_tokens": {
+    "surface_canvas": "#F8FAFC",
+    "surface_raised": "#FFFFFF",
+    "text_primary": "#17212B",
+    "text_secondary": "#52616B",
+    "border_subtle": "#D8E0E8",
+    "focus_ring": "#1660AB"
+  }
+}

@@ -1,5 +1,5 @@
 schema_version: 1
-updated: {{TODAY}}
+updated: 2026-07-20
 skills:
   - id: project-ui-rules
     role: project-constraint

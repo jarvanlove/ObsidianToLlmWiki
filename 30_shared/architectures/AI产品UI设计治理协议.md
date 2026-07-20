@@ -61,6 +61,7 @@ ObsidianToWiki 定义协议、模板和验证；项目仓库保存项目自己�
 ```text
 docs/design/
 ├── UI_CONTRACT.md
+├── UI_VISUAL_BASELINE.json
 ├── UI_SKILL_REGISTRY.yaml
 ├── ui-tasks/<task-id>.yaml
 ├── qa/<task-id>.md
@@ -69,6 +70,20 @@ docs/design/
 ```
 
 `UI_CONTRACT.md` 保存长期项目规则；UI task 保存一次任务的等级、来源、被点名 Skill、批准和证据；RFC 仅用于 U3。截图、QA 与无障碍报告必须在项目仓库内可定位，不能只存在于聊天窗口。
+
+## 视觉方向色库
+
+当项目没有 Golden Screen、批准 Figma 或既有设计系统时，Agent 不能把“没有参考”理解为可以随机配色。公开运行时的 `00_system/registry/ui_visual_directions.json` 保存可审计的来源色卡、色名、色号、直接配对对比度、标签和使用限制。
+
+色库分三层：
+
+| 层级 | 规则 |
+|---|---|
+| 默认方向 | 六个经过基础对比度筛选的方向；没有项目基线时使用固定回退方向，不抽签。 |
+| 受控方向 | 保留在完整色库中，但必须由用户按产品气质显式选择并记录。 |
+| 参考方向 | 保留为活动视觉、插画或后续研究来源；不能直接成为生产 UI 基线。 |
+
+首次 U1+ 任务把选定方向和共享中性色 token 固化到 `docs/design/UI_VISUAL_BASELINE.json`。U1/U2 复用该基线；只有获批 RFC 的 U3 任务能改基线。实现必须使用 canvas、surface、text、border、action、accent 和 focus 等语义 token，不能从色卡临时复制十六进制颜色。
 
 ## Skill 权限模型
 
@@ -95,6 +110,8 @@ U3: direction -> direction_approved + RFC approved -> implementation -> verifica
 
 - U2/U3 未批准方向时拒绝进入实现。
 - U3 未批准 RFC 时拒绝关闭。
+- 没有批准参考时，运行时使用固定回退方向，不随机选择色库；受控方向必须留有用户选择记录。
+- U1/U2 任务不得替换项目视觉基线；U3 只有在 RFC 获批后才能更新它。
 - U1+ 缺浏览器截图、Visual QA 或无障碍证据时拒绝关闭。
 - 证据路径必须在项目仓库内存在。
 

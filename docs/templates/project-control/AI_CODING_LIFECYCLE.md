@@ -37,6 +37,8 @@ For user-facing work, the agent classifies UI impact before implementation:
 
 The agent owns classification and internal runtime calls. The user does not need to run a script or memorize these levels. A named UI Skill is only an executor; it cannot override approved design sources. For U1+ use the `otw.py ui` runtime to create and validate project-local UI task evidence.
 
+When a UI task has no approved reference design, use the shared visual-direction registry. The runtime selects its fixed fallback rather than random colors; controlled directions require the user's recorded choice, and a project baseline remains locked until an approved U3 RFC changes it.
+
 The agent invokes the lifecycle runtime internally. Do not ask the user to locate the runtime or run a checklist script.
 
 ## Close A Task
