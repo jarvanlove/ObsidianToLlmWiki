@@ -33,6 +33,7 @@
 | OTW-UX-004 | Align onboarding and maintenance documentation | P1 | README/manual/quick start/templates/operations/deployment/security/testing describe one setup and natural-language update contract | Done |
 | OTW-UI-001 | Add UI governance runtime | P1 | U0-U3 project UI tasks enforce Design Authority, named-Skill boundaries, approval gates, and visual close evidence without adding UI files to non-UI projects | Done |
 | OTW-UI-002 | Add governed visual-direction library | P1 | All 19 reviewed source palettes remain auditable; six defaults prevent random reference-free UI, controlled choices require user selection, and project baselines are U3/RFC locked | Done |
+| OTW-UI-003 | Add low-noise visual feedback flow | P1 | Reference-free UI keeps a stable baseline without prompting; dissatisfaction yields exactly three plain-language recommendations; confirmation is recorded internally and baseline safeguards remain intact | Done |
 | OTW-COMPAT-002 | Persist reviewed local candidate resolutions | P0 | Shared assets and customized lifecycle files accept explicit `merged` or `keep-local`, stop restaging unchanged candidates, and reopen review when public or local content changes | Done |
 
 ## Next

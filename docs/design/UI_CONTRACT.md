@@ -32,7 +32,7 @@ Lower-priority sources must not override higher-priority sources.
 
 ## Approved Visual Direction
 
-- Direction policy: retain all 19 reviewed sources; use the six default directions only when no reference exists; require a recorded user selection for controlled directions.
+- Direction policy: retain all 19 reviewed sources; silently use the existing baseline or a fixed fallback when no reference exists. If the user dislikes the overall feel, first distinguish a local hierarchy/spacing problem from a direction change; only then recommend three plain-language default directions and accept a simple confirmation. Controlled directions remain available only on an explicit user request.
 - Fixed no-reference fallback: `mist-teal-ink` / 雾青玄.
 - Baseline mutation: U1/U2 retain the current baseline; only an approved U3 RFC may replace it.
 - Source-image handling: the user-provided image files stay outside the public repository; the registry stores only reviewed color facts and use constraints.

@@ -80,6 +80,47 @@ def resolve_visual_direction(direction_id: str = "") -> dict[str, Any]:
     raise ValueError(f"unknown visual direction: {selected_id}")
 
 
+def recommendation_profile(direction_id: str) -> dict[str, Any]:
+    profiles = load_visual_direction_registry().get("user_experience", {}).get("recommendation_profiles", {})
+    profile = profiles.get(direction_id) if isinstance(profiles, dict) else None
+    if not isinstance(profile, dict):
+        raise ValueError(f"missing user experience profile for visual direction: {direction_id}")
+    return profile
+
+
+def recommend_directions(feedback: str, product_context: str = "") -> dict[str, Any]:
+    normalized_feedback = feedback.strip()
+    if not normalized_feedback:
+        raise ValueError("direction recommendation requires user feedback")
+    searchable_text = f"{normalized_feedback} {product_context.strip()}".lower()
+    registry = load_visual_direction_registry()
+    ranked: list[tuple[int, int, dict[str, Any], dict[str, Any], list[str]]] = []
+    for direction in registry["directions"]:
+        if not isinstance(direction, dict) or direction.get("tier") != "default":
+            continue
+        profile = recommendation_profile(str(direction["id"]))
+        matched = [word for word in profile.get("keywords", []) if str(word).lower() in searchable_text]
+        ranked.append((-len(matched), int(direction.get("source_number", 99)), direction, profile, matched))
+    ranked.sort(key=lambda item: (item[0], item[1]))
+    recommendations = [
+        {
+            "id": direction["id"],
+            "name": direction["name"],
+            "label": profile["label"],
+            "description": profile["description"],
+            "matched_feedback": matched,
+        }
+        for _score, _source_number, direction, profile, matched in ranked[:3]
+    ]
+    return {
+        "schema_version": 1,
+        "feedback": normalized_feedback,
+        "product_context": product_context.strip(),
+        "recommendations": recommendations,
+        "confirmation_hint": "Reply with 1, 2, 3, or a natural confirmation such as 'use the second one'.",
+    }
+
+
 def read_visual_baseline(repo_root: Path) -> dict[str, Any] | None:
     target = repo_root / BASELINE_PATH
     if not target.is_file():
@@ -285,6 +326,47 @@ def initialize_task(
     }
 
 
+def select_direction(repo_root: Path, task_id: str, direction_id: str, approval_note: str) -> dict[str, Any]:
+    if not approval_note.strip():
+        raise ValueError("direction selection requires a user confirmation note")
+    if not direction_id.strip():
+        raise ValueError("direction selection requires a recommended direction id")
+    target, payload = load_task(repo_root, task_id)
+    level = str(payload["ui_level"])
+    if level not in {"U2", "U3"}:
+        raise ValueError("only U2/U3 direction candidates can be changed through user feedback")
+    if payload.get("stage") != "direction":
+        raise ValueError("direction can only be changed before approval")
+    direction = resolve_visual_direction(direction_id)
+    baseline = read_visual_baseline(repo_root)
+    baseline_id = str((baseline or {}).get("direction", {}).get("id") or "")
+    baseline_change = bool(baseline_id and baseline_id != direction["id"])
+    if baseline_change and level != "U3":
+        raise ValueError("the existing project style is fixed; changing it requires a U3 task")
+    visual_direction = payload.setdefault("visual_direction", {})
+    if not isinstance(visual_direction, dict):
+        raise ValueError("UI task visual direction must be an object")
+    visual_direction.update(
+        {
+            "id": direction["id"],
+            "name": direction["name"],
+            "tier": direction["tier"],
+            "selection": "user_confirmed",
+            "selection_note": approval_note.strip(),
+            "baseline_change": baseline_change,
+        }
+    )
+    payload["updated_at"] = now_iso()
+    write_yaml(target, payload)
+    profile = recommendation_profile(str(direction["id"])) if direction.get("tier") == "default" else {}
+    return {
+        "schema_version": 1,
+        "status": "updated",
+        "task_path": target.relative_to(repo_root).as_posix(),
+        "direction": {"id": direction["id"], "name": direction["name"], "label": profile.get("label", direction["name"])},
+    }
+
+
 def load_task(repo_root: Path, task_id: str) -> tuple[Path, dict[str, Any]]:
     target = task_path(repo_root, task_id)
     if not target.exists():
@@ -451,13 +533,15 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Create and validate project-local UI governance artifacts.")
-    parser.add_argument("command", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check", "list-directions"])
+    parser.add_argument("command", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check", "list-directions", "recommend-directions", "select-direction"])
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--task", default="")
     parser.add_argument("--task-id", default="")
     parser.add_argument("--level", choices=UI_LEVELS, default="")
     parser.add_argument("--requested-skill", default="")
     parser.add_argument("--visual-direction", default="")
+    parser.add_argument("--feedback", default="")
+    parser.add_argument("--product-context", default="")
     parser.add_argument("--stage", choices=TASK_STAGES, default="")
     parser.add_argument("--approval-note", default="")
     parser.add_argument("--screenshot", action="append", default=[])
@@ -481,6 +565,8 @@ def main() -> None:
                 "fallback_direction_id": registry["fallback_direction_id"],
                 "directions": registry["directions"],
             }
+        elif args.command == "recommend-directions":
+            report = recommend_directions(args.feedback, args.product_context)
         elif args.command == "init":
             if not args.task.strip() or not args.task_id.strip() or not args.level:
                 raise ValueError("init requires --task, --task-id, and --level")
@@ -493,6 +579,8 @@ def main() -> None:
                 args.visual_direction,
                 args.approval_note,
             )
+        elif args.command == "select-direction":
+            report = select_direction(repo_root, args.task_id, args.visual_direction, args.approval_note)
         elif args.command == "set-stage":
             if not args.task_id.strip() or not args.stage:
                 raise ValueError("set-stage requires --task-id and --stage")

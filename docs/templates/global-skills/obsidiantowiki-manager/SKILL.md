@@ -41,6 +41,17 @@ For a task that changes a user-facing screen, interaction, layout, visual system
 - `U2`: new or materially redesigned user flow. Produce a direction candidate and obtain explicit Design Authority approval before implementation.
 - `U3`: design-system or global visual change. Require an approved direction and Design RFC before implementation.
 
+Keep this classification, tokens, task files, and approvals internal. Do not ask a normal user to choose a palette, learn a level, run a command, or understand an RFC.
+
+### Simple visual experience
+
+- When the user gives no visual preference, silently reuse the project baseline. If the project has none, use the fixed fallback; never ask the user to choose from the palette library first and never randomize.
+- When a user says the result feels too cold, plain, busy, unprofessional, or otherwise unsatisfactory, first decide whether the complaint is local (spacing, hierarchy, copy, component state) or visual-directional. Fix local issues without proposing a palette change.
+- For a visual-directional complaint, run `otw.py ui recommend-directions --feedback <user-feedback> --product-context <task-context>`. Present exactly three returned recommendations as numbered plain-language choices: label and one-sentence outcome only. Do not show hex values, tiers, token names, or all 19 sources.
+- Accept `1`, `2`, `3`, `第一个`, `第二个`, `第三个`, `就这个`, or an equivalent natural confirmation. Before direction approval, record it with `otw.py ui select-direction --task-id <id> --visual-direction <id> --approval-note <user-confirmation>`.
+- If the project already has a baseline and the user wants a different overall feel, explain it as an overall style adjustment, not a technical gate. Run it as U3 so the project cannot drift into page-by-page visual inconsistency.
+- Offer controlled directions only when the user asks to see more options or names one; reference-only directions remain invisible inspiration, not selectable production themes.
+
 For U1+ use `otw.py ui assess`, then `otw.py ui init` with a stable task id. Read `docs/design/UI_CONTRACT.md`, `docs/design/UI_VISUAL_BASELINE.json` when present, and the generated task file before using a UI Skill. Record a user-named Skill as `--requested-skill`; it is an executor, never design authority. Generic "make it prettier" Skills are candidate-only unless the project registry grants a narrower role.
 
 When the task lacks an approved visual reference, use the runtime visual-direction registry. Its fallback is fixed, not random. A controlled direction must be explicitly selected by the user and recorded on the UI task; a reference-only palette cannot become a production baseline. Keep the existing project baseline for U1/U2 work. A U3 task may change it only after its Design RFC is approved.

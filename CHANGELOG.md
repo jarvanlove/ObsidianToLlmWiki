@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-20
+
+- Added low-noise visual feedback: users can describe dissatisfaction naturally, receive three plain-language direction recommendations, and confirm with a simple reply while governance records remain internal.
+
 All notable changes to this repository should be documented in this file.
 
 ## Unreleased

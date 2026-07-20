@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "00_system" / "scripts" / "ui_governance.py"
@@ -231,6 +233,106 @@ class UiGovernanceTests(unittest.TestCase):
         corrected = next(item for item in directions if item["source_number"] == 17)
         self.assertEqual(corrected["primary"], {"name": "青矾绿", "hex": "#2C9678"})
         self.assertEqual(corrected["accent"], {"name": "灰食白", "hex": "#F5F4F7"})
+
+    def test_feedback_recommends_three_plain_language_default_directions(self) -> None:
+        result = run(
+            SCRIPT,
+            [
+                "recommend-directions",
+                "--feedback",
+                "这个感觉太冷，也不够高级",
+                "--product-context",
+                "会员权益页",
+            ],
+            REPO_ROOT,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(len(payload["recommendations"]), 3)
+        self.assertEqual(payload["recommendations"][0]["id"], "burgundy-paper")
+        self.assertEqual(payload["recommendations"][0]["label"], "高级氛围")
+        self.assertNotIn("primary", payload["recommendations"][0])
+
+        forwarded = run(
+            OTW,
+            [
+                "ui",
+                "recommend-directions",
+                "--repo-root",
+                str(REPO_ROOT),
+                "--feedback",
+                "太花了，想更清楚正式",
+            ],
+            REPO_ROOT,
+        )
+        self.assertEqual(forwarded.returncode, 0, forwarded.stderr)
+        self.assertEqual(json.loads(forwarded.stdout)["recommendations"][0]["id"], "paper-iris")
+
+    def test_user_can_confirm_a_recommended_direction_before_approval(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            self.initialize(repo, "U2", "membership-page")
+            selected = run(
+                SCRIPT,
+                [
+                    "select-direction",
+                    "--repo-root",
+                    str(repo),
+                    "--task-id",
+                    "membership-page",
+                    "--visual-direction",
+                    "burgundy-paper",
+                    "--approval-note",
+                    "User replied: use the first one",
+                ],
+                REPO_ROOT,
+            )
+            self.assertEqual(selected.returncode, 0, selected.stderr)
+            task = yaml.safe_load((repo / "docs/design/ui-tasks/membership-page.yaml").read_text(encoding="utf-8"))
+            self.assertEqual(task["visual_direction"]["id"], "burgundy-paper")
+            self.assertEqual(task["visual_direction"]["selection"], "user_confirmed")
+
+            approved = run(
+                SCRIPT,
+                [
+                    "set-stage",
+                    "--repo-root",
+                    str(repo),
+                    "--task-id",
+                    "membership-page",
+                    "--stage",
+                    "direction_approved",
+                    "--approval-note",
+                    "User approved the warm premium direction",
+                ],
+                REPO_ROOT,
+            )
+            self.assertEqual(approved.returncode, 0, approved.stderr)
+            baseline = json.loads((repo / "docs/design/UI_VISUAL_BASELINE.json").read_text(encoding="utf-8"))
+            self.assertEqual(baseline["direction"]["id"], "burgundy-paper")
+
+    def test_existing_baseline_cannot_shift_from_feedback_on_u2(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            self.initialize(repo, "U1", "first-screen")
+            self.initialize(repo, "U2", "new-flow")
+            blocked = run(
+                SCRIPT,
+                [
+                    "select-direction",
+                    "--repo-root",
+                    str(repo),
+                    "--task-id",
+                    "new-flow",
+                    "--visual-direction",
+                    "burgundy-paper",
+                    "--approval-note",
+                    "User wants a warmer overall feel",
+                ],
+                REPO_ROOT,
+            )
+            self.assertNotEqual(blocked.returncode, 0)
+            self.assertIn("existing project style is fixed", blocked.stderr)
 
     def test_u1_uses_a_stable_fallback_baseline_and_controlled_direction_needs_user_note(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

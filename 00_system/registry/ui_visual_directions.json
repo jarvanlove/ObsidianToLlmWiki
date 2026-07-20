@@ -7,6 +7,18 @@
     "controlled_behavior": "Controlled directions require an explicit user selection recorded on the UI task.",
     "reference_behavior": "Reference-only directions are inspiration assets. They cannot become a production baseline until a later approved token profile exists."
   },
+  "user_experience": {
+    "default_behavior": "Do not ask the user to choose a palette when a project has no approved reference. Use the project baseline or fixed fallback silently.",
+    "feedback_behavior": "When the user is dissatisfied with the visual feel, recommend exactly three default directions in plain language and wait for a simple confirmation.",
+    "recommendation_profiles": {
+      "prussian-copper": {"label": "稳重专业", "description": "更可信、稳健，适合企业、金融和管理场景。", "keywords": ["稳重", "专业", "可信", "企业", "金融", "管理", "后台"]},
+      "mist-teal-ink": {"label": "清爽科技", "description": "更现代、轻盈，适合工具、协作和效率产品。", "keywords": ["清爽", "科技", "现代", "效率", "工具", "简洁", "轻盈", "太土"]},
+      "ember-charcoal": {"label": "活力行动", "description": "更有行动感和转化感，适合消费、增长和活动页面。", "keywords": ["活力", "行动", "增长", "年轻", "促销", "转化", "热闹"]},
+      "parchment-umber": {"label": "温暖品质", "description": "更温和、有内容感，适合阅读、知识和品牌叙事。", "keywords": ["温暖", "人文", "阅读", "内容", "知识", "故事", "太冷"]},
+      "burgundy-paper": {"label": "高级氛围", "description": "更有品牌感和质感，适合会员、高端和展示型页面。", "keywords": ["高级", "质感", "会员", "奢华", "氛围", "品牌", "太普通"]},
+      "paper-iris": {"label": "克制清晰", "description": "更正式、清楚，适合教育、研究和信息密集页面。", "keywords": ["克制", "正式", "清晰", "教育", "研究", "东方", "太花", "太乱"]}
+    }
+  },
   "shared_tokens": {
     "surface_canvas": "#F8FAFC",
     "surface_raised": "#FFFFFF",

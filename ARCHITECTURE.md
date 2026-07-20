@@ -102,7 +102,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Private vault contains real user/project knowledge.
 - ObsidianToWiki defines the AI coding lifecycle protocol; attached projects execute it through local control files.
 - UI governance is a lifecycle subprotocol: the Agent classifies U0-U3 semantically, `ui_governance.py` validates only artifacts and approvals, and independent Visual QA/human Design Authority judge design quality.
-- Visual direction is project-owned: no-reference UI tasks use a fixed fallback, controlled palettes need a user selection record, and `UI_VISUAL_BASELINE.json` remains fixed until an approved U3 RFC changes it.
+- Visual direction is project-owned: no-reference UI tasks use a fixed fallback without prompting the user, controlled palettes need a user selection record, and `UI_VISUAL_BASELINE.json` remains fixed until an approved U3 RFC changes it. User dissatisfaction first produces local fixes or three plain-language recommendations; technical selection state remains internal.
 - Figma, Stitch, hooks, subagents, and named third-party Skills are optional executors; they cannot override a project's Design Authority or silently modify user-global Skill configuration.
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Natural-language project attach must be followed by a strict project session check before reporting success.

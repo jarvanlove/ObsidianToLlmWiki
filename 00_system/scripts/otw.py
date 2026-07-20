@@ -104,12 +104,15 @@ def main() -> None:
             command_parser.add_argument("--ui-task", default="")
 
     ui = subparsers.add_parser("ui", help="Run project-local UI governance checks for an agent-managed UI task.")
-    ui.add_argument("action", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check"])
+    ui.add_argument("action", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check", "list-directions", "recommend-directions", "select-direction"])
     add_project_options(ui)
     ui.add_argument("--task", default="")
     ui.add_argument("--task-id", default="")
     ui.add_argument("--level", choices=["U0", "U1", "U2", "U3"], default="")
     ui.add_argument("--requested-skill", default="")
+    ui.add_argument("--visual-direction", default="")
+    ui.add_argument("--feedback", default="")
+    ui.add_argument("--product-context", default="")
     ui.add_argument("--stage", default="")
     ui.add_argument("--approval-note", default="")
     ui.add_argument("--screenshot", action="append", default=[])
@@ -174,7 +177,7 @@ def main() -> None:
         run_natural_language(args, "收工")
     elif args.command == "ui":
         values = [args.action, "--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format]
-        for name in ("task", "task_id", "level", "requested_skill", "stage", "approval_note", "visual_qa", "note", "phase"):
+        for name in ("task", "task_id", "level", "requested_skill", "visual_direction", "feedback", "product_context", "stage", "approval_note", "visual_qa", "note", "phase"):
             value = str(getattr(args, name, "") or "").strip()
             if value:
                 values.extend([f"--{name.replace('_', '-')}", value])
