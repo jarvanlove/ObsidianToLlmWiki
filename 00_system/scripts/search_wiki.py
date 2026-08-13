@@ -7,6 +7,7 @@ from contextlib import closing
 from datetime import date
 from pathlib import Path
 
+from context_contract import build_context, default_contract, stable_task_id
 from retrieval_index import (
     INDEX_SCHEMA_VERSION,
     best_chunk,
@@ -147,6 +148,8 @@ def score_page(page: dict[str, object], query_terms: list[str]) -> int:
         score += 5
     if rel_path.startswith("40_outputs/reflections/"):
         score -= 6
+    if page.get("source_layer") == "raw":
+        score -= 25
     if rel_path in {"agents.md", "claude.md", "readme.md", "home.md", "log.md", "index.md"}:
         score -= 12
     score += page_type_weight(page)
@@ -314,6 +317,7 @@ def result_payload(
         "rank": rank,
         "score": score,
         "path": str(page["rel_path"]),
+        "source_layer": str(page.get("source_layer") or "governed"),
         "title": str(page["title"]),
         "summary": str(page["summary"]),
         "page_type": str(frontmatter.get("type") or ""),
@@ -330,71 +334,6 @@ def result_payload(
     }
 
 
-def estimate_tokens(text: str) -> int:
-    cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
-    other_count = len(text) - cjk_count
-    return cjk_count + (other_count + 3) // 4
-
-
-def truncate_to_token_budget(text: str, token_budget: int) -> str:
-    if token_budget <= 0:
-        return ""
-    if estimate_tokens(text) <= token_budget:
-        return text
-    output: list[str] = []
-    for char in text:
-        candidate = "".join(output) + char
-        if estimate_tokens(candidate) > max(1, token_budget - 2):
-            break
-        output.append(char)
-    return "".join(output).rstrip() + "..."
-
-
-def render_context_pack(payload: dict[str, object], token_budget: int) -> str:
-    filters = payload["filters"] if isinstance(payload.get("filters"), dict) else {}
-    filter_text = ", ".join(f"{key}={value}" for key, value in filters.items() if value) or "none"
-    lines = [
-        "# OTW Context Pack",
-        "",
-        f"- query: {payload['query']}",
-        f"- filters: {filter_text}",
-        f"- result_count: {payload['count']}",
-        f"- token_budget: {token_budget}",
-        "",
-    ]
-    rendered = "\n".join(lines)
-
-    results = payload["results"] if isinstance(payload.get("results"), list) else []
-    for result in results:
-        if not isinstance(result, dict):
-            continue
-        source_notes = result.get("source_notes") if isinstance(result.get("source_notes"), list) else []
-        source_refs = result.get("source_refs") if isinstance(result.get("source_refs"), list) else []
-        metadata_lines = [
-            f"## {result['rank']}. {result['title']}",
-            "",
-            f"- path: `{result['path']}`",
-            f"- type: `{result['page_type']}`",
-            f"- project: `{result['project'] or '-'}`",
-            f"- updated: `{result['updated'] or '-'}`",
-            f"- score: {result['score']}",
-            f"- source_notes: {', '.join(str(item) for item in source_notes) if source_notes else '-'}",
-            f"- source_refs: {', '.join(str(item) for item in source_refs) if source_refs else '-'}",
-            f"- heading: {result['heading'] or '-'}",
-            "",
-        ]
-        block_prefix = "\n".join(metadata_lines)
-        remaining = token_budget - estimate_tokens(rendered + "\n" + block_prefix)
-        if remaining <= 8:
-            break
-        snippet = truncate_to_token_budget(str(result.get("snippet") or ""), remaining)
-        rendered += f"\n{block_prefix}> {snippet}\n"
-        if estimate_tokens(rendered) >= token_budget:
-            break
-
-    return rendered.rstrip() + "\n"
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="对知识库 Markdown 页面执行本地可追溯检索。")
     parser.add_argument("query", help="搜索词")
@@ -405,13 +344,15 @@ def main() -> None:
     parser.add_argument("--show-relations", action="store_true", help="对项目相关结果补充关系与运行记忆")
     parser.add_argument("--no-log-failures", action="store_true", help="不记录零结果查询")
     parser.add_argument("--format", choices=["text", "json", "context"], default="text", help="输出格式")
-    parser.add_argument("--token-budget", type=int, default=4000, help="context 输出的近似 token 上限")
+    parser.add_argument("--token-budget", type=int, default=6000, help="context 输出的近似 token 上限")
+    parser.add_argument("--repo-root", default=".", help="接收 Context Receipt 的项目仓库根目录")
+    parser.add_argument("--task-id", default="", help="稳定任务 ID；未提供时根据查询生成")
     parser.add_argument("--index-path", default="", help="可选的 SQLite 索引路径")
     parser.add_argument("--no-refresh", action="store_true", help="查询前不检查 Markdown 新鲜度")
     args = parser.parse_args()
 
     terms, query_expansion = expand_query_terms(args.query)
-    if not terms:
+    if not terms and args.format != "context":
         if args.format == "json":
             print(json.dumps({"schema_version": INDEX_SCHEMA_VERSION, "query": args.query, "count": 0, "results": []}, ensure_ascii=False, indent=2))
         else:
@@ -498,7 +439,19 @@ def main() -> None:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     if args.format == "context":
-        print(render_context_pack(payload, max(args.token_budget, 100)), end="")
+        task_id = args.task_id.strip() or stable_task_id(args.query)
+        contract = default_contract(task_id)
+        contract["token_budget"] = max(args.token_budget, 100)
+        contract["max_cards"] = min(6, max(args.limit, 0))
+        bounded = build_context(
+            repo_root=Path(args.repo_root),
+            wiki_root=VAULT_ROOT,
+            query=args.query,
+            task_id=task_id,
+            candidates=structured_results,
+            contract=contract,
+        )
+        print(str(bounded["context"]), end="")
         return
     if not structured_results:
         print("没有找到结果。")

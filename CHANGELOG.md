@@ -10,6 +10,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
+- Bounded Context Contracts and persisted Context Receipts with L0 Git state, L1 control hashes, trusted project memory, whole-card budgets, explicit missing/conflict states, and deterministic content hashes.
 - Read-only context integrity gate with deterministic trusted/review/degraded/quarantined states, strict fail-closed handling for damaged or missing required context, unified `otw context check`, and doctor integration.
 - Approved the Human-Controlled AI Engineering System 2.0 implementation baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and a human-first local cockpit. Runtime implementation remains under the M0-M5 plan and is not yet released.
 
@@ -53,6 +54,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Changed
 
+- Retrieval context output now excludes quarantined evidence, keeps raw source material searchable but below governed knowledge, and routes natural-language project answers through the receipt-producing context contract.
 - `README.md` is now the Chinese GitHub landing page; the English guide is `README-EN.md`, while `README-zh.md` remains a compatibility redirect
 - Documentation tightened for open-source publication
 - Project entrypoint wording clarified: Codex uses `AGENTS.md`, Claude Code/compatible tools use `CLAUDE.md`, and shared project facts live in project control files

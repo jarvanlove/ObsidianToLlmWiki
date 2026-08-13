@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -217,7 +218,18 @@ def handle_answer_project(repo_root: Path, question: str) -> None:
     env["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
     run_python(
         "search_wiki.py",
-        [question.strip(), "--project", project_slug, "--show-relations"],
+        [
+            question.strip(),
+            "--project",
+            project_slug,
+            "--show-relations",
+            "--format",
+            "context",
+            "--repo-root",
+            str(repo_root),
+            "--task-id",
+            f"answer-{hashlib.sha256(question.strip().encode('utf-8')).hexdigest()[:16]}",
+        ],
         env=env,
     )
 

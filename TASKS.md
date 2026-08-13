@@ -13,7 +13,7 @@ Execution rule: complete and accept one milestone before starting the next. Deta
 
 | Milestone | Tasks | Acceptance checkpoint | Status |
 |---|---|---|---|
-| M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | Task 0A complete; Task 0B next |
+| M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | Task 0B complete; M0 full verification next |
 | M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Pending M0 acceptance |
 | M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Pending M1 acceptance |
 | M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Pending M2 acceptance |
@@ -25,8 +25,8 @@ Current batch:
 - [x] Product owner approved the 2.0 design and implementation direction on 2026-08-13.
 - [x] Commit and publish the approved product/control baseline; file durable decisions back to the private project wiki.
 - [x] Implement Task 0A: read-only context integrity gate.
-- [ ] Implement Task 0B: Context Contract, budget, and Context Receipt.
-- [ ] Make the `retrieval-contract` regression pass without trusting or deleting the pre-existing untracked raw UI manual; current baseline is 0.8000 because that raw page outranks the governed project memory.
+- [x] Implement Task 0B: Context Contract, budget, and Context Receipt.
+- [x] Make the `retrieval-contract` regression pass without trusting or deleting the pre-existing untracked raw UI manual; governed project controls now rank first and the full retrieval evaluation is 1.0.
 - [ ] Run M0 full regression, strict doctor, retrieval gates, compatibility checks, and product-owner checkpoint.
 
 | ID | Task | Risk | Acceptance | Status |

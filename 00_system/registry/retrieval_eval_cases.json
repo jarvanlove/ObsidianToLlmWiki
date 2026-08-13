@@ -5,6 +5,7 @@
       "id": "retrieval-contract",
       "query": "SQLite FTS5 context pack",
       "expected_paths": [
+        "PRODUCT_SPEC.md",
         "README.md",
         "README-EN.md",
         "20_projects/active/obsidiantowiki/project.memory.md",

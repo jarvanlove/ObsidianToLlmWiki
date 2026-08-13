@@ -285,6 +285,7 @@ def indexed_pages(connection: sqlite3.Connection, *, vault_root: Path = VAULT_RO
             {
                 "path": vault_root / Path(rel_path),
                 "rel_path": rel_path,
+                "source_layer": "raw" if rel_path.startswith("01_inbox/raw/") else "governed",
                 "title": str(row["title"]),
                 "summary": str(row["summary"]),
                 "frontmatter": frontmatter if isinstance(frontmatter, dict) else {},
