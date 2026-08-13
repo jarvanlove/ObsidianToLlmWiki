@@ -10,6 +10,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
+- Read-only context integrity gate with deterministic trusted/review/degraded/quarantined states, strict fail-closed handling for damaged or missing required context, unified `otw context check`, and doctor integration.
 - Approved the Human-Controlled AI Engineering System 2.0 implementation baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and a human-first local cockpit. Runtime implementation remains under the M0-M5 plan and is not yet released.
 
 - Initial ObsidianToWiki scaffold

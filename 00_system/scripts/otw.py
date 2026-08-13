@@ -139,6 +139,13 @@ def main() -> None:
     add_project_options(check)
     check.add_argument("--strict", action="store_true")
 
+    context = subparsers.add_parser("context", help="Inspect required AI context without modifying project or wiki files.")
+    context_subparsers = context.add_subparsers(dest="context_action", required=True)
+    context_check = context_subparsers.add_parser("check")
+    add_project_options(context_check)
+    context_check.add_argument("--strict", action="store_true")
+    context_check.add_argument("--format", choices=["text", "json"], default="text")
+
     resolve = subparsers.add_parser("resolve")
     add_project_options(resolve)
     resolve.add_argument("--resolution", action="append", required=True)
@@ -204,6 +211,11 @@ def main() -> None:
         if args.strict:
             values.append("--strict")
         run_script("project_session.py", values)
+    elif args.command == "context":
+        values = ["--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format]
+        if args.strict:
+            values.append("--strict")
+        run_script("context_integrity.py", values)
     elif args.command == "resolve":
         values = ["resolve", "--repo-root", str(Path(args.repo_root).expanduser().resolve())]
         for resolution in args.resolution:

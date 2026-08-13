@@ -9,6 +9,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+from context_integrity import inspect_context
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SOURCE_ROOT = SCRIPT_DIR.parent.parent
@@ -168,7 +170,11 @@ def run_checks(repo_root: Path, explicit_wiki_root: str) -> list[dict[str, str]]
     except sqlite3.Error as exc:
         results.append(check("sqlite:fts5", "fail", str(exc)))
 
-    core_files = [SOURCE_ROOT / "PRODUCT_SPEC.md", SOURCE_ROOT / "00_system" / "registry" / "vault_schema.json"]
+    core_files = [
+        SOURCE_ROOT / "PRODUCT_SPEC.md",
+        SOURCE_ROOT / "00_system" / "registry" / "vault_schema.json",
+        SOURCE_ROOT / "00_system" / "registry" / "memory_policy.json",
+    ]
     missing_core = [path.relative_to(SOURCE_ROOT).as_posix() for path in core_files if not path.exists()]
     results.append(check("runtime", "fail" if missing_core else "pass", f"missing: {', '.join(missing_core)}" if missing_core else str(SOURCE_ROOT)))
     release_status, release_detail = validate_runtime_release()
@@ -216,6 +222,16 @@ def run_checks(repo_root: Path, explicit_wiki_root: str) -> list[dict[str, str]]
                 project_status = "pass" if current == target and runtime_root.resolve() == SOURCE_ROOT else "warn"
                 detail = f"version={current}/{target} runtime_root={runtime_root or '<missing>'}"
                 results.append(check("project_scaffold", project_status, detail))
+                integrity = inspect_context(repo_root, [])
+                integrity_status = str(integrity["status"])
+                doctor_status = {
+                    "trusted": "pass",
+                    "review_required": "warn",
+                    "degraded": "warn",
+                    "quarantined": "fail",
+                }[integrity_status]
+                summary = integrity["summary"]
+                results.append(check("context_integrity", doctor_status, f"status={integrity_status} summary={summary}"))
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             results.append(check("project_context", "fail", f"invalid wiki.context.json: {exc}"))
     return results

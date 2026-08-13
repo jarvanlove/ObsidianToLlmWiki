@@ -36,6 +36,12 @@ class PrivatePolicyError(RuntimeError):
     pass
 
 
+class FrontmatterError(ValueError):
+    def __init__(self, code: str, detail: str = "") -> None:
+        super().__init__(detail or code)
+        self.code = code
+
+
 def resolve_wikilink(
     target: str,
     source_rel_path: str,
@@ -192,23 +198,25 @@ def format_tags(tags: list[str]) -> str:
 
 
 def parse_frontmatter(text: str) -> tuple[dict[str, object], str]:
-    if not text.startswith("---\n"):
+    if not text.startswith("---"):
         return {}, text
+    if not text.startswith("---\n"):
+        raise FrontmatterError("frontmatter_unclosed")
 
     marker = "\n---\n"
     end_offset = text.find(marker, 4)
     if end_offset == -1:
-        return {}, text
+        raise FrontmatterError("frontmatter_unclosed")
 
     raw_frontmatter = text[4:end_offset]
     body = text[end_offset + len(marker) :].lstrip()
     try:
         loaded = yaml.safe_load(raw_frontmatter) or {}
-    except yaml.YAMLError:
-        return {}, text
+    except yaml.YAMLError as exc:
+        raise FrontmatterError("frontmatter_invalid_yaml", str(exc)) from exc
 
     if not isinstance(loaded, dict):
-        return {}, text
+        raise FrontmatterError("frontmatter_not_object")
 
     frontmatter = dict(loaded)
     return frontmatter, body

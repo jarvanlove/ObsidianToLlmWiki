@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "allowed_states": [
+    "trusted",
+    "review_required",
+    "degraded",
+    "quarantined"
+  ],
+  "default_max_age_days": 180,
+  "default_require_provenance": true,
+  "required_project_context": [
+    {
+      "context_key": "project_memory",
+      "required": true,
+      "max_age_days": 30,
+      "require_provenance": false
+    }
+  ],
+  "card_status_trust": {
+    "active": "trusted",
+    "superseded": "degraded",
+    "resolved": "degraded",
+    "disputed": "review_required",
+    "quarantined": "quarantined"
+  },
+  "provenance_fields": [
+    "source_receipt",
+    "source_refs",
+    "evidence_refs"
+  ]
+}
