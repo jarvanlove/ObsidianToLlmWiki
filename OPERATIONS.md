@@ -23,6 +23,7 @@
 - Retrieval evaluation: `evaluate_retrieval.py --cases 00_system/registry/retrieval_eval_cases.json`.
 - Optional agent MCP: install `00_system/requirements-mcp.txt`, then run `mcp_retrieval_server.py` over stdio or the attached project's `scripts/ai/wiki-mcp.py` launcher.
 - Legacy provenance: run `migrate_provenance.py` without `--apply` first. A `partial` result requires original-source review before page refs can be completed.
+- Legacy project memory: run `otw.py memory migrate --repo-root <repo> --dry-run` first. Apply only after reviewing the classification and page list; `--apply` creates byte-exact backups and a manifest. A customization conflict must be reconciled manually and must never be force-overwritten.
 - Compatibility: run `otw.py upgrade` for report-only, then `otw.py upgrade --apply --all-projects` for metadata/hash-safe updates. Uninstalled optional project adapters remain uninstalled.
 - Candidate resolution: after comparing local and `.new`, use `shared_assets.py resolve --path <managed-path> --resolution merged|keep-local` or `project_scaffold.py --repo-root <project> --resolve-lifecycle merged|keep-local`. This is an agent-maintainer operation; normal users keep speaking naturally.
 - Extraction audit: run `source_quality.py --source <file> --format json`; it never prints source content.
@@ -46,6 +47,7 @@
 | PDF produces no derivatives | source note `quality_status`, `needs_ocr`, coverage | Run OCR or provide a text-layer PDF; blocked sources intentionally create no weak pages |
 | Project remains in `needs_receipt_resolution` | `.obsidiantowiki/session-receipt.json` | Apply, skip, or mark every candidate not applicable, then run `project_session.py resolve` |
 | Agent follows wrong entry file | `AGENTS.md`/`CLAUDE.md` wording | Keep entry files peer-level and point both to control files |
+| Memory compile reports unmanaged core pages | `otw.py memory migrate --repo-root <repo> --dry-run` | Review the migration report, then apply explicitly; do not bypass the backup/manifest boundary |
 
 ## Data Safety
 

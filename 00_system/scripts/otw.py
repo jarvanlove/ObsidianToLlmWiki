@@ -146,6 +146,17 @@ def main() -> None:
     context_check.add_argument("--strict", action="store_true")
     context_check.add_argument("--format", choices=["text", "json"], default="text")
 
+    memory = subparsers.add_parser("memory", help="Compile bounded memory projections or migrate legacy project pages.")
+    memory_subparsers = memory.add_subparsers(dest="memory_action", required=True)
+    memory_compile = memory_subparsers.add_parser("compile")
+    add_project_options(memory_compile)
+    memory_compile.add_argument("--dry-run", action="store_true")
+    memory_migrate = memory_subparsers.add_parser("migrate")
+    add_project_options(memory_migrate)
+    migration_mode = memory_migrate.add_mutually_exclusive_group(required=True)
+    migration_mode.add_argument("--dry-run", action="store_true")
+    migration_mode.add_argument("--apply", action="store_true")
+
     resolve = subparsers.add_parser("resolve")
     add_project_options(resolve)
     resolve.add_argument("--resolution", action="append", required=True)
@@ -216,6 +227,15 @@ def main() -> None:
         if args.strict:
             values.append("--strict")
         run_script("context_integrity.py", values)
+    elif args.command == "memory":
+        values = ["--repo-root", str(Path(args.repo_root).expanduser().resolve())]
+        if args.memory_action == "compile":
+            if args.dry_run:
+                values.append("--dry-run")
+            run_script("memory_compiler.py", values)
+        else:
+            values.append("--apply" if args.apply else "--dry-run")
+            run_script("migrate_project_memory.py", values)
     elif args.command == "resolve":
         values = ["resolve", "--repo-root", str(Path(args.repo_root).expanduser().resolve())]
         for resolution in args.resolution:

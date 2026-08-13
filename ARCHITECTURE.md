@@ -32,7 +32,7 @@ task state + Git diff + verification + human decisions
   -> natural-language concierge / action feed / local static cockpit
 ```
 
-Target components are `context_integrity.py`, `context_contract.py`, `engineering_governance.py`, `memory_compiler.py`, and `project_cockpit.py`. They extend the existing `otw.py`, `project_session.py`, retrieval, attach, and compatibility paths; they do not introduce a hosted service, business database, background daemon, or second lifecycle.
+Target components are `context_integrity.py`, `context_contract.py`, `engineering_governance.py`, `memory_compiler.py`, `migrate_project_memory.py`, and `project_cockpit.py`. They extend the existing `otw.py`, `project_session.py`, retrieval, attach, and compatibility paths; they do not introduce a hosted service, business database, background daemon, or second lifecycle.
 
 Markdown remains the durable and auditable format, but it is no longer the default whole-context read unit or the only human interface. Atomic cards own durable facts and explicit lifecycle state. Core project pages become bounded current projections. SQLite remains a disposable retrieval cache. The local cockpit is a generated static projection and never becomes a second source of truth.
 
@@ -64,6 +64,8 @@ Daily project work is exposed through the project cockpit:
 | `evaluate_retrieval.py` | Run fixed path/heading/provenance/MRR retrieval gates and semantic probes |
 | `mcp_retrieval_server.py` | Expose the stable retrieval contract as two read-only MCP stdio tools |
 | `migrate_provenance.py` | Audit and conservatively recover explicit source metadata from legacy knowledge pages |
+| `memory_compiler.py` | Compile active atomic cards into seven budgeted current projections; refuse unmanaged-page overwrite |
+| `migrate_project_memory.py` | Dry-run, back up, migrate, conflict-check, and restore legacy core memory pages |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
@@ -112,6 +114,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Default model context is contract-driven and budgeted; no task may load the complete project wiki by default.
 - Task evidence, not raw chat transcripts, drives durable memory candidates.
 - Atomic memory cards preserve history; bounded current projections contain only active, relevant facts and links to evidence.
+- Legacy core pages must pass migration dry-run before replacement. Apply preserves byte-exact originals and a manifest; uncertain content remains review-required, and later user customization blocks overwrite.
 - Users are not responsible for manually maintaining generated cards or projections; natural language and the local cockpit are the normal human interface.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.

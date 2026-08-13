@@ -41,5 +41,23 @@
       "milestone": {"prefix": "MILE", "review": false},
       "capability_observation": {"prefix": "CAP", "review": true}
     }
+  },
+  "projections": {
+    "page_token_budgets": {
+      "概览.md": 1500,
+      "架构.md": 3000,
+      "决策.md": 2000,
+      "任务.md": 1500,
+      "风险.md": 1500,
+      "时间线.md": 1500,
+      "project.memory.md": 1200
+    },
+    "page_item_limits": {
+      "决策.md": 20,
+      "任务.md": 30,
+      "风险.md": 20
+    },
+    "timeline_days": 90,
+    "timeline_max_events": 30
   }
 }

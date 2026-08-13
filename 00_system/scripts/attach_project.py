@@ -529,6 +529,8 @@ def main() -> None:
         check=True,
         env=env,
     )
+    memory_archive = wiki_root / "20_projects" / "active" / project_slug / "memory" / "archive"
+    memory_archive.mkdir(parents=True, exist_ok=True)
 
     write_text(repo_root / "wiki.context.json", render_context(repo_root, wiki_root, project_slug))
     ensure_local_git_excludes(repo_root)

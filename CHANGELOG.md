@@ -10,6 +10,8 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
+- Seven bounded current-memory projections, a 90-day/30-event timeline, active-only fact filtering, and public `otw memory compile` commands.
+- Dry-run-first legacy memory migration with byte-exact backups, source backlinks, review-required snapshots, idempotent manifests, customization conflict protection, and restoration support.
 - Deterministic atomic-memory compiler for resolved task receipts, with stable card identity, idempotent compilation, explicit supersede/dispute states, high-risk and cross-layer review, sensitive-content rejection, and cards that pass the existing context-integrity gate.
 - Bounded Context Contracts and persisted Context Receipts with L0 Git state, L1 control hashes, trusted project memory, whole-card budgets, explicit missing/conflict states, and deterministic content hashes.
 - Read-only context integrity gate with deterministic trusted/review/degraded/quarantined states, strict fail-closed handling for damaged or missing required context, unified `otw context check`, and doctor integration.

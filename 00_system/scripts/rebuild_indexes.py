@@ -266,6 +266,15 @@ def build_project_local_index(project_index_path: Path) -> str:
     memory = project_root / "project.memory.md"
     notes = sorted(project_root.joinpath("notes").glob("*.md"))
     source_notes = sorted(project_root.joinpath("source-notes").glob("*.md"))
+    memory_cards = []
+    historical_cards = []
+    for path in sorted(project_root.joinpath("memory").glob("*.md")):
+        page = load_page(path)
+        frontmatter = page.get("frontmatter") if isinstance(page.get("frontmatter"), dict) else {}
+        if frontmatter.get("status") == "active":
+            memory_cards.append(page)
+        else:
+            historical_cards.append(page)
 
     lines = [
         "# " + project_name.replace("-", " "),
@@ -291,6 +300,10 @@ def build_project_local_index(project_index_path: Path) -> str:
     lines.extend(list_lines([load_page(path) for path in notes]))
     lines.extend(["", "## 来源笔记", ""])
     lines.extend(list_lines([load_page(path) for path in source_notes]))
+    lines.extend(["", "## 当前原子记忆", ""])
+    lines.extend(list_lines(memory_cards))
+    lines.extend(["", "## 历史与待审核记忆", ""])
+    lines.append(f"- {len(historical_cards)} 条；不会注入当前事实投影。")
     return "\n".join(lines)
 
 

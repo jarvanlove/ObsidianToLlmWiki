@@ -108,6 +108,17 @@ UI 任务也不需要学习额外脚本。局部 UI 修复优先解决层级、�
 - 可跨项目复用的内容进共享层
 - 一次性分析结果进输出层
 
+## 旧项目记忆安全迁移
+
+日常使用仍然只需说“开始工作 / 继续 / 收工”。维护旧项目时，Agent 必须先执行只读预演，确认备份和冲突报告后才能应用迁移：
+
+```bash
+python 00_system/scripts/otw.py memory migrate --repo-root . --dry-run
+python 00_system/scripts/otw.py memory migrate --repo-root . --apply
+```
+
+迁移会完整保留七个旧核心页，并把无法确认的旧内容放入待审核记忆；它不会自动把旧叙述认定为当前事实。当前投影可通过 `memory compile --dry-run` 只读检查。
+
 ## 核心能力总览
 
 ```text
