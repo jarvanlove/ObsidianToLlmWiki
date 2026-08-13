@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -165,13 +166,21 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
                 "status": "pending",
             }
         )
+    created_at = datetime.now().astimezone().replace(microsecond=0).isoformat()
+    task_summary = str(report.get("task") or "").strip()
+    task_id = "session-" + hashlib.sha256(
+        f"{repo_root}|{created_at}|{task_summary}".encode("utf-8")
+    ).hexdigest()[:16]
     return {
         "schema_version": 1,
         "status": "pending",
-        "created_at": datetime.now().astimezone().replace(microsecond=0).isoformat(),
+        "created_at": created_at,
+        "task_id": task_id,
+        "task": task_summary,
         "repo_root": str(repo_root),
         "verification": report["verification"],
         "changed_files": report["changed_files"],
+        "knowledge_candidates": [],
         "candidates": candidates,
     }
 
@@ -273,12 +282,13 @@ def start_report(repo_root: Path, task: str) -> dict[str, Any]:
     }
 
 
-def close_report(repo_root: Path, verification: str, ui_task: str = "") -> dict[str, Any]:
+def close_report(repo_root: Path, verification: str, ui_task: str = "", task: str = "") -> dict[str, Any]:
     paths = changed_files(repo_root)
     report: dict[str, Any] = {
         "kind": "task_close",
         "changed_files": paths,
         "verification": verification.strip() or "TODO: record exact commands and results.",
+        "task": task.strip(),
         "control_file_update_candidates": classify_update_candidates(paths),
         "wiki_file_back_candidates": [
             "Project decisions: durable requirement, architecture, or tradeoff decisions.",
@@ -406,7 +416,7 @@ def main() -> None:
         report = start_report(repo_root, args.task)
     elif args.command == "close":
         try:
-            report = close_report(repo_root, args.verification, args.ui_task)
+            report = close_report(repo_root, args.verification, args.ui_task, args.task)
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
         target_receipt = receipt_path(repo_root, args.receipt)

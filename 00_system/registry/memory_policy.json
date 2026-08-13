@@ -18,6 +18,7 @@
   ],
   "card_status_trust": {
     "active": "trusted",
+    "pending_review": "review_required",
     "superseded": "degraded",
     "resolved": "degraded",
     "disputed": "review_required",
@@ -27,5 +28,18 @@
     "source_receipt",
     "source_refs",
     "evidence_refs"
-  ]
+  ],
+  "memory_cards": {
+    "directory": "20_projects/active/{project_slug}/memory",
+    "allowed_destinations": ["project", "personal", "shared"],
+    "high_risk_review_levels": ["P0", "P1"],
+    "cross_layer_requires_review": true,
+    "kind_rules": {
+      "decision": {"prefix": "DEC", "review": false},
+      "open_risk": {"prefix": "RISK", "review": false},
+      "root_cause": {"prefix": "ROOT", "review": false},
+      "milestone": {"prefix": "MILE", "review": false},
+      "capability_observation": {"prefix": "CAP", "review": true}
+    }
+  }
 }
