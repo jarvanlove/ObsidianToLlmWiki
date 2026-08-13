@@ -10,6 +10,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
+- Human-first local project cockpit with five action-oriented regions, native evidence disclosure, Context Receipt citation, responsive static HTML/JSON, and natural-language “项目现在怎么样” routing.
 - Seven bounded current-memory projections, a 90-day/30-event timeline, active-only fact filtering, and public `otw memory compile` commands.
 - Dry-run-first legacy memory migration with byte-exact backups, source backlinks, review-required snapshots, idempotent manifests, customization conflict protection, and restoration support.
 - Deterministic atomic-memory compiler for resolved task receipts, with stable card identity, idempotent compilation, explicit supersede/dispute states, high-risk and cross-layer review, sensitive-content rejection, and cards that pass the existing context-integrity gate.

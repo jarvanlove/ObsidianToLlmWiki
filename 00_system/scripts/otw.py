@@ -157,6 +157,11 @@ def main() -> None:
     migration_mode.add_argument("--dry-run", action="store_true")
     migration_mode.add_argument("--apply", action="store_true")
 
+    cockpit = subparsers.add_parser("cockpit", help="Build or open the local human-first project cockpit.")
+    cockpit.add_argument("action", choices=["build", "open"])
+    add_project_options(cockpit)
+    cockpit.add_argument("--format", choices=["text", "json"], default="text")
+
     resolve = subparsers.add_parser("resolve")
     add_project_options(resolve)
     resolve.add_argument("--resolution", action="append", required=True)
@@ -236,6 +241,11 @@ def main() -> None:
         else:
             values.append("--apply" if args.apply else "--dry-run")
             run_script("migrate_project_memory.py", values)
+    elif args.command == "cockpit":
+        run_script(
+            "project_cockpit.py",
+            [args.action, "--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format],
+        )
     elif args.command == "resolve":
         values = ["resolve", "--repo-root", str(Path(args.repo_root).expanduser().resolve())]
         for resolution in args.resolution:

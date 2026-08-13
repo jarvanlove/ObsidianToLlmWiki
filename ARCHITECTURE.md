@@ -66,6 +66,7 @@ Daily project work is exposed through the project cockpit:
 | `migrate_provenance.py` | Audit and conservatively recover explicit source metadata from legacy knowledge pages |
 | `memory_compiler.py` | Compile active atomic cards into seven budgeted current projections; refuse unmanaged-page overwrite |
 | `migrate_project_memory.py` | Dry-run, back up, migrate, conflict-check, and restore legacy core memory pages |
+| `project_cockpit.py` | Build one privacy-bounded action projection for both static HTML/JSON and natural-language project status answers |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
 | `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
@@ -116,6 +117,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Atomic memory cards preserve history; bounded current projections contain only active, relevant facts and links to evidence.
 - Legacy core pages must pass migration dry-run before replacement. Apply preserves byte-exact originals and a manifest; uncertain content remains review-required, and later user customization blocks overwrite.
 - Users are not responsible for manually maintaining generated cards or projections; natural language and the local cockpit are the normal human interface.
+- Static cockpit HTML/JSON and natural-language status answers must consume the same projection; cockpit output is local derived state under `.obsidiantowiki/`, never a second source of truth.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
 - Topic aliases are an inspectable local hybrid-retrieval layer; vector retrieval is added only when evaluation probes prove it is needed.

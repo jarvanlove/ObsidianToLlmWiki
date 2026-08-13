@@ -16,6 +16,7 @@
 - Natural language routing: `handle_nl_request.py` / `.ps1`.
 - Project AI session checklist: `project_session.py` / `.ps1`.
   `close` writes `.obsidiantowiki/session-receipt.json`; resolve every candidate before completion.
+- Human project status: ask “项目现在怎么样” or run `otw.py cockpit build --repo-root <repo>`. `cockpit open` opens only the generated local file; the output contains summaries and evidence labels, not source code or private absolute paths.
 - Governance: `lint_wiki.py` / `.ps1`.
 - Rebuild indexes: `rebuild_indexes.py` / `.ps1`.
 - Sync private vault: `sync_private_vault.py` / `.ps1`.

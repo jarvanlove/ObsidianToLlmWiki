@@ -87,6 +87,8 @@ def classify_request(text: str) -> str:
         return "continue_work"
     if compact in {"收工"} or any(token in compact for token in ("今天收工", "整理收工", "当前任务收工")):
         return "close_work"
+    if any(token in compact for token in ("项目现在怎么样", "项目怎么样", "当前状态", "项目状态", "现在做到哪")):
+        return "project_status"
     if "接入wiki" in compact or "接入 wiki" in lowered:
         return "attach_project"
     if "基于当前项目wiki回答" in compact or "当前项目wiki回答" in compact or "基于当前项目 wiki 回答" in lowered:
@@ -234,6 +236,14 @@ def handle_answer_project(repo_root: Path, question: str) -> None:
     )
 
 
+def handle_project_status(repo_root: Path) -> None:
+    load_required_project_context(repo_root)
+    from project_cockpit import build_cockpit, concise_status
+
+    report = build_cockpit(repo_root)
+    print(concise_status(report["projection"]))
+
+
 def handle_develop_and_file_back(repo_root: Path) -> None:
     context, wiki_root, _project_slug, _project_name = load_required_project_context(repo_root)
     read_first = [
@@ -299,6 +309,9 @@ def main() -> None:
         return
     if request_kind == "close_work":
         handle_close_work(repo_root, args.conclusion or args.question, args.ui_task)
+        return
+    if request_kind == "project_status":
+        handle_project_status(repo_root)
         return
     if request_kind == "answer_project":
         handle_answer_project(repo_root, args.question)
