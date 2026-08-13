@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -172,3 +173,126 @@ def transition_task(repo_root: Path, target: str, *, reason: str = "") -> dict[s
     ]
     save_task_state(repo_root, updated)
     return updated
+
+
+def _git_output(repo_root: Path, args: list[str]) -> tuple[int, str]:
+    try:
+        completed = subprocess.run(
+            ["git", "-c", "core.quotepath=false", *args],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except FileNotFoundError:
+        return 127, ""
+    return completed.returncode, completed.stdout.rstrip("\r\n")
+
+
+def _git_paths(repo_root: Path, args: list[str]) -> list[str]:
+    output = _git_output(repo_root, args)[1]
+    return sorted({line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()})
+
+
+def _path_hash(repo_root: Path, relative_path: str) -> str:
+    path = repo_root / relative_path
+    if not path.is_file():
+        return "<missing>"
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def capture_git_baseline(repo_root: Path) -> dict[str, Any]:
+    root = repo_root.resolve()
+    repository_code, repository_flag = _git_output(root, ["rev-parse", "--is-inside-work-tree"])
+    is_repository = repository_code == 0 and repository_flag == "true"
+    head_code, head_output = _git_output(root, ["rev-parse", "HEAD"]) if is_repository else (1, "")
+    head = head_output if head_code == 0 else ""
+    if is_repository and head:
+        tracked = _git_paths(root, ["diff", "--name-only", "HEAD", "--"])
+    elif is_repository:
+        tracked = sorted(
+            set(_git_paths(root, ["diff", "--name-only", "--"]))
+            | set(_git_paths(root, ["diff", "--cached", "--name-only", "--"]))
+        )
+    else:
+        tracked = []
+    untracked = _git_paths(root, ["ls-files", "--others", "--exclude-standard"]) if is_repository else []
+    dirty_paths = sorted(set(tracked) | set(untracked))
+    return {
+        "is_git_repository": is_repository,
+        "branch": _git_output(root, ["branch", "--show-current"])[1] if is_repository else "",
+        "head": head,
+        "tracked_modified": tracked,
+        "untracked": untracked,
+        "path_hashes": {path: _path_hash(root, path) for path in dirty_paths},
+        "captured_at": _now(),
+    }
+
+
+def compare_with_baseline(repo_root: Path, baseline: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(baseline, dict) or "captured_at" not in baseline:
+        raise ValueError("valid Git baseline is required")
+    current = capture_git_baseline(repo_root)
+    previous_paths = sorted(
+        set(str(item) for item in baseline.get("tracked_modified", []))
+        | set(str(item) for item in baseline.get("untracked", []))
+    )
+    current_paths = sorted(set(current["tracked_modified"]) | set(current["untracked"]))
+    previous_hashes = baseline.get("path_hashes") if isinstance(baseline.get("path_hashes"), dict) else {}
+    current_hashes = current["path_hashes"]
+    task_added = sorted(set(current_paths) - set(previous_paths))
+    task_touched_preexisting = sorted(
+        path
+        for path in set(current_paths) & set(previous_paths)
+        if str(previous_hashes.get(path, "")) != str(current_hashes.get(path, ""))
+    )
+    stale_reasons: list[str] = []
+    if bool(baseline.get("is_git_repository")) != bool(current["is_git_repository"]):
+        stale_reasons.append("repository_state_changed")
+    if str(baseline.get("branch") or "") != str(current["branch"] or ""):
+        stale_reasons.append("branch_changed")
+    if str(baseline.get("head") or "") != str(current["head"] or ""):
+        stale_reasons.append("head_changed")
+    return {
+        "stale": bool(stale_reasons),
+        "stale_reasons": stale_reasons,
+        "baseline": baseline,
+        "current": current,
+        "preexisting_changes": previous_paths,
+        "preexisting_remaining": sorted(set(current_paths) & set(previous_paths)),
+        "preexisting_resolved": sorted(set(previous_paths) - set(current_paths)),
+        "task_added": task_added,
+        "task_touched_preexisting": task_touched_preexisting,
+        "task_changes": sorted(set(task_added) | set(task_touched_preexisting)),
+    }
+
+
+def resume_summary(repo_root: Path) -> dict[str, Any]:
+    state = load_task_state(repo_root)
+    if not state:
+        return {"status": "none", "task_id": "", "task": "", "comparison": {}}
+    baseline = state.get("baseline")
+    if not isinstance(baseline, dict) or not baseline:
+        return {
+            "status": str(state["status"]),
+            "task_id": str(state["task_id"]),
+            "task": str(state["task"]),
+            "comparison": {"stale": True, "stale_reasons": ["baseline_missing"]},
+        }
+    comparison = compare_with_baseline(repo_root, baseline)
+    status = str(state["status"])
+    if comparison["stale"] and status not in {"stale", "closed", "abandoned"}:
+        state = transition_task(repo_root, "stale", reason=", ".join(comparison["stale_reasons"]))
+        status = str(state["status"])
+    return {
+        "status": status,
+        "task_id": str(state["task_id"]),
+        "task": str(state["task"]),
+        "comparison": comparison,
+    }

@@ -17,6 +17,82 @@ def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
 
 
 class ProjectSessionReceiptTests(unittest.TestCase):
+    def test_start_uses_governed_state_and_does_not_overwrite_an_open_task(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            run(["git", "init"], repo)
+            run(["git", "config", "user.email", "test@example.com"], repo)
+            run(["git", "config", "user.name", "Test"], repo)
+            (repo / ".gitignore").write_text(".obsidiantowiki/\n", encoding="utf-8")
+            (repo / "feature.py").write_text("value = 1\n", encoding="utf-8")
+            run(["git", "add", "."], repo)
+            run(["git", "commit", "-m", "initial"], repo)
+
+            started = run(
+                [sys.executable, str(SCRIPT), "start", "--repo-root", str(repo), "--task", "First task", "--format", "json"],
+                REPO_ROOT,
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            first = json.loads(started.stdout)
+            state_path = repo / ".obsidiantowiki" / "task-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(state["status"], "investigating")
+            self.assertEqual(state["baseline"]["head"], run(["git", "rev-parse", "HEAD"], repo).stdout.strip())
+
+            second = run(
+                [sys.executable, str(SCRIPT), "start", "--repo-root", str(repo), "--task", "Second task", "--format", "json"],
+                REPO_ROOT,
+            )
+            self.assertEqual(second.returncode, 0, second.stderr)
+            resumed = json.loads(second.stdout)
+            persisted = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(resumed["task_id"], first["task_id"])
+            self.assertEqual(resumed["task"], "First task")
+            self.assertEqual(resumed["requested_task"], "Second task")
+            self.assertEqual(persisted["task_id"], first["task_id"])
+
+            checked = run([sys.executable, str(SCRIPT), "check", "--repo-root", str(repo), "--format", "json"], REPO_ROOT)
+            self.assertEqual(checked.returncode, 0, checked.stderr)
+            self.assertEqual(json.loads(checked.stdout)["engineering_task"]["task_id"], first["task_id"])
+
+    def test_start_migrates_the_previous_active_state_without_changing_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)
+            run(["git", "init"], repo)
+            run(["git", "config", "user.email", "test@example.com"], repo)
+            run(["git", "config", "user.name", "Test"], repo)
+            (repo / ".gitignore").write_text(".obsidiantowiki/\n", encoding="utf-8")
+            (repo / "feature.py").write_text("value = 1\n", encoding="utf-8")
+            run(["git", "add", "."], repo)
+            run(["git", "commit", "-m", "initial"], repo)
+            state_path = repo / ".obsidiantowiki" / "task-state.json"
+            state_path.parent.mkdir()
+            state_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "status": "active",
+                        "task_id": "legacy-task-id",
+                        "task": "Legacy active task",
+                        "knowledge_candidates": [{"kind": "milestone", "stable_key": "legacy"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            started = run(
+                [sys.executable, str(SCRIPT), "start", "--repo-root", str(repo), "--task", "Legacy active task", "--format", "json"],
+                REPO_ROOT,
+            )
+
+            self.assertEqual(started.returncode, 0, started.stderr)
+            payload = json.loads(started.stdout)
+            migrated = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["task_id"], "legacy-task-id")
+            self.assertEqual(migrated["status"], "investigating")
+            self.assertEqual(migrated["baseline"]["head"], run(["git", "rev-parse", "HEAD"], repo).stdout.strip())
+            self.assertEqual(migrated["knowledge_candidates"][0]["stable_key"], "legacy")
+
     def test_close_requires_explicit_resolution_of_every_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repo = Path(temp)

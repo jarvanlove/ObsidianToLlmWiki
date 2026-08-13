@@ -10,6 +10,15 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from engineering_governance import (
+    TASK_STATE_REL_PATH,
+    capture_git_baseline,
+    create_task_state,
+    load_task_state as load_governed_task_state,
+    resume_summary,
+    save_task_state,
+)
+
 
 CONTROL_FILES = (
     "PRODUCT_SPEC.md",
@@ -36,7 +45,6 @@ WIKI_CORE_KEYS = (
 )
 
 RECEIPT_REL_PATH = Path(".obsidiantowiki/session-receipt.json")
-TASK_STATE_REL_PATH = Path(".obsidiantowiki/task-state.json")
 RESOLUTION_STATUSES = {"applied", "skipped", "not_applicable"}
 
 
@@ -137,13 +145,32 @@ def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
 
 
 def load_task_state(repo_root: Path) -> dict[str, Any]:
-    return load_receipt(repo_root / TASK_STATE_REL_PATH)
-
-
-def _task_id(repo_root: Path, task: str) -> str:
-    created_at = datetime.now().astimezone().replace(microsecond=0).isoformat()
-    digest = hashlib.sha256(f"{repo_root}|{created_at}|{task}".encode("utf-8")).hexdigest()[:16]
-    return f"task-{digest}"
+    try:
+        return load_governed_task_state(repo_root)
+    except ValueError:
+        legacy = load_receipt(repo_root / TASK_STATE_REL_PATH)
+        if not (
+            legacy.get("schema_version") == 1
+            and legacy.get("status") == "active"
+            and isinstance(legacy.get("task_id"), str)
+            and str(legacy["task_id"]).strip()
+            and isinstance(legacy.get("task"), str)
+            and str(legacy["task"]).strip()
+        ):
+            raise
+        state = create_task_state(repo_root, str(legacy["task"]), "code_change")
+        state["task_id"] = str(legacy["task_id"])
+        state["baseline"] = capture_git_baseline(repo_root)
+        state["knowledge_candidates"] = [
+            dict(item) for item in legacy.get("knowledge_candidates", []) if isinstance(item, dict)
+        ]
+        state["context_receipt"] = str(legacy.get("context_receipt") or "")
+        state["migrated_from"] = "legacy_active"
+        started_at = str(legacy.get("started_at") or "").strip()
+        if started_at:
+            state["timestamps"]["created_at"] = started_at
+        save_task_state(repo_root, state)
+        return state
 
 
 def _initial_snapshot_candidate(repo_root: Path) -> dict[str, Any] | None:
@@ -422,6 +449,27 @@ def project_state(repo_root: Path) -> dict[str, Any]:
         if changed
         else "attached_idle"
     )
+    try:
+        engineering_state = load_task_state(repo_root)
+        if engineering_state:
+            recovery = resume_summary(repo_root)
+            comparison = recovery.get("comparison") if isinstance(recovery.get("comparison"), dict) else {}
+            baseline = comparison.get("baseline") if isinstance(comparison.get("baseline"), dict) else {}
+            engineering_task = {
+                "status": recovery["status"],
+                "task_id": recovery["task_id"],
+                "task": recovery["task"],
+                "stale": bool(comparison.get("stale")),
+                "stale_reasons": list(comparison.get("stale_reasons") or []),
+                "preexisting_change_count": len(comparison.get("preexisting_changes") or []),
+                "preexisting_tracked_count": len(baseline.get("tracked_modified") or []),
+                "preexisting_untracked_count": len(baseline.get("untracked") or []),
+                "task_changes": list(comparison.get("task_changes") or []),
+            }
+        else:
+            engineering_task = {"status": "none", "task_id": "", "task": "", "stale": False}
+    except ValueError as exc:
+        engineering_task = {"status": "invalid", "task_id": "", "task": "", "stale": True, "error": str(exc)}
     return {
         "repo_root": str(repo_root),
         "wiki_root": str(context.get("wiki_root") or "") if context else "",
@@ -438,35 +486,57 @@ def project_state(repo_root: Path) -> dict[str, Any]:
             "path": str(receipt_path(repo_root)),
             "pending_candidates": pending_candidates,
         },
+        "engineering_task": engineering_task,
     }
+
+
+def _task_closed_by_receipt(repo_root: Path, state: dict[str, Any]) -> bool:
+    if str(state.get("status") or "") in {"closed", "abandoned"}:
+        return True
+    receipt = load_receipt(receipt_path(repo_root))
+    return (
+        receipt.get("status") == "resolved"
+        and receipt.get("governance_status") == "closed"
+        and str(receipt.get("task_id") or "") == str(state.get("task_id") or "")
+    )
 
 
 def start_report(repo_root: Path, task: str) -> dict[str, Any]:
     previous = load_task_state(repo_root)
-    selected_task = task.strip() or str(previous.get("task") or "").strip() or "Read TASKS.md and select the next actionable task."
-    task_id = str(previous.get("task_id") or "").strip() if previous.get("task") == selected_task else ""
-    task_id = task_id or _task_id(repo_root, selected_task)
-    candidates = [dict(item) for item in previous.get("knowledge_candidates", []) if isinstance(item, dict)]
+    requested_task = task.strip()
+    previous_is_open = bool(previous) and not _task_closed_by_receipt(repo_root, previous)
+    if previous_is_open:
+        state = previous
+        recovery = resume_summary(repo_root)
+        state = load_task_state(repo_root)
+        selected_task = str(state["task"])
+        resumed = True
+    else:
+        selected_task = requested_task or "Read TASKS.md and select the next actionable task."
+        baseline = capture_git_baseline(repo_root)
+        state = create_task_state(repo_root, selected_task, "code_change")
+        state["baseline"] = baseline
+        recovery = {"status": state["status"], "task_id": state["task_id"], "task": state["task"], "comparison": {}}
+        resumed = False
+    task_id = str(state["task_id"])
+    candidates = [dict(item) for item in state.get("knowledge_candidates", []) if isinstance(item, dict)]
     initial = _initial_snapshot_candidate(repo_root)
     if initial and not any(item.get("stable_key") == initial["stable_key"] for item in candidates):
         candidates.append(initial)
     health = memory_health(repo_root)
     context_check = _context_check(repo_root, selected_task, task_id)
-    state = {
-        "schema_version": 1,
-        "status": "active",
-        "task_id": task_id,
-        "task": selected_task,
-        "started_at": datetime.now().astimezone().replace(microsecond=0).isoformat(),
-        "knowledge_candidates": candidates,
-        "context_receipt": context_check.get("receipt_path", ""),
-    }
-    write_json_atomic(repo_root / TASK_STATE_REL_PATH, state)
+    state["knowledge_candidates"] = candidates
+    state["context_receipt"] = context_check.get("receipt_path", "")
+    state["timestamps"]["updated_at"] = datetime.now().astimezone().replace(microsecond=0).isoformat()
+    save_task_state(repo_root, state)
     return {
         "kind": "task_start",
         "state": project_state(repo_root),
         "task": selected_task,
+        "requested_task": requested_task or selected_task,
         "task_id": task_id,
+        "resumed": resumed,
+        "recovery": recovery,
         "memory_lifecycle": {
             "context_status": context_check["status"],
             "token_usage": context_check["token_usage"],
@@ -523,6 +593,19 @@ def render_check_text(report: dict[str, Any]) -> str:
         lines.extend([f"- wiki_root: {report['wiki_root']}", f"- project_slug: {report['project_slug']}"])
     else:
         lines.append("- wiki_context: missing or invalid")
+
+    engineering_task = report.get("engineering_task") or {}
+    if engineering_task.get("status") not in {None, "", "none"}:
+        lines.append("\nEngineering task")
+        lines.append(f"- task: {engineering_task.get('task', '')}")
+        lines.append(f"- status: {engineering_task.get('status', 'unknown')}")
+        lines.append(f"- preexisting tracked changes: {engineering_task.get('preexisting_tracked_count', 0)}")
+        lines.append(f"- preexisting untracked files: {engineering_task.get('preexisting_untracked_count', 0)}")
+        task_changes = list(engineering_task.get("task_changes") or [])
+        if task_changes:
+            lines.append("- task changes: " + ", ".join(task_changes[:20]))
+        if engineering_task.get("stale"):
+            lines.append("- recovery required: " + ", ".join(engineering_task.get("stale_reasons") or ["unknown"]))
 
     changed = report.get("changed_files") or []
     if changed:

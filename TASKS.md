@@ -15,7 +15,7 @@ Execution rule: complete and accept one milestone before starting the next. Deta
 |---|---|---|---|
 | M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | Accepted by product owner on 2026-08-13 |
 | M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Accepted by product owner on 2026-08-13; operational acceptance continues during normal use |
-| M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Task 2 complete; Task 3 pending |
+| M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Tasks 2-3 complete; awaiting M2 acceptance |
 | M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Pending M2 acceptance |
 | M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Pending M3 acceptance |
 | M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Pending M4 acceptance |
@@ -35,6 +35,7 @@ Current batch:
 - [x] Implement Task 0F: connect memory compilation and cockpit refresh to the existing attach/start/continue/close lifecycle without creating a second memory session; unresolved receipts never compile and maintenance failures remain explicit.
 - [x] Product owner explicitly approved M1 on 2026-08-13. Continue operational acceptance in real attached projects and record failures as follow-up tasks; do not keep M1 formally open or hide findings behind M2.
 - [x] Implement Task 2: add the schema-v1 engineering task state, validated transitions, and atomic local persistence without creating a second tracked task record.
+- [x] Implement Task 3: capture branch, HEAD, tracked/untracked changes and path fingerprints; distinguish pre-existing work from task changes; preserve interrupted task identity and mark branch/HEAD conflicts stale.
 
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|
