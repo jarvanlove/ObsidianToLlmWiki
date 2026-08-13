@@ -108,7 +108,7 @@ class MemoryCompilerTests(unittest.TestCase):
         self.assertEqual(result["status"], "no_candidates")
         self.assertEqual(self.card_files(), [])
 
-    def test_new_session_receipt_has_task_identity_and_empty_candidate_queue(self) -> None:
+    def test_new_session_receipt_has_task_identity_and_automatic_milestone_candidate(self) -> None:
         report = {
             "task": "Implement bounded memory",
             "verification": "tests passed",
@@ -121,7 +121,8 @@ class MemoryCompilerTests(unittest.TestCase):
 
         self.assertTrue(str(receipt["task_id"]).startswith("session-"))
         self.assertEqual(receipt["task"], report["task"])
-        self.assertEqual(receipt["knowledge_candidates"], [])
+        self.assertEqual(receipt["knowledge_candidates"][0]["kind"], "milestone")
+        self.assertEqual(receipt["knowledge_candidates"][0]["stable_key"], receipt["task_id"])
 
     def test_supported_candidate_types_are_classified_and_written(self) -> None:
         candidates = [

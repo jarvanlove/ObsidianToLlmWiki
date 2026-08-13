@@ -14,7 +14,7 @@ Execution rule: complete and accept one milestone before starting the next. Deta
 | Milestone | Tasks | Acceptance checkpoint | Status |
 |---|---|---|---|
 | M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | Accepted by product owner on 2026-08-13 |
-| M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Tasks 0C-0E complete; Task 0F next |
+| M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Tasks 0C-0F complete; awaiting M1 acceptance |
 | M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Pending M1 acceptance |
 | M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Pending M2 acceptance |
 | M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Pending M3 acceptance |
@@ -32,7 +32,7 @@ Current batch:
 - [x] Implement Task 0C: compile resolved, evidence-backed candidates into trusted atomic memory cards with stable identity, review, supersede, dispute, and sensitive-content boundaries.
 - [x] Implement Task 0D: bounded current projections, compression, and non-destructive migration for empty, normal, and 100KB projects.
 - [x] Implement Task 0E: natural-language concierge, action feed, and U2 project cockpit; reused the approved mist-teal-ink baseline and passed desktop/mobile/keyboard/privacy evidence gates.
-- [ ] Implement Task 0F: connect memory compilation and cockpit refresh to the existing attach/start/continue/close lifecycle without creating a second memory session.
+- [x] Implement Task 0F: connect memory compilation and cockpit refresh to the existing attach/start/continue/close lifecycle without creating a second memory session; unresolved receipts never compile and maintenance failures remain explicit.
 
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|

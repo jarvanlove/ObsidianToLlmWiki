@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 import tempfile
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +36,7 @@ WIKI_CORE_KEYS = (
 )
 
 RECEIPT_REL_PATH = Path(".obsidiantowiki/session-receipt.json")
+TASK_STATE_REL_PATH = Path(".obsidiantowiki/task-state.json")
 RESOLUTION_STATUSES = {"applied", "skipped", "not_applicable"}
 
 
@@ -135,6 +136,128 @@ def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
             temporary.unlink()
 
 
+def load_task_state(repo_root: Path) -> dict[str, Any]:
+    return load_receipt(repo_root / TASK_STATE_REL_PATH)
+
+
+def _task_id(repo_root: Path, task: str) -> str:
+    created_at = datetime.now().astimezone().replace(microsecond=0).isoformat()
+    digest = hashlib.sha256(f"{repo_root}|{created_at}|{task}".encode("utf-8")).hexdigest()[:16]
+    return f"task-{digest}"
+
+
+def _initial_snapshot_candidate(repo_root: Path) -> dict[str, Any] | None:
+    context = load_context(repo_root)
+    if not context:
+        return None
+    wiki_root = Path(str(context.get("wiki_root") or ""))
+    project_slug = str(context.get("project_slug") or "").strip()
+    memory_dir = wiki_root / "20_projects" / "active" / project_slug / "memory"
+    if project_slug and memory_dir.exists() and any(memory_dir.glob("*.md")):
+        return None
+    present = [name for name in CONTROL_FILES if (repo_root / name).exists()]
+    if not present:
+        return None
+    return {
+        "kind": "milestone",
+        "stable_key": "initial-project-snapshot",
+        "summary": f"Initial project snapshot: {len(present)} governed control files are present.",
+        "evidence_refs": [f"git:{git_output(repo_root, ['rev-parse', 'HEAD']) or 'uncommitted'}", *[f"control:{name}" for name in present]],
+        "destination": "project",
+    }
+
+
+def _automatic_candidates(repo_root: Path, report: dict[str, Any]) -> list[dict[str, Any]]:
+    state = load_task_state(repo_root)
+    candidates = [dict(item) for item in state.get("knowledge_candidates", []) if isinstance(item, dict)]
+    task = str(report.get("task") or state.get("task") or "").strip()
+    task_id = str(report.get("task_id") or state.get("task_id") or "").strip()
+    verification = str(report.get("verification") or "").strip()
+    if task and task_id and verification and not verification.startswith("TODO:"):
+        candidates.append(
+            {
+                "kind": "milestone",
+                "stable_key": task_id,
+                "summary": f"Completed: {task}",
+                "evidence_refs": [f"receipt:{task_id}", f"git:{git_output(repo_root, ['rev-parse', 'HEAD']) or 'uncommitted'}"],
+                "destination": "project",
+            }
+        )
+    unique: dict[tuple[str, str], dict[str, Any]] = {}
+    for candidate in candidates:
+        unique[(str(candidate.get("kind") or ""), str(candidate.get("stable_key") or ""))] = candidate
+    return list(unique.values())
+
+
+def memory_health(repo_root: Path) -> dict[str, Any]:
+    context = load_context(repo_root)
+    if not context:
+        return {"status": "unavailable", "maintenance_reasons": ["wiki_context_missing"], "activity_state": "unknown", "recovery_summary": ""}
+    from memory_compiler import CORE_PROJECTION_NAMES, PROJECTION_START, estimate_tokens, load_policy
+    from wiki_lib import parse_frontmatter
+
+    wiki_root = Path(str(context.get("wiki_root") or ""))
+    project_slug = str(context.get("project_slug") or "").strip()
+    project_root = wiki_root / "20_projects" / "active" / project_slug
+    policy = load_policy()
+    projections = policy.get("projections") if isinstance(policy.get("projections"), dict) else {}
+    budgets = projections.get("page_token_budgets") if isinstance(projections.get("page_token_budgets"), dict) else {}
+    reasons: list[str] = []
+    unmanaged: list[str] = []
+    for name in CORE_PROJECTION_NAMES:
+        path = project_root / name
+        if not path.exists():
+            continue
+        content = path.read_text(encoding="utf-8")
+        if PROJECTION_START not in content:
+            unmanaged.append(name)
+        if estimate_tokens(content) > int(budgets.get(name) or 1000):
+            reasons.append("projection_over_budget")
+    if unmanaged:
+        reasons.append("unmanaged_core_pages_require_migration")
+
+    latest: date | None = None
+    for path in sorted((project_root / "memory").glob("*.md")):
+        try:
+            frontmatter, _body = parse_frontmatter(path.read_text(encoding="utf-8"))
+            effective = date.fromisoformat(str(frontmatter.get("effective_from") or ""))
+        except (OSError, UnicodeError, ValueError):
+            continue
+        latest = max(latest, effective) if latest else effective
+    cooled = bool(latest and latest < date.today() - timedelta(days=90))
+    recovery = "项目已超过 90 天无活动；恢复时仅加载当前控制文件、开放风险和最近有效里程碑。" if cooled else ""
+    return {
+        "status": "needs_maintenance" if reasons else "current",
+        "maintenance_reasons": list(dict.fromkeys(reasons)),
+        "unmanaged_pages": unmanaged,
+        "activity_state": "cooled" if cooled else "active",
+        "recovery_summary": recovery,
+    }
+
+
+def _context_check(repo_root: Path, task: str, task_id: str) -> dict[str, Any]:
+    context = load_context(repo_root)
+    if not context:
+        return {"status": "missing", "token_usage": {"limit": 6000, "used": 0}, "receipt_path": ""}
+    try:
+        from context_contract import build_context
+
+        result = build_context(
+            repo_root=repo_root,
+            wiki_root=Path(str(context.get("wiki_root") or "")),
+            query=task,
+            task_id=task_id,
+            candidates=[],
+        )
+    except (OSError, ValueError) as exc:
+        return {"status": "missing", "token_usage": {"limit": 6000, "used": 0}, "receipt_path": "", "error": type(exc).__name__}
+    return {
+        "status": result["status"],
+        "token_usage": result["token_usage"],
+        "receipt_path": result["receipt_path"],
+    }
+
+
 def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
     candidates: list[dict[str, str]] = []
     for recommendation in report["control_file_update_candidates"]:
@@ -168,9 +291,12 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
         )
     created_at = datetime.now().astimezone().replace(microsecond=0).isoformat()
     task_summary = str(report.get("task") or "").strip()
-    task_id = "session-" + hashlib.sha256(
+    state = load_task_state(repo_root)
+    task_id = str(report.get("task_id") or state.get("task_id") or "").strip() or "session-" + hashlib.sha256(
         f"{repo_root}|{created_at}|{task_summary}".encode("utf-8")
     ).hexdigest()[:16]
+    report_risk = report.get("risk") if isinstance(report.get("risk"), dict) else {}
+    risk_level = str(report_risk.get("level") or "P2").upper()
     return {
         "schema_version": 1,
         "status": "pending",
@@ -179,8 +305,9 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
         "task": task_summary,
         "repo_root": str(repo_root),
         "verification": report["verification"],
+        "risk": {"level": risk_level},
         "changed_files": report["changed_files"],
-        "knowledge_candidates": [],
+        "knowledge_candidates": _automatic_candidates(repo_root, {**report, "task_id": task_id}),
         "candidates": candidates,
     }
 
@@ -204,6 +331,53 @@ def resolve_receipt(path: Path, resolutions: list[str]) -> dict[str, Any]:
     receipt["status"] = "pending" if pending else "resolved"
     receipt["resolved_at"] = "" if pending else datetime.now().astimezone().replace(microsecond=0).isoformat()
     receipt["pending_candidates"] = pending
+    write_json_atomic(path, receipt)
+    receipt["receipt_path"] = str(path)
+    return receipt
+
+
+def finalize_memory_maintenance(repo_root: Path, path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    if receipt.get("status") != "resolved":
+        return receipt
+    health = memory_health(repo_root)
+    context = load_context(repo_root)
+    maintenance: dict[str, Any]
+    if "unmanaged_core_pages_require_migration" in health.get("maintenance_reasons", []):
+        maintenance = {"status": "blocked", "reason": "unmanaged_core_pages_require_migration"}
+        memory_status = "pending_memory_repair"
+    elif not context:
+        maintenance = {"status": "blocked", "reason": "wiki_context_missing"}
+        memory_status = "pending_memory_repair"
+    else:
+        try:
+            from memory_compiler import compile_projections, compile_receipt
+            from project_cockpit import build_cockpit
+
+            wiki_root = Path(str(context.get("wiki_root") or ""))
+            project_slug = str(context.get("project_slug") or "")
+            cards = compile_receipt(path, wiki_root=wiki_root, project_slug=project_slug)
+            if cards.get("status") == "blocked":
+                raise ValueError("memory_receipt_compile_blocked")
+            projections = compile_projections(wiki_root=wiki_root, project_slug=project_slug)
+            if projections.get("status") == "blocked":
+                raise ValueError(str(projections.get("reason") or "projection_compile_blocked"))
+            cockpit = build_cockpit(repo_root)
+            maintenance = {
+                "status": "completed",
+                "cards": cards.get("status"),
+                "projections": projections.get("status"),
+                "cockpit": cockpit.get("status"),
+            }
+            memory_status = "current"
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            maintenance = {"status": "blocked", "reason": str(exc) or type(exc).__name__}
+            memory_status = "pending_memory_repair"
+    receipt["memory_status"] = memory_status
+    receipt["memory_maintenance"] = maintenance
+    if memory_status != "current" and str((receipt.get("risk") or {}).get("level") or "P2").upper() in {"P0", "P1"}:
+        receipt["governance_status"] = "blocked_memory_repair"
+    else:
+        receipt["governance_status"] = "closed"
     write_json_atomic(path, receipt)
     receipt["receipt_path"] = str(path)
     return receipt
@@ -268,10 +442,39 @@ def project_state(repo_root: Path) -> dict[str, Any]:
 
 
 def start_report(repo_root: Path, task: str) -> dict[str, Any]:
+    previous = load_task_state(repo_root)
+    selected_task = task.strip() or str(previous.get("task") or "").strip() or "Read TASKS.md and select the next actionable task."
+    task_id = str(previous.get("task_id") or "").strip() if previous.get("task") == selected_task else ""
+    task_id = task_id or _task_id(repo_root, selected_task)
+    candidates = [dict(item) for item in previous.get("knowledge_candidates", []) if isinstance(item, dict)]
+    initial = _initial_snapshot_candidate(repo_root)
+    if initial and not any(item.get("stable_key") == initial["stable_key"] for item in candidates):
+        candidates.append(initial)
+    health = memory_health(repo_root)
+    context_check = _context_check(repo_root, selected_task, task_id)
+    state = {
+        "schema_version": 1,
+        "status": "active",
+        "task_id": task_id,
+        "task": selected_task,
+        "started_at": datetime.now().astimezone().replace(microsecond=0).isoformat(),
+        "knowledge_candidates": candidates,
+        "context_receipt": context_check.get("receipt_path", ""),
+    }
+    write_json_atomic(repo_root / TASK_STATE_REL_PATH, state)
     return {
         "kind": "task_start",
         "state": project_state(repo_root),
-        "task": task.strip() or "Read TASKS.md and select the next actionable task.",
+        "task": selected_task,
+        "task_id": task_id,
+        "memory_lifecycle": {
+            "context_status": context_check["status"],
+            "token_usage": context_check["token_usage"],
+            "candidate_count": len(candidates),
+            "maintenance_reasons": health["maintenance_reasons"],
+            "activity_state": health["activity_state"],
+            "recovery_summary": health["recovery_summary"],
+        },
         "checklist": [
             "classify: normal task / requirement change / bug fix / release check / operations incident",
             "risk: P3 docs/UI, P2 normal feature, P1 auth/core flow, P0 data deletion/payment/migration/security",
@@ -284,11 +487,13 @@ def start_report(repo_root: Path, task: str) -> dict[str, Any]:
 
 def close_report(repo_root: Path, verification: str, ui_task: str = "", task: str = "") -> dict[str, Any]:
     paths = changed_files(repo_root)
+    state = load_task_state(repo_root)
     report: dict[str, Any] = {
         "kind": "task_close",
         "changed_files": paths,
         "verification": verification.strip() or "TODO: record exact commands and results.",
-        "task": task.strip(),
+        "task": task.strip() or str(state.get("task") or "").strip(),
+        "task_id": str(state.get("task_id") or "").strip(),
         "control_file_update_candidates": classify_update_candidates(paths),
         "wiki_file_back_candidates": [
             "Project decisions: durable requirement, architecture, or tradeoff decisions.",
@@ -348,6 +553,11 @@ def render_check_text(report: dict[str, Any]) -> str:
 def render_start_text(report: dict[str, Any]) -> str:
     lines = [render_check_text(report["state"]), "\nTask start checklist", f"- task: {report['task']}"]
     lines.extend(f"- {item}" for item in report["checklist"])
+    lifecycle = report.get("memory_lifecycle") or {}
+    usage = lifecycle.get("token_usage") or {}
+    lines.append(f"- context: {lifecycle.get('context_status', 'unknown')} ({usage.get('used', 0)}/{usage.get('limit', 6000)} tokens)")
+    if lifecycle.get("recovery_summary"):
+        lines.append(f"- recovery: {lifecycle['recovery_summary']}")
     return "\n".join(lines)
 
 
@@ -428,7 +638,10 @@ def main() -> None:
         report["receipt_path"] = str(target_receipt)
         report["receipt_status"] = "pending"
     else:
-        report = resolve_receipt(receipt_path(repo_root, args.receipt), args.resolution)
+        target_receipt = receipt_path(repo_root, args.receipt)
+        report = resolve_receipt(target_receipt, args.resolution)
+        if report.get("status") == "resolved":
+            report = finalize_memory_maintenance(repo_root, target_receipt, report)
 
     if args.format == "json":
         write_or_print(json.dumps(report, ensure_ascii=False, indent=2), args.output)
@@ -443,7 +656,11 @@ def main() -> None:
     else:
         write_or_print(render_receipt_text(report), args.output)
 
-    if args.strict and (report.get("missing_required") or report.get("status") == "pending"):
+    if args.strict and (
+        report.get("missing_required")
+        or report.get("status") == "pending"
+        or report.get("governance_status") == "blocked_memory_repair"
+    ):
         raise SystemExit(1)
 
 

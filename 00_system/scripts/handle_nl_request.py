@@ -127,6 +127,7 @@ def handle_attach_project(repo_root: Path, request: str, tags: str, wiki_root_ar
         args.extend(["--wiki-root", wiki_root_arg.strip()])
     run_python("attach_project.py", args)
     run_project_session(repo_root, "check", ["--strict"])
+    run_project_session(repo_root, "start", ["--task", "Initialize the first evidence-backed project snapshot."])
 
 
 def handle_runtime(command: str, wiki_root_arg: str, *, check_only: bool = False) -> None:
@@ -151,8 +152,8 @@ def handle_continue_work(repo_root: Path, request: str, tags: str, wiki_root_arg
     if not load_project_context(repo_root):
         handle_start_work(repo_root, request, tags, wiki_root_arg, task)
         return
-    run_project_session(repo_root, "check")
-    print("\n继续执行当前项目：请结合 TASKS.md、本次 diff 和上面的驾驶舱状态选择下一步。")
+    extra_args = ["--task", task.strip()] if task.strip() else []
+    run_project_session(repo_root, "start", extra_args)
 
 
 def handle_close_work(repo_root: Path, verification: str, ui_task: str = "") -> None:
