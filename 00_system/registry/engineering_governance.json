@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "task_state_path": ".obsidiantowiki/task-state.json",
+  "default_status": "investigating",
+  "default_risk": "P2",
+  "risk_levels": ["P3", "P2", "P1", "P0"],
+  "statuses": [
+    "detected",
+    "investigating",
+    "planned",
+    "awaiting_approval",
+    "implementing",
+    "verifying",
+    "awaiting_understanding",
+    "ready_to_close",
+    "closed",
+    "blocked",
+    "abandoned",
+    "stale"
+  ],
+  "transitions": {
+    "detected": ["investigating", "blocked", "abandoned", "stale"],
+    "investigating": ["planned", "blocked", "abandoned", "stale"],
+    "planned": ["awaiting_approval", "implementing", "blocked", "abandoned", "stale"],
+    "awaiting_approval": ["implementing", "blocked", "abandoned", "stale"],
+    "implementing": ["verifying", "blocked", "abandoned", "stale"],
+    "verifying": ["awaiting_understanding", "ready_to_close", "blocked", "abandoned", "stale"],
+    "awaiting_understanding": ["ready_to_close", "blocked", "abandoned", "stale"],
+    "ready_to_close": ["closed", "blocked", "abandoned", "stale"],
+    "blocked": ["investigating", "abandoned", "stale"],
+    "stale": ["investigating", "blocked", "abandoned"],
+    "abandoned": [],
+    "closed": []
+  }
+}
