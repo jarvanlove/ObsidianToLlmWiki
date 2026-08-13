@@ -2,6 +2,33 @@
 
 ## Now
 
+### Human-Controlled AI Engineering System 2.0
+
+Approved baseline:
+
+- `docs/plans/2026-08-13-human-controlled-ai-engineering-system-design.md`
+- `docs/plans/2026-08-13-human-controlled-ai-engineering-system-implementation-plan.md`
+
+Execution rule: complete and accept one milestone before starting the next. Detailed file-level steps remain in the implementation plan; this page tracks only current execution state.
+
+| Milestone | Tasks | Acceptance checkpoint | Status |
+|---|---|---|---|
+| M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | In progress: baseline formalization |
+| M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Pending M0 acceptance |
+| M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Pending M1 acceptance |
+| M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Pending M2 acceptance |
+| M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Pending M3 acceptance |
+| M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Pending M4 acceptance |
+
+Current batch:
+
+- [x] Product owner approved the 2.0 design and implementation direction on 2026-08-13.
+- [ ] Commit and publish the approved product/control baseline; file durable decisions back to the private project wiki.
+- [ ] Implement Task 0A: read-only context integrity gate.
+- [ ] Implement Task 0B: Context Contract, budget, and Context Receipt.
+- [ ] Make the `retrieval-contract` regression pass without trusting or deleting the pre-existing untracked raw UI manual; current baseline is 0.8000 because that raw page outranks the governed project memory.
+- [ ] Run M0 full regression, strict doctor, retrieval gates, compatibility checks, and product-owner checkpoint.
+
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|
 | OTW-CTRL-001 | Integrate AI project control workflow into public scaffold | P2 | Public repo has control files, shared workflow assets, and updated project bridge templates without making Codex depend on CLAUDE.md | Done |

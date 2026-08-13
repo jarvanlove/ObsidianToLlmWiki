@@ -77,6 +77,12 @@ python .\00_system\scripts\build_retrieval_index.py
 | Private sync safety | run `tests.test_private_sync`; verify protected files never appear in real-vault dry-run actions |
 | Agent adapters | run `tests.test_agent_retrieval_adapter`; verify MCP initialize, tools/list, structured search, and bounded context calls |
 | Provenance migration | run `tests.test_provenance_migration`; verify audit-only default, explicit evidence extraction, no fake page refs, and idempotency |
+| Context integrity | run `tests.test_context_integrity`; verify malformed frontmatter, schema errors, stale pages, missing provenance, conflicts, privacy exclusions, and quarantined pages fail or degrade without modifying the wiki |
+| Context contract/receipt | run `tests.test_context_contract` and retrieval core; verify L0-L3 precedence, six-card/default 6000-token bounds, deterministic hashes, explicit missing facts, and no quarantined result enters context |
+| Memory compiler/projection | run `tests.test_memory_compiler tests.test_memory_projection`; verify resolved-receipt input, stable IDs, idempotency, supersede/dispute rules, page budgets, archives, and evidence backlinks |
+| Historical memory migration | run `tests.test_memory_migration`; verify dry-run, backup/manifest, empty-template bootstrap, 100KB fixture migration, restoration, and preservation of user customization |
+| Human project cockpit | run `tests.test_project_cockpit tests.test_project_concierge` plus U2 visual close; verify five default areas, progressive disclosure, no secret/absolute-path leak, responsive screenshots, keyboard access, and Context Receipt citations |
+| Automatic memory lifecycle | run `tests.test_automatic_memory_lifecycle tests.test_project_lifecycle_e2e`; verify attach/start/continue/close/resolve/compile/projection/cockpit use one task ID and do not require explicit wiki commands |
 
 ## Manual Checks
 
@@ -85,8 +91,13 @@ python .\00_system\scripts\build_retrieval_index.py
 - Confirm public scaffold assets do not include private raw material or secrets.
 - Confirm user-facing UI tasks still use natural language, named Skills are recorded as executors, and Figma/Stitch sources are not treated as approved unless the UI task says so.
 - Confirm private project memory is updated for durable conclusions.
+- Confirm an ordinary user can answer current state, recent changes, open risks, pending decisions, and next step without opening Markdown.
+- Confirm default AI context does not include all project control files, all core wiki pages, or superseded/resolved history.
+- Confirm damaged or missing wiki context cannot be silently replaced by model inference.
 - Confirm README, quick start, manual, Skill template, installers, manifests, control templates, architecture, operations, deployment, security, changelog, and tests describe the same setup/update contract.
 
 ## Completion Rule
 
 Report exact scripts run and whether they touched public repo, private vault, or both.
+
+For Human-Controlled AI Engineering 2.0, each milestone additionally records Context Receipt coverage, projection token budgets, compatibility results, and whether a human approval gate was required. A later milestone cannot hide a failed earlier gate.

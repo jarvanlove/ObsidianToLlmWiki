@@ -13,6 +13,29 @@ The product boundary spans four cooperating local components: the public runtime
 | Automation layer | `00_system/scripts/`, `00_system/templates/`, `00_system/registry/` | attach, ingest, search, file-back, governance, sync |
 | Documentation layer | root docs, `docs/`, `Home.md`, `README*.md` | user-facing instructions and design plans |
 
+## Human-Controlled AI Engineering 2.0 Target
+
+The approved 2.0 target adds a control and memory-compilation path without replacing the local Markdown-first architecture:
+
+```text
+L0 current code/runtime evidence
+  > L1 current project controls
+  > L2 trusted durable wiki memory
+  > L3 AI inference
+
+task state + Git diff + verification + human decisions
+  -> context integrity gate and Context Receipt
+  -> engineering governance gates
+  -> resolved session receipt
+  -> atomic memory compiler
+  -> bounded current projections
+  -> natural-language concierge / action feed / local static cockpit
+```
+
+Target components are `context_integrity.py`, `context_contract.py`, `engineering_governance.py`, `memory_compiler.py`, and `project_cockpit.py`. They extend the existing `otw.py`, `project_session.py`, retrieval, attach, and compatibility paths; they do not introduce a hosted service, business database, background daemon, or second lifecycle.
+
+Markdown remains the durable and auditable format, but it is no longer the default whole-context read unit or the only human interface. Atomic cards own durable facts and explicit lifecycle state. Core project pages become bounded current projections. SQLite remains a disposable retrieval cache. The local cockpit is a generated static projection and never becomes a second source of truth.
+
 ## Entry Files
 
 - `AGENTS.md`: Codex entrypoint for this repo.
@@ -85,6 +108,11 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 ## Invariants
 
 - Markdown remains source of truth.
+- Markdown truth is qualified by fact precedence and health: damaged, disputed, stale, or quarantined pages cannot silently become current execution facts.
+- Default model context is contract-driven and budgeted; no task may load the complete project wiki by default.
+- Task evidence, not raw chat transcripts, drives durable memory candidates.
+- Atomic memory cards preserve history; bounded current projections contain only active, relevant facts and links to evidence.
+- Users are not responsible for manually maintaining generated cards or projections; natural language and the local cockpit are the normal human interface.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
 - Topic aliases are an inspectable local hybrid-retrieval layer; vector retrieval is added only when evaluation probes prove it is needed.

@@ -10,6 +10,8 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
+- Approved the Human-Controlled AI Engineering System 2.0 implementation baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and a human-first local cockpit. Runtime implementation remains under the M0-M5 plan and is not yet released.
+
 - Initial ObsidianToWiki scaffold
 - Dual agent entrypoints for Codex and Claude Code
 - AI project control workflow assets for production-grade AI-assisted development

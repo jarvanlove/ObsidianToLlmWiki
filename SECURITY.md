@@ -14,6 +14,9 @@ Security-sensitive areas include:
 - upgrade/migration overwrite behavior
 - Git update and installer command execution
 - private scaffold baseline, candidate, backup, and receipt integrity
+- context integrity, provenance, freshness, conflict, and token-budget enforcement
+- task-state, approval, Context Receipt, and memory-card integrity
+- prevention of secrets, private absolute paths, source code, and personal assessments leaking into generated cockpits or shared memory
 
 ## Reporting
 
@@ -38,5 +41,13 @@ This policy only governs ObsidianToWiki code paths. It does not prevent Codex, C
 Malformed private policy fails closed for ObsidianToWiki operations. Never commit the real policy when its path list is sensitive; only the example template belongs in the public repository.
 
 Automatic product update accepts only a clean public worktree and fast-forward Git history. It does not stash, reset, checkout over local work, or execute a force pull. Private managed files require a matching recorded hash before replacement; conflicts preserve the original and write both a candidate and backup.
+
+## Human-Controlled Context and Memory
+
+Current code/runtime evidence outranks project controls, which outrank trusted durable memory; AI inference is never project truth. Missing, damaged, stale, disputed, or quarantined context must be reported explicitly. P1/P0 work that depends on unavailable historical constraints fails closed unless an accountable human establishes a new approved boundary.
+
+Only resolved, evidence-backed task receipts may produce durable memory candidates. High-risk/security conclusions, cross-project shared promotion, and personal capability observations require the policy-defined review. Raw chat, secrets, full source code, private absolute paths, and unsupported personal judgments must not be promoted automatically.
+
+Generated current projections and the local cockpit are derived views. They must preserve evidence links, obey explicit budgets, exclude private-policy paths, and be safe to delete and rebuild. A cockpit failure must not corrupt source Markdown or weaken engineering gates.
 
 The private policy is not a cloud-exfiltration boundary. An AI coding tool with filesystem access may still read local files outside ObsidianToWiki. Limit each provider's workspace roots, MCP permissions, and tool approvals independently.
