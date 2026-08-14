@@ -267,6 +267,21 @@ def record_task_contract(
         diagnosis["root_cause"] = root_cause.strip()
     if minimal_fix is not None:
         diagnosis["minimal_fix"] = minimal_fix.strip()
+    recheck = diagnosis.get("recheck_required")
+    if (
+        isinstance(recheck, dict)
+        and root_cause is not None
+        and root_cause.strip()
+        and minimal_fix is not None
+        and minimal_fix.strip()
+    ):
+        acceptance_id = str(recheck.get("acceptance_id") or "")
+        patch_loop = dict(diagnosis.get("patch_loop") or {})
+        streaks = dict(patch_loop.get("streaks") or {})
+        if acceptance_id in streaks:
+            streaks[acceptance_id] = {"count": 0, "last_implementation_id": None}
+        diagnosis["patch_loop"] = {**patch_loop, "streaks": streaks}
+        diagnosis.pop("recheck_required", None)
     if acceptance is not None:
         if not isinstance(acceptance, list):
             raise ValueError("acceptance must be a list")
@@ -305,6 +320,227 @@ def _bug_contract_missing(state: dict[str, Any]) -> list[str]:
     if not isinstance(acceptance, list) or not any(isinstance(item, str) and item.strip() for item in acceptance):
         missing.append("acceptance")
     return missing
+
+
+def _normalize_scope_path(value: str, *, allow_directory: bool = False) -> str:
+    selected = value.strip().replace("\\", "/")
+    directory = allow_directory and selected.endswith("/")
+    selected = selected.rstrip("/")
+    if not selected or selected.startswith("/") or re.match(r"^[a-zA-Z]:", selected):
+        raise ValueError("scope paths must be relative to the project")
+    parts = selected.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise ValueError("scope paths must not escape the project")
+    return f"{selected}/" if directory else selected
+
+
+def set_task_scope(repo_root: Path, allowed: list[str]) -> dict[str, Any]:
+    if not isinstance(allowed, list):
+        raise ValueError("allowed scope must be a list")
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    selected_allowed = sorted({_normalize_scope_path(str(path), allow_directory=True) for path in allowed})
+    updated = dict(state)
+    updated["scope"] = {"allowed": selected_allowed, "changed": [], "drift": []}
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return updated
+
+
+def _path_is_allowed(path: str, allowed: list[str]) -> bool:
+    return any(path == item or (item.endswith("/") and path.startswith(item)) for item in allowed)
+
+
+def _scope_drift_reasons(path: str, allowed: list[str]) -> list[str]:
+    parts = path.lower().split("/")
+    name = parts[-1]
+    reasons = ["unplanned_path"]
+    allowed_roots = {item.rstrip("/").split("/", 1)[0].lower() for item in allowed}
+    if len(parts) > 1 and parts[0] not in allowed_roots:
+        reasons.append("new_directory")
+    if any(part in {"architecture", "application", "domain", "infrastructure"} for part in parts[:-1]):
+        reasons.append("architecture_layer")
+    dependency_files = {
+        "requirements.txt",
+        "pyproject.toml",
+        "poetry.lock",
+        "uv.lock",
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "go.mod",
+        "go.sum",
+        "cargo.toml",
+        "cargo.lock",
+    }
+    if name in dependency_files:
+        reasons.append("dependency_change")
+    if any(part in {"migration", "migrations", "alembic"} for part in parts):
+        reasons.append("database_migration")
+    deployment_parts = {"deploy", "deployment", "k8s", "kubernetes", "terraform", "helm", "workflows"}
+    if any(part in deployment_parts for part in parts) or name.startswith(("dockerfile", "docker-compose")):
+        reasons.append("deployment_configuration")
+    return reasons
+
+
+def _block_state(state: dict[str, Any], reason: str) -> dict[str, Any]:
+    if state["status"] == "blocked":
+        return state
+    if "blocked" not in TRANSITIONS.get(str(state["status"]), frozenset()):
+        raise ValueError(f"cannot block task from status {state['status']}")
+    now = _now()
+    source = str(state["status"])
+    updated = dict(state)
+    updated["status"] = "blocked"
+    updated["timestamps"] = {
+        **dict(state["timestamps"]),
+        "updated_at": now,
+        "status_changed_at": now,
+    }
+    updated["history"] = [
+        *list(state["history"]),
+        {"from": source, "to": "blocked", "reason": reason, "at": now},
+    ]
+    return updated
+
+
+def evaluate_scope(repo_root: Path, changed_paths: list[str] | None = None) -> dict[str, Any]:
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    if changed_paths is None:
+        comparison = compare_with_baseline(repo_root, dict(state["baseline"]))
+        if comparison["stale"]:
+            raise ValueError("cannot evaluate scope from a stale Git baseline")
+        selected_changed = [_normalize_scope_path(path) for path in comparison["task_changes"]]
+    else:
+        if not isinstance(changed_paths, list):
+            raise ValueError("changed_paths must be a list")
+        selected_changed = [_normalize_scope_path(str(path)) for path in changed_paths]
+    selected_changed = sorted(set(selected_changed))
+    allowed = [str(path) for path in state["scope"].get("allowed", [])]
+    drift = [
+        {"path": path, "reasons": _scope_drift_reasons(path, allowed)}
+        for path in selected_changed
+        if not _path_is_allowed(path, allowed)
+    ]
+
+    effective_level = str(state["risk"]["level"])
+    if any(
+        reason in {"database_migration", "deployment_configuration"}
+        for item in drift
+        for reason in item["reasons"]
+    ):
+        effective_level = RISK_ORDER[max(RISK_ORDER.index(effective_level), RISK_ORDER.index("P1"))]
+    explicit_risk = classify_risk("scope drift", paths=[item["path"] for item in drift])
+    if explicit_risk["reasons"] != ["normal local engineering change"]:
+        effective_level = RISK_ORDER[
+            max(RISK_ORDER.index(effective_level), RISK_ORDER.index(str(explicit_risk["level"])))
+        ]
+
+    action = "continue"
+    blocking = False
+    if drift and effective_level == "P3":
+        action = "warn"
+    elif drift and effective_level == "P2":
+        action = "replan"
+        blocking = True
+    elif drift:
+        action = "reconfirm"
+        blocking = True
+
+    updated = dict(state)
+    updated["scope"] = {"allowed": allowed, "changed": selected_changed, "drift": drift}
+    if action == "reconfirm":
+        updated["risk"] = {
+            **dict(state["risk"]),
+            "level": effective_level,
+            "reasons": [*list(state["risk"].get("reasons", [])), "scope drift requires reconfirmation"],
+            "source": "deterministic-rule",
+            "confirmed_by": None,
+            "confirmed_at": None,
+        }
+    if blocking:
+        updated = _block_state(updated, f"scope drift requires {action}")
+    else:
+        updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return {
+        "changed": selected_changed,
+        "drift": drift,
+        "effective_level": effective_level,
+        "action": action,
+        "blocking": blocking,
+    }
+
+
+def record_acceptance_attempt(
+    repo_root: Path,
+    acceptance_id: str,
+    implementation_id: str,
+    *,
+    passed: bool,
+) -> dict[str, Any]:
+    selected_acceptance = acceptance_id.strip()
+    selected_implementation = implementation_id.strip()
+    if not selected_acceptance or not selected_implementation:
+        raise ValueError("acceptance_id and implementation_id are required")
+    if not isinstance(passed, bool):
+        raise ValueError("passed must be a boolean")
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    if state["diagnosis"].get("recheck_required"):
+        raise ValueError("root-cause recheck required before another implementation")
+    if state["status"] not in {"implementing", "verifying"}:
+        raise ValueError("acceptance attempts require an implementation in progress")
+
+    diagnosis = dict(state["diagnosis"])
+    patch_loop = dict(diagnosis.get("patch_loop") or {})
+    streaks = dict(patch_loop.get("streaks") or {})
+    streak = dict(streaks.get(selected_acceptance) or {"count": 0, "last_implementation_id": None})
+    counted = False
+    if passed:
+        streak = {"count": 0, "last_implementation_id": None}
+    elif streak.get("last_implementation_id") != selected_implementation:
+        streak = {"count": int(streak.get("count") or 0) + 1, "last_implementation_id": selected_implementation}
+        counted = True
+    streaks[selected_acceptance] = streak
+    events = [
+        *list(patch_loop.get("events") or []),
+        {
+            "acceptance_id": selected_acceptance,
+            "implementation_id": selected_implementation,
+            "passed": passed,
+            "counted": counted,
+            "recorded_at": _now(),
+        },
+    ]
+    diagnosis["patch_loop"] = {"streaks": streaks, "events": events}
+
+    recheck_required = not passed and int(streak["count"]) >= 3
+    if recheck_required:
+        diagnosis["recheck_required"] = {
+            "acceptance_id": selected_acceptance,
+            "reason": "three distinct implementations failed the same acceptance condition",
+        }
+    updated = dict(state)
+    updated["diagnosis"] = diagnosis
+    if recheck_required:
+        updated = _block_state(updated, "patch loop requires root-cause recheck")
+    else:
+        updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return {
+        "acceptance_id": selected_acceptance,
+        "implementation_id": selected_implementation,
+        "failure_count": int(streak["count"]),
+        "counted": counted,
+        "status": str(updated["status"]),
+        "recheck_required": recheck_required,
+    }
 
 
 def transition_task(repo_root: Path, target: str, *, reason: str = "") -> dict[str, Any]:
