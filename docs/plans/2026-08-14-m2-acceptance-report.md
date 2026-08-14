@@ -6,7 +6,7 @@ Machine-verified baseline: `05b00f62cdcc6abce41ccd994f3ee4839af73fb5`
 
 ## Acceptance status
 
-M2 machine acceptance passed. Product-owner approval is still required; M3 has not started.
+M2 machine acceptance passed, and the product owner explicitly approved M2 on 2026-08-14. M3 is authorized to begin from Task 4.
 
 ## Verified scope
 
@@ -59,4 +59,4 @@ Approve M2 only if these product behaviors are acceptable:
 3. branch or HEAD conflicts must pause automatic continuation as `stale`;
 4. local task-state failure must preserve the last complete JSON rather than guessing or resetting.
 
-After explicit approval, M3 may begin. Without approval, the project remains at the M2 checkpoint.
+The product owner explicitly approved these behaviors on 2026-08-14 and authorized M3. This approval closes the M2 checkpoint; it does not pre-approve any M3 implementation or acceptance result.
