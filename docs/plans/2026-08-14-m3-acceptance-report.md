@@ -6,7 +6,7 @@ Machine-verified baseline: `d1e5d6aa0937e41625656be7e440ce187e361632`
 
 ## Acceptance status
 
-M3 machine acceptance passed. Product-owner approval is still required before M4 begins.
+M3 machine acceptance passed, and the product owner explicitly approved M3 on 2026-08-14. M4 is authorized to begin from Task 8.
 
 ## Verified scope
 
@@ -74,4 +74,4 @@ Approve M3 only if these behaviors are acceptable:
 4. P1/P0 work needs a named responsibility confirmation before implementation.
 5. Verification must be structured and machine-consistent; high-risk closure cannot rely only on the same AI's self-check.
 
-Approval closes M3 and authorizes M4 Tasks 8-9. It does not pre-approve M4 implementation or acceptance.
+The product owner explicitly approved these behaviors on 2026-08-14 and authorized M4. This approval closes the M3 checkpoint; it does not pre-approve Task 8, Task 9, or the M4 acceptance result.
