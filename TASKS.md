@@ -16,8 +16,8 @@ Execution rule: complete and accept one milestone before starting the next. Deta
 | M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | Accepted by product owner on 2026-08-13 |
 | M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Accepted by product owner on 2026-08-13; operational acceptance continues during normal use |
 | M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Accepted by product owner on 2026-08-14 |
-| M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Tasks 4-7 complete; machine acceptance pending |
-| M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Pending M3 acceptance |
+| M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Machine acceptance passed; product-owner approval pending |
+| M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Pending product-owner approval of M3 |
 | M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Pending M4 acceptance |
 
 Current batch:
@@ -42,6 +42,7 @@ Current batch:
 - [x] Implement M3 Task 5: Bug tasks require reproduction evidence, root cause, minimal-fix rationale, and observable acceptance before leaving investigation; non-Bug task types keep their own prerequisites.
 - [x] Implement M3 Task 6: compare task changes with allowed scope, explain and gate drift by effective risk, and block a third distinct failed implementation until root cause is rechecked.
 - [x] Implement M3 Task 7: require schema-v2 structured verification evidence, reject prose-only success and non-zero passing claims, require evidence beyond AI self-check for P1/P0, and read v1 string receipts as blocked `legacy_unstructured` records.
+- [x] Run M3 machine acceptance: disposable P2 Bug and P1 authentication rehearsals exposed and repaired PowerShell seven-digit ISO timestamp compatibility; 35 targeted tests, 174-test full regression, strict Doctor, compilation, scope, and diff checks passed; report published for product-owner review.
 
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|

@@ -52,6 +52,27 @@ class EngineeringGovernanceEvidenceTests(unittest.TestCase):
         self.assertEqual(receipt["gate_results"]["verification_evidence"]["status"], "passed")
         self.assertEqual(receipt["explanation_package"], {})
 
+    def test_powershell_seven_digit_iso_timestamp_passes(self) -> None:
+        item = evidence()
+        item["recorded_at"] = "2026-08-14T11:35:48.1508662+08:00"
+
+        receipt = build_receipt(REPO_ROOT, report(items=[item]))
+
+        self.assertEqual(receipt["status"], "pending")
+        self.assertEqual(receipt["gate_results"]["verification_evidence"]["status"], "passed")
+
+    def test_malformed_timestamp_remains_blocked(self) -> None:
+        item = evidence()
+        item["recorded_at"] = "2026-08-14-not-a-time"
+
+        receipt = build_receipt(REPO_ROOT, report(items=[item]))
+
+        self.assertEqual(receipt["status"], "blocked")
+        self.assertIn(
+            "evidence_0_invalid_recorded_at",
+            receipt["gate_results"]["verification_evidence"]["reasons"],
+        )
+
     def test_plain_verification_string_cannot_close(self) -> None:
         receipt = build_receipt(REPO_ROOT, report(verification="测试通过"))
 

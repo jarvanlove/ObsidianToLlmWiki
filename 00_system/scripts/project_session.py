@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import tempfile
 from datetime import date, datetime, timedelta
@@ -297,7 +298,12 @@ def evaluate_evidence(evidence: list[dict[str, Any]], risk_level: str, legacy_ve
         if selected["source"] not in EVIDENCE_SOURCES:
             reasons.append(f"evidence_{index}_invalid_source")
         try:
-            datetime.fromisoformat(str(selected["recorded_at"]))
+            recorded_at = re.sub(
+                r"(\.\d{6})\d+(?=(?:[+-]\d{2}:\d{2})?$)",
+                r"\1",
+                str(selected["recorded_at"]),
+            )
+            datetime.fromisoformat(recorded_at)
         except ValueError:
             reasons.append(f"evidence_{index}_invalid_recorded_at")
         if selected["result"] == "passed" and selected["exit_code"] != 0:
