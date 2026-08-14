@@ -26,6 +26,8 @@ TASK_STATE_REL_PATH = Path(str(REGISTRY["task_state_path"]))
 SCHEMA_VERSION = int(REGISTRY["schema_version"])
 STATUSES = frozenset(str(item) for item in REGISTRY["statuses"])
 RISK_LEVELS = frozenset(str(item) for item in REGISTRY["risk_levels"])
+RISK_ORDER = tuple(str(item) for item in REGISTRY["risk_levels"])
+RISK_RULES = tuple(dict(item) for item in REGISTRY["risk_rules"])
 TRANSITIONS = {
     str(source): frozenset(str(target) for target in targets)
     for source, targets in dict(REGISTRY["transitions"]).items()
@@ -65,6 +67,11 @@ def _validate_state(state: dict[str, Any]) -> None:
     risk = state.get("risk")
     if not isinstance(risk, dict) or str(risk.get("level") or "") not in RISK_LEVELS:
         raise ValueError("task state has invalid risk level")
+    if not isinstance(risk.get("reasons"), list):
+        raise ValueError("task state risk reasons must be a list")
+    confirmed_by = risk.get("confirmed_by")
+    if confirmed_by is not None and (not isinstance(confirmed_by, str) or not confirmed_by.strip()):
+        raise ValueError("task state risk confirmed_by must be null or a non-empty string")
     expected_types = {
         "baseline": dict,
         "acceptance": list,
@@ -149,6 +156,90 @@ def create_task_state(repo_root: Path, task: str, intent: str) -> dict[str, Any]
     return state
 
 
+def classify_risk(
+    task: str,
+    *,
+    intent: str = "",
+    paths: list[str] | tuple[str, ...] | None = None,
+    uncertain: bool = False,
+) -> dict[str, Any]:
+    evidence = " ".join(
+        item.strip().lower()
+        for item in [task, intent, *(paths or [])]
+        if isinstance(item, str) and item.strip()
+    )
+    matched_by_level: dict[str, list[str]] = {level: [] for level in RISK_ORDER}
+    for rule in RISK_RULES:
+        keywords = [str(item).lower() for item in rule.get("keywords", [])]
+        groups = [
+            [str(item).lower() for item in group]
+            for group in rule.get("all_keyword_groups", [])
+            if isinstance(group, list)
+        ]
+        keyword_match = bool(keywords) and any(keyword in evidence for keyword in keywords)
+        group_match = bool(groups) and all(any(keyword in evidence for keyword in group) for group in groups)
+        if keyword_match or group_match:
+            matched_by_level[str(rule["level"])].append(str(rule["reason"]))
+
+    selected_level = str(REGISTRY["default_risk"])
+    reasons = ["normal local engineering change"]
+    for level in reversed(RISK_ORDER):
+        if matched_by_level[level]:
+            selected_level = level
+            reasons = matched_by_level[level]
+            break
+
+    if uncertain:
+        current_index = RISK_ORDER.index(selected_level)
+        selected_level = RISK_ORDER[min(current_index + 1, len(RISK_ORDER) - 1)]
+        reasons = [*reasons, "uncertainty requires conservative one-level promotion"]
+
+    return {"level": selected_level, "reasons": reasons, "source": "deterministic-rule"}
+
+
+def set_task_risk(repo_root: Path, classification: dict[str, Any]) -> dict[str, Any]:
+    level = str(classification.get("level") or "")
+    reasons = classification.get("reasons")
+    source = str(classification.get("source") or "")
+    if level not in RISK_LEVELS or not isinstance(reasons, list) or not reasons:
+        raise ValueError("valid risk classification is required")
+    if source != "deterministic-rule":
+        raise ValueError("risk classification source must be deterministic-rule")
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    updated = dict(state)
+    updated["risk"] = {
+        "level": level,
+        "reasons": [str(reason) for reason in reasons],
+        "source": source,
+        "confirmed_by": None,
+        "confirmed_at": None,
+    }
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return updated
+
+
+def confirm_task_risk(repo_root: Path, confirmed_by: str) -> dict[str, Any]:
+    selected_confirmer = confirmed_by.strip()
+    if not selected_confirmer:
+        raise ValueError("responsibility confirmation requires confirmed_by")
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    now = _now()
+    updated = dict(state)
+    updated["risk"] = {
+        **dict(state["risk"]),
+        "confirmed_by": selected_confirmer,
+        "confirmed_at": now,
+    }
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": now}
+    save_task_state(repo_root, updated)
+    return updated
+
+
 def transition_task(repo_root: Path, target: str, *, reason: str = "") -> dict[str, Any]:
     state = load_task_state(repo_root)
     if not state:
@@ -159,6 +250,9 @@ def transition_task(repo_root: Path, target: str, *, reason: str = "") -> dict[s
         raise ValueError(f"unsupported task status: {selected_target or '<missing>'}")
     if selected_target not in TRANSITIONS.get(source, frozenset()):
         raise ValueError(f"invalid task transition: {source} -> {selected_target}")
+    risk = dict(state["risk"])
+    if selected_target == "implementing" and risk["level"] in {"P1", "P0"} and not risk.get("confirmed_by"):
+        raise ValueError(f"{risk['level']} task requires responsibility confirmation before implementing")
     now = _now()
     updated = dict(state)
     updated["status"] = selected_target
