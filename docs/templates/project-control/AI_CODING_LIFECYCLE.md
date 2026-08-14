@@ -41,6 +41,17 @@ When a UI task has no approved reference design, silently use the shared visual-
 
 The agent invokes the lifecycle runtime internally. Do not ask the user to locate the runtime or run a checklist script.
 
+## Bug Root-Cause Gate
+
+A bug fix remains `investigating` or becomes `blocked` until the task record contains:
+
+1. reproduction steps or explicit evidence explaining why direct reproduction is unavailable;
+2. the root cause, not only the visible symptom;
+3. why the proposed change is the smallest sufficient fix; and
+4. at least one observable acceptance condition.
+
+Only bug tasks require this root-cause chain. Do not force a feature, refactor, or docs task to pretend it is a bug. The agent records these facts in the governed task state; the user should not need to maintain a separate checklist.
+
 ## Close A Task
 
 Before reporting completion:

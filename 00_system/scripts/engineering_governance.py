@@ -240,6 +240,73 @@ def confirm_task_risk(repo_root: Path, confirmed_by: str) -> dict[str, Any]:
     return updated
 
 
+def record_task_contract(
+    repo_root: Path,
+    *,
+    reproduction: str | None = None,
+    reproduction_unavailable_evidence: str | None = None,
+    root_cause: str | None = None,
+    minimal_fix: str | None = None,
+    acceptance: list[str] | None = None,
+) -> dict[str, Any]:
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    if reproduction is not None and reproduction_unavailable_evidence is not None:
+        raise ValueError("record reproduction or unavailable evidence, not both")
+
+    diagnosis = dict(state["diagnosis"])
+    if reproduction is not None:
+        diagnosis["reproduction"] = {"status": "reproduced", "evidence": reproduction.strip()}
+    elif reproduction_unavailable_evidence is not None:
+        diagnosis["reproduction"] = {
+            "status": "not_reproduced",
+            "evidence": reproduction_unavailable_evidence.strip(),
+        }
+    if root_cause is not None:
+        diagnosis["root_cause"] = root_cause.strip()
+    if minimal_fix is not None:
+        diagnosis["minimal_fix"] = minimal_fix.strip()
+    if acceptance is not None:
+        if not isinstance(acceptance, list):
+            raise ValueError("acceptance must be a list")
+        selected_acceptance = [str(item).strip() for item in acceptance if str(item).strip()]
+    else:
+        selected_acceptance = list(state["acceptance"])
+
+    updated = dict(state)
+    updated["diagnosis"] = diagnosis
+    updated["acceptance"] = selected_acceptance
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return updated
+
+
+def _bug_contract_missing(state: dict[str, Any]) -> list[str]:
+    intent = re.sub(r"[-\s]+", "_", str(state.get("intent") or "").strip().lower())
+    if intent not in {"bug", "bug_fix", "bugfix"}:
+        return []
+    diagnosis = dict(state["diagnosis"])
+    reproduction = diagnosis.get("reproduction")
+    valid_reproduction = (
+        isinstance(reproduction, dict)
+        and reproduction.get("status") in {"reproduced", "not_reproduced"}
+        and isinstance(reproduction.get("evidence"), str)
+        and bool(reproduction["evidence"].strip())
+    )
+    missing: list[str] = []
+    if not valid_reproduction:
+        missing.append("reproduction")
+    if not isinstance(diagnosis.get("root_cause"), str) or not diagnosis["root_cause"].strip():
+        missing.append("root_cause")
+    if not isinstance(diagnosis.get("minimal_fix"), str) or not diagnosis["minimal_fix"].strip():
+        missing.append("minimal_fix")
+    acceptance = state.get("acceptance")
+    if not isinstance(acceptance, list) or not any(isinstance(item, str) and item.strip() for item in acceptance):
+        missing.append("acceptance")
+    return missing
+
+
 def transition_task(repo_root: Path, target: str, *, reason: str = "") -> dict[str, Any]:
     state = load_task_state(repo_root)
     if not state:
@@ -250,6 +317,10 @@ def transition_task(repo_root: Path, target: str, *, reason: str = "") -> dict[s
         raise ValueError(f"unsupported task status: {selected_target or '<missing>'}")
     if selected_target not in TRANSITIONS.get(source, frozenset()):
         raise ValueError(f"invalid task transition: {source} -> {selected_target}")
+    if selected_target in {"planned", "awaiting_approval", "implementing"}:
+        missing_contract = _bug_contract_missing(state)
+        if missing_contract:
+            raise ValueError(f"bug implementation contract incomplete: {', '.join(missing_contract)}")
     risk = dict(state["risk"])
     if selected_target == "implementing" and risk["level"] in {"P1", "P0"} and not risk.get("confirmed_by"):
         raise ValueError(f"{risk['level']} task requires responsibility confirmation before implementing")
