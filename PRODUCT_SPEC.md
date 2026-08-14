@@ -130,6 +130,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Retrieval changes must pass fixed path, heading, provenance, pass-rate, and MRR gates before release; semantic infrastructure is justified by failed semantic probes, not trend pressure.
 - Legacy provenance migration may only write source notes and page references already explicit in the page; uncertain pages remain `partial` or unchanged.
 - Current code/runtime evidence outranks project control files; current project controls outrank trusted durable memory; trusted memory outranks AI inference. Missing facts must remain missing rather than being inferred as project truth.
+- Task close receipts use structured verification evidence. Prose-only success claims and passing results with non-zero exit codes cannot close; P1/P0 tasks cannot rely only on AI self-check evidence.
 - Every default context pack has a hard budget and Context Receipt. Damaged, stale, conflicting, or quarantined memory must be excluded or explicitly degraded according to task risk.
 - Core project wiki pages are bounded current projections, not permanent append-only logs. Historical evidence remains recoverable through atomic cards, task receipts, archives, and Git history.
 - A project that has completed real work must not remain an unexplained empty wiki shell; first snapshots derived from local facts remain `review_required` until confirmed.

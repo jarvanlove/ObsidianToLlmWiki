@@ -10,6 +10,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
+- Schema-v2 task close receipts with structured verification evidence, source allowlisting, non-zero exit/result consistency, P1/P0 independent-evidence gates, and fail-closed v1 prose receipt compatibility.
 - Human-first local project cockpit with five action-oriented regions, native evidence disclosure, Context Receipt citation, responsive static HTML/JSON, and natural-language “项目现在怎么样” routing.
 - Seven bounded current-memory projections, a 90-day/30-event timeline, active-only fact filtering, and public `otw memory compile` commands.
 - Dry-run-first legacy memory migration with byte-exact backups, source backlinks, review-required snapshots, idempotent manifests, customization conflict protection, and restoration support.

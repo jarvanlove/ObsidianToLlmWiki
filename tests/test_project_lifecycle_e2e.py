@@ -95,8 +95,16 @@ class ProjectLifecycleE2ETests(unittest.TestCase):
             )
             self.assertEqual(continued.returncode, 0, continued.stderr)
 
+            evidence = json.dumps({
+                "kind": "test",
+                "command": "python -m unittest tests.test_project_lifecycle_e2e -v",
+                "exit_code": 0,
+                "result": "passed",
+                "recorded_at": "2026-08-14T11:00:00+08:00",
+                "source": "deterministic",
+            })
             closed = subprocess.run(
-                [sys.executable, str(OTW), "close", "--repo-root", str(repo), "--verification", "E2E passed"],
+                [sys.executable, str(OTW), "close", "--repo-root", str(repo), "--evidence", evidence],
                 cwd=REPO_ROOT,
                 env=env,
                 check=False,

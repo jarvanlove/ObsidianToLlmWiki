@@ -69,7 +69,7 @@ Daily project work is exposed through the project cockpit:
 | `project_cockpit.py` | Build one privacy-bounded action projection for both static HTML/JSON and natural-language project status answers |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
-| `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
+| `project_session.py` | Generate AI coding task start/close checklists, schema-v2 structured-evidence receipts, and control-file update candidates |
 | `ui_governance.py` | Create and validate project-local UI task records, locked visual baselines, Design Authority approvals, and visual close evidence |
 | `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
 | `runtime_manager.py` | Orchestrate one-command setup and Git-safe whole-product updates |
@@ -140,7 +140,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Natural-language project attach must be followed by a strict project session check before reporting success.
 - User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
-- A close workflow is not complete while `.obsidiantowiki/session-receipt.json` contains pending candidates.
+- A close workflow is not complete while `.obsidiantowiki/session-receipt.json` has a blocked verification gate or pending candidates. Schema v2 stores structured `evidence`, `gate_results`, `explanation_package`, and `knowledge_candidates`; v1 prose receipts load as `legacy_unstructured` and cannot silently close.
 - Source ingestion runs an extraction gate before derivatives; blocked sources cannot produce document maps or section notes.
 - Long-document maps group front matter and TOC pages separately, accept only defensible chapter headings, and label size-based chapter continuations explicitly.
 - Reingestion may delete only obsolete section files recorded by the previous generated document map; it must not delete hand-authored knowledge pages.

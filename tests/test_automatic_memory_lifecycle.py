@@ -25,6 +25,17 @@ from project_session import (  # noqa: E402
 from wiki_lib import render_markdown  # noqa: E402
 
 
+def deterministic_evidence() -> list[dict[str, object]]:
+    return [{
+        "kind": "test",
+        "command": "python -m unittest tests.test_automatic_memory_lifecycle -v",
+        "exit_code": 0,
+        "result": "passed",
+        "recorded_at": "2026-08-14T11:00:00+08:00",
+        "source": "deterministic",
+    }]
+
+
 class AutomaticMemoryLifecycleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
@@ -91,6 +102,7 @@ class AutomaticMemoryLifecycleTests(unittest.TestCase):
             "task": started["task"],
             "task_id": started["task_id"],
             "verification": "python -m unittest: passed",
+            "evidence": deterministic_evidence(),
             "changed_files": ["feature.py"],
             "control_file_update_candidates": [],
             "wiki_file_back_candidates": [],

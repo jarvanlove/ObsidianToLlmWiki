@@ -12,6 +12,19 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "00_system" / "scripts" / "project_session.py"
 
 
+def evidence_json() -> str:
+    return json.dumps(
+        {
+            "kind": "test",
+            "command": "python -m unittest tests.test_project_session_receipt -v",
+            "exit_code": 0,
+            "result": "passed",
+            "recorded_at": "2026-08-14T11:00:00+08:00",
+            "source": "deterministic",
+        }
+    )
+
+
 def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, check=False, capture_output=True, text=True, encoding="utf-8")
 
@@ -112,8 +125,8 @@ class ProjectSessionReceiptTests(unittest.TestCase):
                     "close",
                     "--repo-root",
                     str(repo),
-                    "--verification",
-                    "unit tests passed",
+                    "--evidence",
+                    evidence_json(),
                     "--format",
                     "json",
                 ],
@@ -164,8 +177,8 @@ class ProjectSessionReceiptTests(unittest.TestCase):
                     "close",
                     "--repo-root",
                     str(repo),
-                    "--verification",
-                    "unit tests passed",
+                    "--evidence",
+                    evidence_json(),
                     "--format",
                     "json",
                 ],

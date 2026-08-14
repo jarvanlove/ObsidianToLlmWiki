@@ -37,6 +37,11 @@ def nl_args(args: argparse.Namespace, request: str) -> list[str]:
         value = str(getattr(args, name, "") or "").strip()
         if value:
             values.extend([f"--{name.replace('_', '-')}", value])
+    for item in getattr(args, "evidence", []) or []:
+        values.extend(["--evidence", str(item)])
+    evidence_file = str(getattr(args, "evidence_file", "") or "").strip()
+    if evidence_file:
+        values.extend(["--evidence-file", evidence_file])
     return values
 
 
@@ -102,6 +107,8 @@ def main() -> None:
             command_parser.add_argument("--task", default="")
         if command == "close":
             command_parser.add_argument("--ui-task", default="")
+            command_parser.add_argument("--evidence", action="append", default=[])
+            command_parser.add_argument("--evidence-file", default="")
 
     ui = subparsers.add_parser("ui", help="Run project-local UI governance checks for an agent-managed UI task.")
     ui.add_argument("action", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check", "list-directions", "recommend-directions", "select-direction"])

@@ -15,7 +15,7 @@
 - File back answer: `file_back_query.py` / `.ps1`.
 - Natural language routing: `handle_nl_request.py` / `.ps1`.
 - Project AI session checklist: `project_session.py` / `.ps1`.
-  `close` writes `.obsidiantowiki/session-receipt.json`; resolve every candidate before completion.
+  `close` writes schema-v2 `.obsidiantowiki/session-receipt.json`; the Agent passes repeatable `--evidence` JSON or `--evidence-file`, then resolves every candidate. A prose-only `--verification` value is legacy compatibility input and cannot close.
 - Human project status: ask “项目现在怎么样” or run `otw.py cockpit build --repo-root <repo>`. `cockpit open` opens only the generated local file; the output contains summaries and evidence labels, not source code or private absolute paths.
 - Governance: `lint_wiki.py` / `.ps1`.
 - Rebuild indexes: `rebuild_indexes.py` / `.ps1`.

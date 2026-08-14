@@ -156,11 +156,21 @@ def handle_continue_work(repo_root: Path, request: str, tags: str, wiki_root_arg
     run_project_session(repo_root, "start", extra_args)
 
 
-def handle_close_work(repo_root: Path, verification: str, ui_task: str = "") -> None:
+def handle_close_work(
+    repo_root: Path,
+    verification: str,
+    ui_task: str = "",
+    evidence: list[str] | None = None,
+    evidence_file: str = "",
+) -> None:
     load_required_project_context(repo_root)
     extra_args = ["--verification", verification.strip()]
     if ui_task.strip():
         extra_args.extend(["--ui-task", ui_task.strip()])
+    for item in evidence or []:
+        extra_args.extend(["--evidence", item])
+    if evidence_file.strip():
+        extra_args.extend(["--evidence-file", evidence_file.strip()])
     run_project_session(repo_root, "close", extra_args)
 
 
@@ -284,6 +294,8 @@ def main() -> None:
     parser.add_argument("--tags", default="", help="英文逗号分隔标签")
     parser.add_argument("--task", default="", help="可选，当前自然语言工作请求的任务描述")
     parser.add_argument("--ui-task", default="", help="可选，收工时必须通过 UI 证据门禁的任务 ID")
+    parser.add_argument("--evidence", action="append", default=[], help="结构化验证证据 JSON，可重复")
+    parser.add_argument("--evidence-file", default="", help="结构化验证证据 JSON 文件")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).expanduser().resolve()
@@ -309,7 +321,7 @@ def main() -> None:
         handle_continue_work(repo_root, args.request, tags, args.wiki_root, args.task)
         return
     if request_kind == "close_work":
-        handle_close_work(repo_root, args.conclusion or args.question, args.ui_task)
+        handle_close_work(repo_root, args.conclusion or args.question, args.ui_task, args.evidence, args.evidence_file)
         return
     if request_kind == "project_status":
         handle_project_status(repo_root)

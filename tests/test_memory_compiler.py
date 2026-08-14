@@ -45,11 +45,23 @@ class MemoryCompilerTests(unittest.TestCase):
         path.write_text(
             json.dumps(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "status": status,
                     "task_id": name,
                     "risk": {"level": risk},
                     "verification": verification,
+                    "evidence": ([{
+                        "kind": "test",
+                        "command": "python -m unittest tests.test_memory_compiler -v",
+                        "exit_code": 0,
+                        "result": "passed",
+                        "recorded_at": "2026-08-14T11:00:00+08:00",
+                        "source": "deterministic",
+                    }] if verification else []),
+                    "gate_results": {"verification_evidence": {
+                        "status": "passed" if verification else "blocked",
+                        "reasons": [] if verification else ["structured_evidence_required"],
+                    }},
                     "knowledge_candidates": candidates,
                 },
                 ensure_ascii=False,
@@ -102,6 +114,22 @@ class MemoryCompilerTests(unittest.TestCase):
         self.assertEqual(self.compile(missing_evidence)["status"], "blocked")
         self.assertEqual(self.card_files(), [])
 
+    def test_legacy_v1_prose_receipt_cannot_compile_memory(self) -> None:
+        receipt = self.write_receipt(
+            "legacy-task",
+            [self.candidate("decision", "retry-policy", "Use bounded retries.")],
+        )
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        payload["schema_version"] = 1
+        payload.pop("evidence")
+        payload.pop("gate_results")
+        receipt.write_text(json.dumps(payload), encoding="utf-8")
+
+        result = self.compile(receipt)
+
+        self.assertEqual(result["status"], "blocked")
+        self.assertIn("legacy_unstructured", result["reasons"])
+
     def test_routine_receipt_without_candidates_creates_no_cards(self) -> None:
         result = self.compile(self.write_receipt("routine-task", []))
 
@@ -112,6 +140,14 @@ class MemoryCompilerTests(unittest.TestCase):
         report = {
             "task": "Implement bounded memory",
             "verification": "tests passed",
+            "evidence": [{
+                "kind": "test",
+                "command": "python -m unittest tests.test_memory_compiler -v",
+                "exit_code": 0,
+                "result": "passed",
+                "recorded_at": "2026-08-14T11:00:00+08:00",
+                "source": "deterministic",
+            }],
             "changed_files": ["memory.py"],
             "control_file_update_candidates": [],
             "wiki_file_back_candidates": [],

@@ -58,6 +58,7 @@ python .\00_system\scripts\build_retrieval_index.py
 | Shared prompt/pattern/index | `lint_wiki.ps1`, verify `30_shared/索引.md` |
 | Project attach templates | inspect generated template wording; if possible, test on disposable project |
 | AI session protocol/script | run `project_session.py check --strict` and `handle_nl_request.py --request "开始工作"` / `"继续"` / `"收工"` on a disposable attached project |
+| Structured verification evidence | run `tests.test_engineering_governance_evidence tests.test_project_session_receipt`; verify schema-v2 required fields/source allowlist, non-zero exit handling, P1/P0 independent evidence, v1 legacy blocking, and explicit candidate resolution |
 | UI governance runtime | run `tests.test_ui_governance`; verify U0 creates no design controls, 19 source directions contain exactly six defaults, the fallback baseline is stable, controlled directions require a user note, U2 blocks implementation until direction approval, U3 blocks implementation until RFC approval, and U1+ close requires screenshot/Visual QA/accessibility evidence |
 | Natural-language project attach | run `handle_nl_request.py --request "开始工作"` against an existing disposable git repo and an empty disposable wiki root; verify `wiki.context.json`, control files, wiki core pages, runtime templates, and `page_schemas.json` exist |
 | AI adapter templates | test disposable attach with `--install-ai-adapters`; verify no private wiki path is written |

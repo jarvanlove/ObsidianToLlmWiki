@@ -289,10 +289,13 @@ def compile_receipt(
         return {"status": "blocked", "reasons": [f"invalid_receipt:{type(exc).__name__}"], "cards": []}
     if not isinstance(receipt, dict):
         return {"status": "blocked", "reasons": ["invalid_receipt:root"], "cards": []}
+    if receipt.get("schema_version") != 2:
+        return {"status": "blocked", "reasons": ["legacy_unstructured"], "cards": []}
     if receipt.get("status") != "resolved":
         return {"status": "blocked", "reasons": ["receipt_not_resolved"], "cards": []}
-    if not str(receipt.get("verification") or "").strip():
-        return {"status": "blocked", "reasons": ["receipt_missing_verification"], "cards": []}
+    gate = (receipt.get("gate_results") or {}).get("verification_evidence") or {}
+    if gate.get("status") != "passed" or not isinstance(receipt.get("evidence"), list) or not receipt["evidence"]:
+        return {"status": "blocked", "reasons": ["receipt_evidence_gate_not_passed"], "cards": []}
 
     candidates = receipt.get("knowledge_candidates")
     if not isinstance(candidates, list) or not candidates:

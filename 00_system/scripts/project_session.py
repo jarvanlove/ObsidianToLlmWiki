@@ -46,6 +46,11 @@ WIKI_CORE_KEYS = (
 
 RECEIPT_REL_PATH = Path(".obsidiantowiki/session-receipt.json")
 RESOLUTION_STATUSES = {"applied", "skipped", "not_applicable"}
+EVIDENCE_SOURCES = {"deterministic", "ai_self_check", "independent_ai_review", "human_observation"}
+EVIDENCE_RESULTS = {"passed", "failed"}
+EVIDENCE_FIELDS = ("kind", "command", "exit_code", "result", "recorded_at", "source")
+MAX_EVIDENCE_ITEMS = 50
+MAX_EVIDENCE_FILE_BYTES = 1_000_000
 
 
 def load_context(repo_root: Path) -> dict[str, object]:
@@ -120,14 +125,32 @@ def receipt_path(repo_root: Path, explicit: str = "") -> Path:
     return Path(explicit).expanduser().resolve() if explicit.strip() else repo_root / RECEIPT_REL_PATH
 
 
-def load_receipt(path: Path) -> dict[str, Any]:
+def load_receipt(path: Path, *, migrate_legacy: bool = True) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {"status": "invalid"}
-    return payload if isinstance(payload, dict) else {"status": "invalid"}
+    if not isinstance(payload, dict):
+        return {"status": "invalid"}
+    if migrate_legacy and payload.get("schema_version") == 1:
+        migrated = dict(payload)
+        migrated.update(
+            {
+                "schema_version": 2,
+                "legacy_schema_version": 1,
+                "legacy_status": str(payload.get("status") or ""),
+                "status": "blocked",
+                "evidence": [],
+                "gate_results": {
+                    "verification_evidence": {"status": "blocked", "reasons": ["legacy_unstructured"]}
+                },
+                "explanation_package": {},
+            }
+        )
+        return migrated
+    return payload
 
 
 def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
@@ -148,7 +171,7 @@ def load_task_state(repo_root: Path) -> dict[str, Any]:
     try:
         return load_governed_task_state(repo_root)
     except ValueError:
-        legacy = load_receipt(repo_root / TASK_STATE_REL_PATH)
+        legacy = load_receipt(repo_root / TASK_STATE_REL_PATH, migrate_legacy=False)
         if not (
             legacy.get("schema_version") == 1
             and legacy.get("status") == "active"
@@ -199,8 +222,9 @@ def _automatic_candidates(repo_root: Path, report: dict[str, Any]) -> list[dict[
     candidates = [dict(item) for item in state.get("knowledge_candidates", []) if isinstance(item, dict)]
     task = str(report.get("task") or state.get("task") or "").strip()
     task_id = str(report.get("task_id") or state.get("task_id") or "").strip()
-    verification = str(report.get("verification") or "").strip()
-    if task and task_id and verification and not verification.startswith("TODO:"):
+    gate_results = report.get("gate_results") if isinstance(report.get("gate_results"), dict) else {}
+    verification_gate = gate_results.get("verification_evidence") if isinstance(gate_results.get("verification_evidence"), dict) else {}
+    if task and task_id and verification_gate.get("status") == "passed":
         candidates.append(
             {
                 "kind": "milestone",
@@ -214,6 +238,81 @@ def _automatic_candidates(repo_root: Path, report: dict[str, Any]) -> list[dict[
     for candidate in candidates:
         unique[(str(candidate.get("kind") or ""), str(candidate.get("stable_key") or ""))] = candidate
     return list(unique.values())
+
+
+def parse_evidence_inputs(repo_root: Path, raw_items: list[str], evidence_file: str = "") -> list[dict[str, Any]]:
+    items: list[Any] = []
+    if evidence_file.strip():
+        path = Path(evidence_file).expanduser()
+        if not path.is_absolute():
+            path = repo_root / path
+        try:
+            if path.stat().st_size > MAX_EVIDENCE_FILE_BYTES:
+                raise ValueError("evidence file exceeds 1000000 bytes")
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid evidence file: {path}") from exc
+        if isinstance(payload, dict) and isinstance(payload.get("evidence"), list):
+            items.extend(payload["evidence"])
+        elif isinstance(payload, list):
+            items.extend(payload)
+        else:
+            raise ValueError("evidence file must contain a JSON list or an object with an evidence list")
+    for raw in raw_items:
+        try:
+            items.append(json.loads(raw))
+        except json.JSONDecodeError as exc:
+            raise ValueError("--evidence must be a JSON object") from exc
+    if not all(isinstance(item, dict) for item in items):
+        raise ValueError("every evidence item must be a JSON object")
+    if len(items) > MAX_EVIDENCE_ITEMS:
+        raise ValueError(f"evidence is limited to {MAX_EVIDENCE_ITEMS} items")
+    return [dict(item) for item in items]
+
+
+def evaluate_evidence(evidence: list[dict[str, Any]], risk_level: str, legacy_verification: str = "") -> dict[str, Any]:
+    reasons: list[str] = []
+    normalized: list[dict[str, Any]] = []
+    if not evidence:
+        reasons.append("legacy_unstructured" if legacy_verification.strip() else "structured_evidence_required")
+    for index, item in enumerate(evidence):
+        missing = [field for field in EVIDENCE_FIELDS if field not in item]
+        if missing:
+            reasons.append(f"evidence_{index}_missing_fields:" + ",".join(missing))
+            continue
+        selected = {
+            "kind": str(item["kind"]).strip(),
+            "command": str(item["command"]).strip(),
+            "exit_code": item["exit_code"],
+            "result": str(item["result"]).strip(),
+            "recorded_at": str(item["recorded_at"]).strip(),
+            "source": str(item["source"]).strip(),
+        }
+        if not selected["kind"] or not selected["command"]:
+            reasons.append(f"evidence_{index}_identity_required")
+        if isinstance(selected["exit_code"], bool) or not isinstance(selected["exit_code"], int):
+            reasons.append(f"evidence_{index}_exit_code_must_be_integer")
+        if selected["result"] not in EVIDENCE_RESULTS:
+            reasons.append(f"evidence_{index}_invalid_result")
+        if selected["source"] not in EVIDENCE_SOURCES:
+            reasons.append(f"evidence_{index}_invalid_source")
+        try:
+            datetime.fromisoformat(str(selected["recorded_at"]))
+        except ValueError:
+            reasons.append(f"evidence_{index}_invalid_recorded_at")
+        if selected["result"] == "passed" and selected["exit_code"] != 0:
+            reasons.append("passed_evidence_has_nonzero_exit_code")
+        normalized.append(selected)
+    passed = [item for item in normalized if item["result"] == "passed" and item["exit_code"] == 0]
+    if evidence and not passed:
+        reasons.append("passing_evidence_required")
+    if risk_level in {"P0", "P1"} and passed and all(item["source"] == "ai_self_check" for item in passed):
+        reasons.append("independent_evidence_required")
+    unique_reasons = list(dict.fromkeys(reasons))
+    return {
+        "evidence": normalized,
+        "gate": {"status": "blocked" if unique_reasons else "passed", "reasons": unique_reasons},
+    }
 
 
 def memory_health(repo_root: Path) -> dict[str, Any]:
@@ -324,17 +423,33 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
     ).hexdigest()[:16]
     report_risk = report.get("risk") if isinstance(report.get("risk"), dict) else {}
     risk_level = str(report_risk.get("level") or "P2").upper()
+    raw_evidence = report.get("evidence") if isinstance(report.get("evidence"), list) else []
+    evidence_result = evaluate_evidence(
+        [dict(item) for item in raw_evidence if isinstance(item, dict)],
+        risk_level,
+        str(report.get("verification") or ""),
+    )
+    gate_results = {"verification_evidence": evidence_result["gate"]}
+    verification = str(report.get("verification") or "").strip()
+    if not verification and evidence_result["evidence"]:
+        verification = "; ".join(
+            f"{item['kind']}: {item['result']} ({item['command']})" for item in evidence_result["evidence"]
+        )
+    candidate_report = {**report, "task_id": task_id, "gate_results": gate_results}
     return {
-        "schema_version": 1,
-        "status": "pending",
+        "schema_version": 2,
+        "status": "pending" if evidence_result["gate"]["status"] == "passed" else "blocked",
         "created_at": created_at,
         "task_id": task_id,
         "task": task_summary,
         "repo_root": str(repo_root),
-        "verification": report["verification"],
+        "verification": verification,
+        "evidence": evidence_result["evidence"],
+        "gate_results": gate_results,
+        "explanation_package": {},
         "risk": {"level": risk_level},
         "changed_files": report["changed_files"],
-        "knowledge_candidates": _automatic_candidates(repo_root, {**report, "task_id": task_id}),
+        "knowledge_candidates": _automatic_candidates(repo_root, candidate_report),
         "candidates": candidates,
     }
 
@@ -343,6 +458,9 @@ def resolve_receipt(path: Path, resolutions: list[str]) -> dict[str, Any]:
     receipt = load_receipt(path)
     if not receipt or receipt.get("status") == "invalid":
         raise SystemExit(f"invalid or missing session receipt: {path}")
+    verification_gate = (receipt.get("gate_results") or {}).get("verification_evidence") or {}
+    if verification_gate.get("status") != "passed":
+        raise SystemExit("session receipt verification evidence gate is blocked")
     candidates = receipt.get("candidates")
     if not isinstance(candidates, list):
         raise SystemExit(f"session receipt has no candidates: {path}")
@@ -441,6 +559,8 @@ def project_state(repo_root: Path) -> dict[str, Any]:
     cockpit_state = (
         "not_attached"
         if not context
+        else "blocked_verification"
+        if receipt_status == "blocked"
         else "needs_receipt_resolution"
         if receipt_status in {"pending", "invalid"}
         else "closed_pending_commit"
@@ -494,8 +614,10 @@ def _task_closed_by_receipt(repo_root: Path, state: dict[str, Any]) -> bool:
     if str(state.get("status") or "") in {"closed", "abandoned"}:
         return True
     receipt = load_receipt(receipt_path(repo_root))
+    verification_gate = (receipt.get("gate_results") or {}).get("verification_evidence") or {}
     return (
         receipt.get("status") == "resolved"
+        and verification_gate.get("status") == "passed"
         and receipt.get("governance_status") == "closed"
         and str(receipt.get("task_id") or "") == str(state.get("task_id") or "")
     )
@@ -555,15 +677,23 @@ def start_report(repo_root: Path, task: str) -> dict[str, Any]:
     }
 
 
-def close_report(repo_root: Path, verification: str, ui_task: str = "", task: str = "") -> dict[str, Any]:
+def close_report(
+    repo_root: Path,
+    verification: str,
+    ui_task: str = "",
+    task: str = "",
+    evidence: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     paths = changed_files(repo_root)
     state = load_task_state(repo_root)
     report: dict[str, Any] = {
         "kind": "task_close",
         "changed_files": paths,
-        "verification": verification.strip() or "TODO: record exact commands and results.",
+        "verification": verification.strip(),
+        "evidence": list(evidence or []),
         "task": task.strip() or str(state.get("task") or "").strip(),
         "task_id": str(state.get("task_id") or "").strip(),
+        "risk": dict(state.get("risk") or {"level": "P2"}),
         "control_file_update_candidates": classify_update_candidates(paths),
         "wiki_file_back_candidates": [
             "Project decisions: durable requirement, architecture, or tradeoff decisions.",
@@ -654,7 +784,11 @@ def render_close_text(report: dict[str, Any]) -> str:
     lines.extend(f"- {item}" for item in report["wiki_file_back_candidates"])
     lines.extend(["", f"Rule: {report['rule']}"])
     if report.get("receipt_path"):
-        lines.extend([f"Receipt: {report['receipt_path']}", "Resolve every receipt candidate before reporting the session closed."])
+        lines.append(f"Receipt: {report['receipt_path']}")
+        if report.get("receipt_status") == "blocked":
+            lines.append("Structured verification evidence is blocked; record valid evidence and close again.")
+        else:
+            lines.append("Resolve every receipt candidate before reporting the session closed.")
     return "\n".join(lines)
 
 
@@ -689,6 +823,8 @@ def main() -> None:
     parser.add_argument("--repo-root", default=".", help="Project repository root.")
     parser.add_argument("--task", default="", help="Task description for start.")
     parser.add_argument("--verification", default="", help="Verification summary for close.")
+    parser.add_argument("--evidence", action="append", default=[], help="Structured verification evidence as a JSON object; repeatable.")
+    parser.add_argument("--evidence-file", default="", help="JSON file containing an evidence list or an object with an evidence list.")
     parser.add_argument("--ui-task", default="", help="Optional project-local UI task id that must pass visual evidence gates.")
     parser.add_argument("--strict", action="store_true", help="Exit with code 1 when required attach items are missing.")
     parser.add_argument("--format", choices=["text", "json", "markdown"], default="text", help="Output format.")
@@ -709,7 +845,8 @@ def main() -> None:
         report = start_report(repo_root, args.task)
     elif args.command == "close":
         try:
-            report = close_report(repo_root, args.verification, args.ui_task, args.task)
+            evidence = parse_evidence_inputs(repo_root, args.evidence, args.evidence_file)
+            report = close_report(repo_root, args.verification, args.ui_task, args.task, evidence)
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
         target_receipt = receipt_path(repo_root, args.receipt)
@@ -718,8 +855,9 @@ def main() -> None:
             raise SystemExit(f"resolve the existing session receipt before closing again: {target_receipt}")
         receipt = build_receipt(repo_root, report)
         write_json_atomic(target_receipt, receipt)
+        report["verification"] = receipt["verification"] or "TODO: record structured verification evidence."
         report["receipt_path"] = str(target_receipt)
-        report["receipt_status"] = "pending"
+        report["receipt_status"] = receipt["status"]
     else:
         target_receipt = receipt_path(repo_root, args.receipt)
         report = resolve_receipt(target_receipt, args.resolution)
@@ -742,6 +880,7 @@ def main() -> None:
     if args.strict and (
         report.get("missing_required")
         or report.get("status") == "pending"
+        or report.get("status") == "blocked"
         or report.get("governance_status") == "blocked_memory_repair"
     ):
         raise SystemExit(1)

@@ -57,7 +57,7 @@ Only bug tasks require this root-cause chain. Do not force a feature, refactor, 
 Before reporting completion:
 
 1. Inspect the diff.
-2. Record exact verification commands and results.
+2. Record each verification as structured evidence with `kind`, `command`, `exit_code`, `result`, `recorded_at`, and `source`.
 3. Update `TASKS.md`.
 4. Check whether `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TESTING.md`, `SECURITY.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, `CHANGELOG.md`, or `docs/adr/` should change.
 5. File back only durable conclusions to the wiki.
@@ -65,6 +65,8 @@ Before reporting completion:
 For U1+ work, do not close until the linked UI task has passed its visual-evidence gate. A material UI task needs browser screenshots, an independent Visual QA report, and accessibility evidence. U2/U3 additionally require recorded visual-direction approval.
 
 The agent records and resolves the close receipt internally before reporting completion.
+
+Close receipts use schema v2. Evidence source must be `deterministic`, `ai_self_check`, `independent_ai_review`, or `human_observation`. A prose-only claim such as “tests passed” is retained only as `legacy_unstructured` and cannot close a task; a non-zero exit code cannot be marked passed. P1/P0 work also needs at least one passing source other than `ai_self_check`. Agents should pass repeatable `--evidence` JSON objects or a bounded `--evidence-file`; users still only say `收工`.
 
 ## Update Rules
 
