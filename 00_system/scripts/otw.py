@@ -110,6 +110,14 @@ def main() -> None:
             command_parser.add_argument("--evidence", action="append", default=[])
             command_parser.add_argument("--evidence-file", default="")
 
+    understand = subparsers.add_parser("understand", help="Record a human confirmation for a blocked explanation package.")
+    add_project_options(understand)
+    understand.add_argument("--confirmed-by", required=True)
+    understand.add_argument("--understood-impact-and-risks", action="store_true")
+    understand.add_argument("--explicit-authorization", action="store_true")
+    understand.add_argument("--confirmation-source", required=True)
+    understand.add_argument("--receipt", default="")
+
     ui = subparsers.add_parser("ui", help="Run project-local UI governance checks for an agent-managed UI task.")
     ui.add_argument("action", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check", "list-directions", "recommend-directions", "select-direction"])
     add_project_options(ui)
@@ -205,6 +213,23 @@ def main() -> None:
     elif args.command == "close":
         args.conclusion = args.verification
         run_natural_language(args, "收工")
+    elif args.command == "understand":
+        values = [
+            "understand",
+            "--repo-root",
+            str(Path(args.repo_root).expanduser().resolve()),
+            "--confirmed-by",
+            args.confirmed_by,
+            "--confirmation-source",
+            args.confirmation_source,
+        ]
+        if args.understood_impact_and_risks:
+            values.append("--understood-impact-and-risks")
+        if args.explicit_authorization:
+            values.append("--explicit-authorization")
+        if args.receipt:
+            values.extend(["--receipt", args.receipt])
+        run_script("project_session.py", values)
     elif args.command == "ui":
         values = [args.action, "--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format]
         for name in ("task", "task_id", "level", "requested_skill", "visual_direction", "feedback", "product_context", "stage", "approval_note", "visual_qa", "note", "phase"):

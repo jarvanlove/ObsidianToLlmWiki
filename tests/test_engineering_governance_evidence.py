@@ -12,6 +12,7 @@ SCRIPTS_DIR = REPO_ROOT / "00_system" / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+from engineering_governance import EXPLANATION_FIELDS  # noqa: E402
 from project_session import build_receipt, load_receipt, parse_evidence_inputs  # noqa: E402
 
 
@@ -50,7 +51,8 @@ class EngineeringGovernanceEvidenceTests(unittest.TestCase):
             {"kind", "command", "exit_code", "result", "recorded_at", "source"},
         )
         self.assertEqual(receipt["gate_results"]["verification_evidence"]["status"], "passed")
-        self.assertEqual(receipt["explanation_package"], {})
+        self.assertEqual(tuple(receipt["explanation_package"]), EXPLANATION_FIELDS)
+        self.assertTrue(all(receipt["explanation_package"].values()))
 
     def test_powershell_seven_digit_iso_timestamp_passes(self) -> None:
         item = evidence()

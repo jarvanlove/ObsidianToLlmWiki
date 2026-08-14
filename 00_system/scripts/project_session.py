@@ -13,11 +13,15 @@ from typing import Any
 
 from engineering_governance import (
     TASK_STATE_REL_PATH,
+    build_explanation_package,
     capture_git_baseline,
     create_task_state,
+    evaluate_understanding_gate,
     load_task_state as load_governed_task_state,
+    record_human_understanding,
     resume_summary,
     save_task_state,
+    transition_task,
 )
 
 
@@ -225,7 +229,13 @@ def _automatic_candidates(repo_root: Path, report: dict[str, Any]) -> list[dict[
     task_id = str(report.get("task_id") or state.get("task_id") or "").strip()
     gate_results = report.get("gate_results") if isinstance(report.get("gate_results"), dict) else {}
     verification_gate = gate_results.get("verification_evidence") if isinstance(gate_results.get("verification_evidence"), dict) else {}
-    if task and task_id and verification_gate.get("status") == "passed":
+    understanding_gate = gate_results.get("human_understanding") if isinstance(gate_results.get("human_understanding"), dict) else {}
+    if (
+        task
+        and task_id
+        and verification_gate.get("status") == "passed"
+        and understanding_gate.get("status") == "passed"
+    ):
         candidates.append(
             {
                 "kind": "milestone",
@@ -435,7 +445,21 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
         risk_level,
         str(report.get("verification") or ""),
     )
-    gate_results = {"verification_evidence": evidence_result["gate"]}
+    explanation_package = build_explanation_package(
+        repo_root,
+        changed_files=[str(item) for item in report.get("changed_files", [])],
+        evidence=evidence_result["evidence"],
+        risk_level=risk_level,
+    )
+    understanding_gate = evaluate_understanding_gate(
+        repo_root,
+        explanation_package,
+        risk_level=risk_level,
+    )
+    gate_results = {
+        "verification_evidence": evidence_result["gate"],
+        "human_understanding": understanding_gate,
+    }
     verification = str(report.get("verification") or "").strip()
     if not verification and evidence_result["evidence"]:
         verification = "; ".join(
@@ -444,7 +468,9 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
     candidate_report = {**report, "task_id": task_id, "gate_results": gate_results}
     return {
         "schema_version": 2,
-        "status": "pending" if evidence_result["gate"]["status"] == "passed" else "blocked",
+        "status": "pending"
+        if all(gate.get("status") == "passed" for gate in gate_results.values())
+        else "blocked",
         "created_at": created_at,
         "task_id": task_id,
         "task": task_summary,
@@ -452,7 +478,7 @@ def build_receipt(repo_root: Path, report: dict[str, Any]) -> dict[str, Any]:
         "verification": verification,
         "evidence": evidence_result["evidence"],
         "gate_results": gate_results,
-        "explanation_package": {},
+        "explanation_package": explanation_package,
         "risk": {"level": risk_level},
         "changed_files": report["changed_files"],
         "knowledge_candidates": _automatic_candidates(repo_root, candidate_report),
@@ -467,6 +493,9 @@ def resolve_receipt(path: Path, resolutions: list[str]) -> dict[str, Any]:
     verification_gate = (receipt.get("gate_results") or {}).get("verification_evidence") or {}
     if verification_gate.get("status") != "passed":
         raise SystemExit("session receipt verification evidence gate is blocked")
+    understanding_gate = (receipt.get("gate_results") or {}).get("human_understanding") or {}
+    if understanding_gate.get("status") != "passed":
+        raise SystemExit("session receipt human understanding gate is blocked")
     candidates = receipt.get("candidates")
     if not isinstance(candidates, list):
         raise SystemExit(f"session receipt has no candidates: {path}")
@@ -482,6 +511,44 @@ def resolve_receipt(path: Path, resolutions: list[str]) -> dict[str, Any]:
     receipt["status"] = "pending" if pending else "resolved"
     receipt["resolved_at"] = "" if pending else datetime.now().astimezone().replace(microsecond=0).isoformat()
     receipt["pending_candidates"] = pending
+    write_json_atomic(path, receipt)
+    receipt["receipt_path"] = str(path)
+    return receipt
+
+
+def confirm_receipt_understanding(
+    repo_root: Path,
+    path: Path,
+    *,
+    confirmed_by: str,
+    understood_impact_and_remaining_risks: bool,
+    explicit_authorization: bool = False,
+    confirmation_source: str,
+) -> dict[str, Any]:
+    receipt = load_receipt(path)
+    if not receipt or receipt.get("status") in {"invalid", "resolved"}:
+        raise SystemExit(f"receipt must be blocked or pending before confirmation: {path}")
+    package = receipt.get("explanation_package")
+    if not isinstance(package, dict):
+        raise SystemExit("session receipt has no explanation package")
+    risk_level = str((receipt.get("risk") or {}).get("level") or "P2").upper()
+    record_human_understanding(
+        repo_root,
+        package,
+        confirmed_by=confirmed_by,
+        understood_impact_and_remaining_risks=understood_impact_and_remaining_risks,
+        explicit_authorization=explicit_authorization,
+        confirmation_source=confirmation_source,
+    )
+    gate = evaluate_understanding_gate(repo_root, package, risk_level=risk_level)
+    receipt["gate_results"] = {**dict(receipt.get("gate_results") or {}), "human_understanding": gate}
+    verification_gate = (receipt.get("gate_results") or {}).get("verification_evidence") or {}
+    receipt["status"] = "pending" if verification_gate.get("status") == "passed" and gate["status"] == "passed" else "blocked"
+    if receipt["status"] == "pending":
+        receipt["knowledge_candidates"] = _automatic_candidates(repo_root, receipt)
+        state = load_task_state(repo_root)
+        if state.get("status") == "awaiting_understanding":
+            transition_task(repo_root, "ready_to_close", reason="human understanding gate passed")
     write_json_atomic(path, receipt)
     receipt["receipt_path"] = str(path)
     return receipt
@@ -621,9 +688,16 @@ def _task_closed_by_receipt(repo_root: Path, state: dict[str, Any]) -> bool:
         return True
     receipt = load_receipt(receipt_path(repo_root))
     verification_gate = (receipt.get("gate_results") or {}).get("verification_evidence") or {}
+    understanding_gate = (receipt.get("gate_results") or {}).get("human_understanding")
+    understanding_passed = (
+        understanding_gate.get("status") == "passed"
+        if isinstance(understanding_gate, dict)
+        else receipt.get("status") == "resolved"
+    )
     return (
         receipt.get("status") == "resolved"
         and verification_gate.get("status") == "passed"
+        and understanding_passed
         and receipt.get("governance_status") == "closed"
         and str(receipt.get("task_id") or "") == str(state.get("task_id") or "")
     )
@@ -789,6 +863,25 @@ def render_close_text(report: dict[str, Any]) -> str:
     lines.append("\nWiki file-back candidates")
     lines.extend(f"- {item}" for item in report["wiki_file_back_candidates"])
     lines.extend(["", f"Rule: {report['rule']}"])
+    package = report.get("explanation_package") or {}
+    if package:
+        labels = {
+            "what_changed": "What changed",
+            "why_changed": "Why",
+            "data_or_call_chain_changes": "Data or call-chain change",
+            "affected_files_and_boundaries": "Affected files and boundaries",
+            "verification": "Verification evidence",
+            "remaining_risks": "Remaining risks",
+            "rollback": "Rollback",
+        }
+        lines.append("\nCritical-change explanation")
+        for field, label in labels.items():
+            lines.append(f"- {label}: {package.get(field, 'unknown')}")
+    understanding_gate = (report.get("gate_results") or {}).get("human_understanding") or {}
+    if understanding_gate:
+        lines.append(f"- Human understanding gate: {understanding_gate.get('status', 'unknown')}")
+        for reason in understanding_gate.get("reasons", []):
+            lines.append(f"  - {reason}")
     if report.get("receipt_path"):
         lines.append(f"Receipt: {report['receipt_path']}")
         if report.get("receipt_status") == "blocked":
@@ -825,7 +918,7 @@ def write_or_print(content: str, output: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Check or close an ObsidianToWiki AI coding session.")
-    parser.add_argument("command", choices=["check", "start", "close", "resolve"])
+    parser.add_argument("command", choices=["check", "start", "close", "understand", "resolve"])
     parser.add_argument("--repo-root", default=".", help="Project repository root.")
     parser.add_argument("--task", default="", help="Task description for start.")
     parser.add_argument("--verification", default="", help="Verification summary for close.")
@@ -836,6 +929,18 @@ def main() -> None:
     parser.add_argument("--format", choices=["text", "json", "markdown"], default="text", help="Output format.")
     parser.add_argument("--output", default="", help="Optional output file.")
     parser.add_argument("--receipt", default="", help="Optional session receipt path.")
+    parser.add_argument("--confirmed-by", default="", help="Accountable human who confirmed the explanation package.")
+    parser.add_argument(
+        "--understood-impact-and-risks",
+        action="store_true",
+        help="Record the human's explicit understanding of impact and remaining risks.",
+    )
+    parser.add_argument(
+        "--explicit-authorization",
+        action="store_true",
+        help="Record the additional explicit authorization required for P0.",
+    )
+    parser.add_argument("--confirmation-source", default="", help="Must be human; AI self-confirmation is rejected.")
     parser.add_argument(
         "--resolution",
         action="append",
@@ -861,9 +966,28 @@ def main() -> None:
             raise SystemExit(f"resolve the existing session receipt before closing again: {target_receipt}")
         receipt = build_receipt(repo_root, report)
         write_json_atomic(target_receipt, receipt)
+        understanding_gate = (receipt.get("gate_results") or {}).get("human_understanding") or {}
+        state = load_task_state(repo_root)
+        if understanding_gate.get("status") == "blocked" and state.get("status") == "verifying":
+            transition_task(repo_root, "awaiting_understanding", reason="human understanding confirmation required")
         report["verification"] = receipt["verification"] or "TODO: record structured verification evidence."
         report["receipt_path"] = str(target_receipt)
         report["receipt_status"] = receipt["status"]
+        report["explanation_package"] = receipt["explanation_package"]
+        report["gate_results"] = receipt["gate_results"]
+    elif args.command == "understand":
+        target_receipt = receipt_path(repo_root, args.receipt)
+        try:
+            report = confirm_receipt_understanding(
+                repo_root,
+                target_receipt,
+                confirmed_by=args.confirmed_by,
+                understood_impact_and_remaining_risks=args.understood_impact_and_risks,
+                explicit_authorization=args.explicit_authorization,
+                confirmation_source=args.confirmation_source,
+            )
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
     else:
         target_receipt = receipt_path(repo_root, args.receipt)
         report = resolve_receipt(target_receipt, args.resolution)

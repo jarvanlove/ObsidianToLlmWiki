@@ -32,6 +32,15 @@ TRANSITIONS = {
     str(source): frozenset(str(target) for target in targets)
     for source, targets in dict(REGISTRY["transitions"]).items()
 }
+EXPLANATION_FIELDS = (
+    "what_changed",
+    "why_changed",
+    "data_or_call_chain_changes",
+    "affected_files_and_boundaries",
+    "verification",
+    "remaining_risks",
+    "rollback",
+)
 
 
 def _now() -> str:
@@ -48,6 +57,38 @@ def _task_id(task: str, created_at: str) -> str:
     digest = hashlib.sha256(f"{created_at}|{task}".encode("utf-8")).hexdigest()[:8]
     compact_time = re.sub(r"[^0-9T]", "", created_at.split("+", 1)[0]).replace("-", "").replace(":", "")
     return f"{compact_time}-{slug}-{digest}"
+
+
+def _safe_summary(value: object, *, limit: int = 500) -> str:
+    selected = " ".join(str(value or "").split())
+    selected = re.sub(
+        r"(?i)\b(password|token|secret|api[_-]?key|credential)\s*[:=]\s*[^\s,;]+",
+        r"\1=<redacted>",
+        selected,
+    )
+    selected = re.sub(r"(?i)\bbearer\s+[^\s,;]+", "Bearer <redacted>", selected)
+    selected = re.sub(r"(?i)\b[a-z]:[\\/][^\s,;]+", "<private-path>", selected)
+    selected = re.sub(r"(?<!\w)/(?:Users|home|root)/[^\s,;]+", "<private-path>", selected)
+    if len(selected) > limit:
+        selected = selected[: limit - 3].rstrip() + "..."
+    return selected or "unknown"
+
+
+def _safe_project_paths(paths: list[str]) -> list[str]:
+    selected: list[str] = []
+    for raw in paths:
+        path = str(raw).strip().replace("\\", "/")
+        if not path or path.startswith("/") or re.match(r"^[a-zA-Z]:", path) or ".." in path.split("/"):
+            continue
+        selected.append(_safe_summary(path, limit=200))
+    return sorted(set(selected))[:20]
+
+
+def explanation_package_hash(package: dict[str, Any]) -> str:
+    normalized = {field: package.get(field, "unknown") for field in EXPLANATION_FIELDS}
+    return hashlib.sha256(
+        json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 def _validate_state(state: dict[str, Any]) -> None:
@@ -86,6 +127,20 @@ def _validate_state(state: dict[str, Any]) -> None:
     for field, expected_type in expected_types.items():
         if not isinstance(state.get(field), expected_type):
             raise ValueError(f"task state field {field} must be {expected_type.__name__}")
+    understanding = dict(state.get("understanding") or {})
+    if understanding:
+        if understanding.get("confirmation_source") != "human":
+            raise ValueError("task understanding confirmation source must be human")
+        if not isinstance(understanding.get("confirmed_by"), str) or not understanding["confirmed_by"].strip():
+            raise ValueError("task understanding requires confirmed_by")
+        if understanding.get("understood_impact_and_remaining_risks") is not True:
+            raise ValueError("task understanding requires an explicit true confirmation")
+        if not isinstance(understanding.get("explicit_authorization"), bool):
+            raise ValueError("task understanding explicit_authorization must be boolean")
+        if str(understanding.get("risk_level") or "") not in RISK_LEVELS:
+            raise ValueError("task understanding has invalid risk level")
+        if not re.fullmatch(r"[0-9a-f]{64}", str(understanding.get("explanation_package_hash") or "")):
+            raise ValueError("task understanding has invalid explanation package hash")
 
 
 def save_task_state(repo_root: Path, state: dict[str, Any]) -> None:
@@ -216,6 +271,7 @@ def set_task_risk(repo_root: Path, classification: dict[str, Any]) -> dict[str, 
         "confirmed_by": None,
         "confirmed_at": None,
     }
+    updated["understanding"] = {}
     updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
     save_task_state(repo_root, updated)
     return updated
@@ -238,6 +294,167 @@ def confirm_task_risk(repo_root: Path, confirmed_by: str) -> dict[str, Any]:
     updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": now}
     save_task_state(repo_root, updated)
     return updated
+
+
+def build_explanation_package(
+    repo_root: Path,
+    *,
+    changed_files: list[str],
+    evidence: list[dict[str, Any]],
+    risk_level: str | None = None,
+) -> dict[str, str]:
+    state = load_task_state(repo_root)
+    selected_paths = _safe_project_paths(changed_files)
+    path_summary = ", ".join(selected_paths) if selected_paths else "unknown"
+    diagnosis = dict(state.get("diagnosis") or {})
+    task = _safe_summary(state.get("task") or "unknown")
+    root_cause = _safe_summary(diagnosis.get("root_cause") or "")
+    minimal_fix = _safe_summary(diagnosis.get("minimal_fix") or "")
+    why_parts = [f"Task: {task}"]
+    if root_cause != "unknown":
+        why_parts.append(f"Root cause: {root_cause}")
+    if minimal_fix != "unknown":
+        why_parts.append(f"Minimal change: {minimal_fix}")
+
+    risk = dict(state.get("risk") or {})
+    selected_risk = str(risk_level or risk.get("level") or "P2").upper()
+    reasons = [_safe_summary(reason, limit=200) for reason in risk.get("reasons", []) if str(reason).strip()]
+    boundary_summary = ", ".join(reasons) if reasons else "unknown"
+    scope = dict(state.get("scope") or {})
+    drift = scope.get("drift") if isinstance(scope.get("drift"), list) else []
+    drift_paths = _safe_project_paths(
+        [str(item.get("path") or "") for item in drift if isinstance(item, dict)]
+    )
+
+    evidence_summaries: list[str] = []
+    for item in evidence[:20]:
+        if not isinstance(item, dict):
+            continue
+        evidence_summaries.append(
+            "{kind}: {result} (exit={exit_code}, source={source})".format(
+                kind=_safe_summary(item.get("kind"), limit=80),
+                result=_safe_summary(item.get("result"), limit=40),
+                exit_code=item.get("exit_code", "unknown"),
+                source=_safe_summary(item.get("source"), limit=40),
+            )
+        )
+    verification = "; ".join(evidence_summaries) if evidence_summaries else "unknown"
+    baseline = dict(state.get("baseline") or {})
+    baseline_head = str(baseline.get("head") or "").strip()
+    rollback = (
+        f"Restore only the listed task paths to Git baseline {baseline_head[:12]} and rerun verification."
+        if selected_paths and baseline_head and baseline_head != "HEAD"
+        else "unknown"
+    )
+    remaining_risks = f"Risk {selected_risk}; boundaries: {boundary_summary}; residual risk details: unknown"
+    if drift_paths:
+        remaining_risks += "; unresolved scope drift: " + ", ".join(drift_paths)
+
+    return {
+        "what_changed": f"Changed project paths: {path_summary}" if selected_paths else "unknown",
+        "why_changed": _safe_summary("; ".join(why_parts)),
+        "data_or_call_chain_changes": "unknown",
+        "affected_files_and_boundaries": _safe_summary(
+            f"Files: {path_summary}; risk boundaries: {boundary_summary}"
+        ),
+        "verification": verification,
+        "remaining_risks": _safe_summary(remaining_risks),
+        "rollback": rollback,
+    }
+
+
+def record_human_understanding(
+    repo_root: Path,
+    package: dict[str, Any],
+    *,
+    confirmed_by: str,
+    understood_impact_and_remaining_risks: bool,
+    explicit_authorization: bool = False,
+    confirmation_source: str,
+) -> dict[str, Any]:
+    if confirmation_source.strip() != "human":
+        raise ValueError("human confirmation source is required; AI cannot confirm for the user")
+    selected_confirmer = confirmed_by.strip()
+    if not selected_confirmer:
+        raise ValueError("human understanding confirmation requires confirmed_by")
+    if understood_impact_and_remaining_risks is not True:
+        raise ValueError("the human must explicitly understand impact and remaining risks")
+    if not isinstance(explicit_authorization, bool):
+        raise ValueError("explicit_authorization must be boolean")
+    if set(package) != set(EXPLANATION_FIELDS) or any(not package.get(field) for field in EXPLANATION_FIELDS):
+        raise ValueError("complete explanation package is required before human confirmation")
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    now = _now()
+    updated = dict(state)
+    updated["understanding"] = {
+        "confirmation_source": "human",
+        "confirmed_by": selected_confirmer,
+        "confirmed_at": now,
+        "understood_impact_and_remaining_risks": True,
+        "explicit_authorization": explicit_authorization,
+        "risk_level": str(state["risk"]["level"]),
+        "explanation_package_hash": explanation_package_hash(package),
+    }
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": now}
+    save_task_state(repo_root, updated)
+    return updated
+
+
+def evaluate_understanding_gate(
+    repo_root: Path,
+    package: dict[str, Any],
+    *,
+    risk_level: str | None = None,
+) -> dict[str, Any]:
+    state = load_task_state(repo_root)
+    selected_risk = str(risk_level or (state.get("risk") or {}).get("level") or "P2").upper()
+    if selected_risk not in RISK_LEVELS:
+        raise ValueError(f"unsupported understanding risk level: {selected_risk}")
+    if selected_risk == "P3":
+        return {
+            "status": "passed",
+            "action": "auto_pass",
+            "risk_level": selected_risk,
+            "human_confirmation_required": False,
+            "reasons": [],
+        }
+    if selected_risk == "P2":
+        return {
+            "status": "passed",
+            "action": "display",
+            "risk_level": selected_risk,
+            "human_confirmation_required": False,
+            "reasons": [],
+        }
+
+    understanding = dict(state.get("understanding") or {})
+    reasons: list[str] = []
+    if not understanding:
+        reasons.append("human_understanding_confirmation_required")
+    else:
+        if understanding.get("confirmation_source") != "human":
+            reasons.append("human_confirmation_source_required")
+        if understanding.get("understood_impact_and_remaining_risks") is not True:
+            reasons.append("human_understanding_confirmation_required")
+        if understanding.get("risk_level") != selected_risk:
+            reasons.append("risk_level_changed")
+        if understanding.get("explanation_package_hash") != explanation_package_hash(package):
+            reasons.append("explanation_package_changed")
+    if selected_risk == "P0" and understanding.get("explicit_authorization") is not True:
+        reasons.append("explicit_authorization_required")
+    reasons = list(dict.fromkeys(reasons))
+    return {
+        "status": "blocked" if reasons else "passed",
+        "action": "explicit_authorization" if selected_risk == "P0" else "human_confirmation",
+        "risk_level": selected_risk,
+        "human_confirmation_required": True,
+        "reasons": reasons,
+        "confirmed_by": str(understanding.get("confirmed_by") or ""),
+        "confirmed_at": str(understanding.get("confirmed_at") or ""),
+        "explicit_authorization": bool(understanding.get("explicit_authorization")),
+    }
 
 
 def record_task_contract(
@@ -343,6 +560,7 @@ def set_task_scope(repo_root: Path, allowed: list[str]) -> dict[str, Any]:
     selected_allowed = sorted({_normalize_scope_path(str(path), allow_directory=True) for path in allowed})
     updated = dict(state)
     updated["scope"] = {"allowed": selected_allowed, "changed": [], "drift": []}
+    updated["understanding"] = {}
     updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
     save_task_state(repo_root, updated)
     return updated
@@ -462,6 +680,7 @@ def evaluate_scope(repo_root: Path, changed_paths: list[str] | None = None) -> d
             "confirmed_by": None,
             "confirmed_at": None,
         }
+        updated["understanding"] = {}
     if blocking:
         updated = _block_state(updated, f"scope drift requires {action}")
     else:
