@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import sys
 import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime
@@ -19,13 +19,16 @@ from engineering_governance import (  # noqa: E402
     classify_risk,
     create_task_state,
     evaluate_understanding_gate,
+    load_task_state,
     record_human_understanding,
     record_task_contract,
     set_task_risk,
+    transition_task,
 )
 from project_session import (  # noqa: E402
     build_receipt,
     confirm_receipt_understanding,
+    finalize_memory_maintenance,
     resolve_receipt,
     write_json_atomic,
 )
@@ -228,6 +231,22 @@ class HumanUnderstandingGateTests(unittest.TestCase):
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertIn("Session receipt: pending", completed.stdout)
+
+    def test_resolved_p2_receipt_closes_the_matching_governed_task(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            report = close_report(repo, risk="P2")
+            transition_task(repo, "planned", reason="test plan")
+            transition_task(repo, "implementing", reason="test implementation")
+            transition_task(repo, "verifying", reason="test verification")
+            path = repo / "receipt.json"
+            write_json_atomic(path, build_receipt(repo, report))
+
+            receipt = resolve_receipt(path, [])
+            finalized = finalize_memory_maintenance(repo, path, receipt)
+
+            self.assertEqual(finalized["governance_status"], "closed")
+            self.assertEqual(load_task_state(repo)["status"], "closed")
 
 
 if __name__ == "__main__":

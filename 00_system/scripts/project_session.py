@@ -597,6 +597,14 @@ def finalize_memory_maintenance(repo_root: Path, path: Path, receipt: dict[str, 
     else:
         receipt["governance_status"] = "closed"
     write_json_atomic(path, receipt)
+    if receipt["governance_status"] == "closed":
+        state = load_task_state(repo_root)
+        if str(state.get("task_id") or "") == str(receipt.get("task_id") or ""):
+            if state.get("status") == "verifying":
+                transition_task(repo_root, "ready_to_close", reason="verification and human understanding gates passed")
+                state = load_task_state(repo_root)
+            if state.get("status") == "ready_to_close":
+                transition_task(repo_root, "closed", reason="session receipt resolved")
     receipt["receipt_path"] = str(path)
     return receipt
 
