@@ -49,7 +49,7 @@ Current batch:
 - [x] Run M4 machine acceptance: disposable P2/P1/P0 and capability-routing rehearsal, 13 targeted tests, 187-test full regression, strict Doctor, compilation, scope, and diff checks passed; report published for product-owner review. M5 remains blocked until explicit M4 approval.
 - [x] Product owner explicitly approved M4 and authorized M5 on 2026-08-14. This closes the M4 checkpoint without pre-approving Task 10–12 or the final 2.0 release; the next implementation batch starts with Task 10 only.
 - [x] Implement M5 Task 10: classify ordinary requests as read-only, code change, external mutation, or destructive; silently avoid tasks for read-only work, transparently start/resume mutation tasks, keep P3/P2 to one status line, and stop P1/P0 at their human gates without a daemon.
-- [x] Implement M5 Task 11: publish runtime `2.0.0-rc.1` and project scaffold v4, create missing governance controls without overwriting project customization, preserve v1 receipt and active-task compatibility, stage adapter/scaffold conflicts, and reject newer task or adapter state schemas instead of downgrading them.
+- [x] Implement M5 Task 11: publish runtime `2.0.0-rc.1` and project scaffold v4, create missing governance controls without overwriting project customization, preserve v1 receipt and active-task compatibility, stage adapter/scaffold conflicts, reject newer task or adapter state schemas instead of downgrading them, and normalize JavaScript UTC `Z` evidence timestamps before deterministic validation.
 
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|
@@ -87,7 +87,6 @@ Current batch:
 
 ## Next
 
-- During M5 compatibility work, decide whether schema-v2 evidence timestamps must accept JavaScript-style UTC `Z`; preserve the current fail-closed behavior until a tested contract is approved.
 - Observe session-receipt candidate quality in real coding sessions and tune recommendations without weakening explicit resolution.
 - Test optional hook/subagent adapters in one real project; keep them opt-in even when the base manager Skill is installed globally.
 - Observe Skill/MCP retrieval behavior in real Codex, Claude Code, and Cursor sessions before recommending automatic invocation more broadly.

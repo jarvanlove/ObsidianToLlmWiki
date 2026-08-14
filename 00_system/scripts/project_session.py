@@ -314,10 +314,13 @@ def evaluate_evidence(evidence: list[dict[str, Any]], risk_level: str, legacy_ve
         if selected["source"] not in EVIDENCE_SOURCES:
             reasons.append(f"evidence_{index}_invalid_source")
         try:
+            raw_recorded_at = str(selected["recorded_at"])
+            if raw_recorded_at.endswith("Z"):
+                raw_recorded_at = raw_recorded_at[:-1] + "+00:00"
             recorded_at = re.sub(
                 r"(\.\d{6})\d+(?=(?:[+-]\d{2}:\d{2})?$)",
                 r"\1",
-                str(selected["recorded_at"]),
+                raw_recorded_at,
             )
             datetime.fromisoformat(recorded_at)
         except ValueError:
