@@ -100,7 +100,7 @@ Daily project work is exposed through the project cockpit:
 
 ## Version Boundaries
 
-- `runtime_release.json` declares the public runtime channel plus private scaffold, project scaffold, receipt, and task-state contract versions. During M5 acceptance, `2.0.0-rc.1` prevents the incomplete release from being treated as stable.
+- `runtime_release.json` declares the public runtime channel plus private scaffold, project scaffold, receipt, and task-state contract versions. M5 used `2.0.0-rc.1` until A-J acceptance, full regression, strict Doctor, and three isolated pilots passed; the published runtime is now `2.0.0 stable`.
 - `vault_schema.json` versions knowledge-vault metadata migrations.
 - `private_scaffold_state.json` records hashes for manifest-managed private files.
 - `.obsidiantowiki/project-scaffold-state.json` records an attached project's managed lifecycle baseline.
@@ -143,7 +143,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Figma, Stitch, hooks, subagents, and named third-party Skills are optional executors; they cannot override a project's Design Authority or silently modify user-global Skill configuration.
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Natural-language project attach must be followed by a strict project session check before reporting success.
-- User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
+- User-facing daily workflow should stay low-noise: after one-time attachment, the normal path is a direct natural-language request. `开始工作` -> `继续` -> `收工` remains an optional inspection, recovery, and explicit-close path; advanced commands remain secondary.
 - A close workflow is not complete while `.obsidiantowiki/session-receipt.json` has a blocked verification gate or pending candidates. Schema v2 stores structured `evidence`, `gate_results`, `explanation_package`, and `knowledge_candidates`; v1 prose receipts load as `legacy_unstructured` and cannot silently close.
 - Every new close receipt carries the same seven-part explanation package. P3 passes automatically, P2 displays without ritual, P1 requires hash-bound human understanding, and P0 also requires explicit authorization; AI-originated confirmation is rejected.
 - Capability recovery is signal-based and non-blocking: one lightweight intervention per task, no aggregate score, and only auditable behavior becomes a pending candidate. Capability candidates enter receipts only after verification and understanding pass, never route directly to shared memory, and still require receipt resolution plus the existing memory compiler.

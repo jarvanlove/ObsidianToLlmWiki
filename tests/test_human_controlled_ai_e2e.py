@@ -267,8 +267,10 @@ class HumanControlledAiE2ETests(unittest.TestCase):
 
     def test_release_entry_docs_start_with_the_four_user_promises(self) -> None:
         requirements = {
+            "README.md": ("接入一次", "根因", "自动记录", "开始工作"),
             "README-zh.md": ("接入一次", "根因", "自动记录", "开始工作"),
             "README-EN.md": ("Attach once", "root cause", "automatically", "start work"),
+            "快速开始.md": ("接入一次", "根因", "自动记录", "开始工作"),
             "使用手册.md": ("接入一次", "根因", "自动记录", "开始工作"),
             "标准自然语言话术清单.md": ("接入一次", "根因", "自动记录", "开始工作"),
         }

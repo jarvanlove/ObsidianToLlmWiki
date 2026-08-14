@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-> **Approval:** Product direction approved on 2026-08-13. Execute milestone-by-milestone with an acceptance checkpoint between M0-M5.
+> **Status:** Product direction approved on 2026-08-13. M0-M5 were implemented, machine-accepted, and product-owner approved on 2026-08-14. Main integration was later explicitly authorized after documentation, index, private-Wiki, and final-verification gates.
 
 **Goal:** 将 ObsidianToWiki 从“依赖用户主动调用、手工维护且会持续膨胀的 Markdown 项目记忆”升级为“项目接入后被动生效、上下文可信有界、记忆自动编译、同时服务 AI 与人类的人类可控 AI 工程系统”。
 

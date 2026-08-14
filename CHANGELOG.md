@@ -13,7 +13,7 @@ All notable changes to this repository should be documented in this file.
 ### Added
 
 - Stable runtime `2.0.0` with A-J Human-Controlled AI end-to-end acceptance and three isolated pilots covering a clean project, pre-existing uncommitted work, and a simulated P1 authentication boundary; receipt/state summaries contain no credentials or business code.
-- Product-owner acceptance of M5 closes the M0-M5 Human-Controlled AI Engineering System 2.0 iteration; the feature branch remains intentionally unmerged pending a separate instruction.
+- Product-owner acceptance of M5 closes the M0-M5 Human-Controlled AI Engineering System 2.0 iteration; main integration was later explicitly authorized behind the release-documentation, private-Wiki, and final-verification gates.
 - Project scaffold v4 and runtime compatibility contracts: newly attached projects receive the governance guide, user-modified project files remain untouched or stage review candidates, v1 receipts and active tasks remain usable, JavaScript UTC `Z` evidence timestamps validate consistently, and newer task/adapter state schemas fail closed.
 - Ambient governance for ordinary coding language: deterministic read-only/code/external/destructive intent routing, transparent single-task start/resume, one-line P3/P2 status, P1 responsibility confirmation, P0 explicit authorization, fail-closed unattached mutations, managed project-entry rules, and no background daemon dependency.
 - M4 machine-acceptance evidence for the seven-part explanation package, P2 low-noise display, hash-bound P1 human confirmation, separate P0 authorization, five bounded capability triggers, three fixed choices, receipt-before-memory ordering, pending review, and no direct personal/shared write; M4 is approved and M5 is authorized to begin from Task 10.
@@ -27,7 +27,7 @@ All notable changes to this repository should be documented in this file.
 - Deterministic atomic-memory compiler for resolved task receipts, with stable card identity, idempotent compilation, explicit supersede/dispute states, high-risk and cross-layer review, sensitive-content rejection, and cards that pass the existing context-integrity gate.
 - Bounded Context Contracts and persisted Context Receipts with L0 Git state, L1 control hashes, trusted project memory, whole-card budgets, explicit missing/conflict states, and deterministic content hashes.
 - Read-only context integrity gate with deterministic trusted/review/degraded/quarantined states, strict fail-closed handling for damaged or missing required context, unified `otw context check`, and doctor integration.
-- Approved the Human-Controlled AI Engineering System 2.0 implementation baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and a human-first local cockpit. Runtime implementation remains under the M0-M5 plan and is not yet released.
+- Approved and delivered the Human-Controlled AI Engineering System 2.0 baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and a human-first local cockpit.
 
 - Initial ObsidianToWiki scaffold
 - Dual agent entrypoints for Codex and Claude Code

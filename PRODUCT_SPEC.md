@@ -27,7 +27,7 @@ Must have:
 - AI project control workflow assets for production-grade AI-assisted development.
 - AI coding lifecycle protocol for task start, verification, close, control-file updates, and wiki file-back candidates.
 - Optional hook/subagent adapter templates that call the lifecycle protocol without becoming a separate source of truth.
-- Project cockpit workflow that lets users operate daily work through only three phrases: `开始工作`, `继续`, and `收工`.
+- Passive project operation after one-time attachment: users describe normal work directly; `开始工作`, `继续`, and `收工` remain optional inspection and recovery controls.
 - Provider-neutral global manager Skill and `otw.py` runtime so agents, rather than users, invoke lifecycle scripts.
 - UI governance for AI coding: U0-U3 task classification, project-local Design Authority, a 19-source visual-direction registry, locked project baselines, direction/RFC gates, visual evidence before UI-task close, and a low-noise feedback flow that turns dissatisfaction into three plain-language recommendations.
 - Optional Figma and Stitch workflow adapters that preserve project-owned design facts without requiring either tool for every project.
@@ -69,7 +69,7 @@ Explicitly not doing unless added to `TASKS.md`:
 
 ### Project cockpit
 
-- Entry: user says `开始工作`, `继续`, or `收工`.
+- Entry: normal coding intent is routed automatically after one-time attachment; explicit cockpit phrases remain available for inspection and recovery.
 - Steps: infer project state -> run the matching lifecycle check -> execute or report the next safe action.
 - Success: users do not need to remember script names, hook names, or wiki update rules.
 - Failure states: missing project context, missing control files, ambiguous task, unverified changes.
