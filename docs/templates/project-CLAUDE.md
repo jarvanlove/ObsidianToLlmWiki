@@ -41,3 +41,4 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Classify user-facing changes as U0/U1/U2/U3. U1+ work uses `docs/design/UI_CONTRACT.md` and a task record; U2/U3 cannot enter production implementation before visual direction approval.
 - A user-named or third-party UI Skill is an executor, never Design Authority. It must not override approved sources, tokens, components, or release evidence.
 - `close` creates `.obsidiantowiki/session-receipt.json`; resolve every candidate with `project_session.py resolve` before reporting the session closed. Never compile unresolved candidates; preserve the task result and report `pending_memory_repair` if maintenance fails.
+- Scaffold v4 creates a missing `docs/ai-workflows/ENGINEERING_GOVERNANCE.md`. Upgrades update only managed content that the user has not modified; stage conflicts for review instead of overwriting local customization.

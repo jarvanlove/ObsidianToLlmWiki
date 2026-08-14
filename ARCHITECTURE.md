@@ -100,7 +100,7 @@ Daily project work is exposed through the project cockpit:
 
 ## Version Boundaries
 
-- `runtime_release.json` declares the public runtime, private scaffold, and core project scaffold releases.
+- `runtime_release.json` declares the public runtime channel plus private scaffold, project scaffold, receipt, and task-state contract versions. During M5 acceptance, `2.0.0-rc.1` prevents the incomplete release from being treated as stable.
 - `vault_schema.json` versions knowledge-vault metadata migrations.
 - `private_scaffold_state.json` records hashes for manifest-managed private files.
 - `.obsidiantowiki/project-scaffold-state.json` records an attached project's managed lifecycle baseline.
@@ -133,6 +133,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Public updates are clean-worktree, upstream-known, fast-forward-only operations. They never stash, reset, or force overwrite.
 - Private root entry files and knowledge are seed-only/protected. Managed scaffold files update only from a recorded unchanged hash; otherwise a candidate and backup are required.
 - Core project scaffold upgrades run for every registered project. Optional adapters remain opt-in and update only when already installed.
+- Project scaffold v4 creates a missing governance guide for new or upgraded projects, updates managed content only when its recorded or legacy hash is unchanged, and stages user-modified conflicts for review. Adapter and task-state readers reject schemas newer than the runtime instead of guessing or downgrading them.
 - Project Skills decide when to retrieve; the optional MCP server only exposes the existing retrieval contract.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.

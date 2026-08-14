@@ -40,10 +40,14 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
             self.assertEqual(attached.returncode, 0, attached.stderr)
             context = json.loads((repo / "wiki.context.json").read_text(encoding="utf-8"))
             self.assertEqual(Path(context["runtime_root"]), REPO_ROOT)
-            self.assertEqual(context["project_scaffold_version"], 3)
+            self.assertEqual(context["project_scaffold_version"], 4)
             self.assertTrue((repo / ".obsidiantowiki/project-scaffold-state.json").exists())
             self.assertFalse((repo / "scripts/ai").exists())
             self.assertFalse((repo / ".agents").exists())
+            governance = repo / "docs/ai-workflows/ENGINEERING_GOVERNANCE.md"
+            self.assertTrue(governance.exists())
+            self.assertIn("Ordinary Requests", governance.read_text(encoding="utf-8"))
+            governance.write_text("# User governance boundary\n", encoding="utf-8")
             candidate = repo / ".obsidiantowiki/upgrade-candidates/project-scaffold/docs/ai-workflows/AI_CODING_LIFECYCLE.md.new"
             self.assertFalse(candidate.exists(), "a newly generated lifecycle file must not conflict with its own template")
 
@@ -52,6 +56,7 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
             claude = repo / "CLAUDE.md"
             claude.write_text(claude.read_text(encoding="utf-8") + "\nUser-owned Claude rule.\n", encoding="utf-8")
             lifecycle = repo / "docs/ai-workflows/AI_CODING_LIFECYCLE.md"
+            self.assertIn("read_only", lifecycle.read_text(encoding="utf-8"))
             lifecycle.write_text("# User lifecycle\n", encoding="utf-8")
             upgraded = subprocess.run(
                 [sys.executable, str(UPGRADER), "--repo-root", str(repo), "--format", "json"],
@@ -71,6 +76,7 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
             self.assertIn("code_change", agents_text)
             self.assertIn("external_mutation", claude_text)
             self.assertIn("destructive", claude_text)
+            self.assertEqual(governance.read_text(encoding="utf-8"), "# User governance boundary\n")
             self.assertEqual(lifecycle.read_text(encoding="utf-8"), "# User lifecycle\n")
             self.assertTrue(candidate.exists())
 

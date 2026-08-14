@@ -14,6 +14,12 @@ Daily user-facing commands:
 
 Users should not need to remember script names, file names, hook names, or subagent names.
 
+## Ordinary Requests
+
+The Agent routes normal conversation into governance automatically. A `read_only` request stays read-only and creates no task. A `code_change`, `external_mutation`, or `destructive` request starts or resumes the governed lifecycle before any write or external action. P3/P2 work remains ambient; only an unknown root cause, scope drift, P1/P0 confirmation, insufficient evidence, or a required understanding gate interrupts the user.
+
+This behavior is deterministic and uses the public runtime. It does not require a background daemon or a user-maintained Markdown checklist.
+
 ## Start A Task
 
 Before editing:

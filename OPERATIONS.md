@@ -30,6 +30,7 @@
 - Legacy project memory: run `otw.py memory migrate --repo-root <repo> --dry-run` first. Apply only after reviewing the classification and page list; `--apply` creates byte-exact backups and a manifest. A customization conflict must be reconciled manually and must never be force-overwritten.
 - Compatibility: run `otw.py upgrade` for report-only, then `otw.py upgrade --apply --all-projects` for metadata/hash-safe updates. Uninstalled optional project adapters remain uninstalled.
 - Candidate resolution: after comparing local and `.new`, use `shared_assets.py resolve --path <managed-path> --resolution merged|keep-local` or `project_scaffold.py --repo-root <project> --resolve-lifecycle merged|keep-local`. This is an agent-maintainer operation; normal users keep speaking naturally.
+- M5 compatibility releases use a release-candidate runtime marker until Task 12 and final acceptance pass. Scaffold v4 may create missing governance files, but it must not overwrite an existing project governance guide or other user-owned control content. A state schema newer than the runtime is an upgrade requirement, not permission to rewrite the state.
 - Extraction audit: run `source_quality.py --source <file> --format json`; it never prints source content.
 
 ## Common Incidents
