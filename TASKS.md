@@ -17,8 +17,8 @@ Execution rule: complete and accept one milestone before starting the next. Deta
 | M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Accepted by product owner on 2026-08-13; operational acceptance continues during normal use |
 | M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Accepted by product owner on 2026-08-14 |
 | M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Accepted by product owner on 2026-08-14 |
-| M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Machine acceptance passed; product-owner approval pending |
-| M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Pending M4 acceptance |
+| M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Accepted by product owner on 2026-08-14 |
+| M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Authorized; Task 10 pending |
 
 Current batch:
 
@@ -47,6 +47,7 @@ Current batch:
 - [x] Implement M4 Task 8: generate an exact seven-part safe explanation package, keep P3/P2 low-noise, require hash-bound human understanding for P1, require separate authorization for P0, and reject AI-originated confirmation.
 - [x] Implement M4 Task 9: offer at most one evidence-triggered learning intervention per task, record only allowlisted observable behavior, prohibit aggregate capability scores and direct shared routing, and keep candidates behind understanding, receipt resolution, and memory review.
 - [x] Run M4 machine acceptance: disposable P2/P1/P0 and capability-routing rehearsal, 13 targeted tests, 187-test full regression, strict Doctor, compilation, scope, and diff checks passed; report published for product-owner review. M5 remains blocked until explicit M4 approval.
+- [x] Product owner explicitly approved M4 and authorized M5 on 2026-08-14. This closes the M4 checkpoint without pre-approving Task 10–12 or the final 2.0 release; the next implementation batch starts with Task 10 only.
 
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|

@@ -6,7 +6,7 @@ Machine-verified baseline: `4f03af9e359321ad06fc10460ab48e206938d7b3`
 
 ## Acceptance status
 
-M4 machine acceptance passed. Tasks 8–9 are machine-verified together and await explicit product-owner approval before M5 can begin.
+M4 machine acceptance passed, and the product owner explicitly approved M4 on 2026-08-14. M5 is authorized to begin from Task 10.
 
 ## Verified scope
 
@@ -73,4 +73,4 @@ Approve M4 only if these behaviors are acceptable:
 4. Learning intervention occurs at most once per task and always offers the same three low-noise choices.
 5. Capability records remain evidence-backed, reviewable, private by default, and never become an AI-generated score or direct shared write.
 
-Until the product owner explicitly approves this checkpoint, M4 remains unapproved and M5 must not start.
+The product owner explicitly approved these behaviors on 2026-08-14 and authorized M5. This closes the M4 checkpoint; it does not pre-approve Task 10, Task 11, Task 12, or the final 2.0 release.

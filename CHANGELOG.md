@@ -10,7 +10,7 @@ All notable changes to this repository should be documented in this file.
 
 ### Added
 
-- M4 machine-acceptance evidence for the seven-part explanation package, P2 low-noise display, hash-bound P1 human confirmation, separate P0 authorization, five bounded capability triggers, three fixed choices, receipt-before-memory ordering, pending review, and no direct personal/shared write; M4 now awaits explicit product-owner approval before M5.
+- M4 machine-acceptance evidence for the seven-part explanation package, P2 low-noise display, hash-bound P1 human confirmation, separate P0 authorization, five bounded capability triggers, three fixed choices, receipt-before-memory ordering, pending review, and no direct personal/shared write; M4 is approved and M5 is authorized to begin from Task 10.
 - Evidence-based capability recovery with five bounded triggers, one low-noise intervention per task, three fixed user choices, allowlisted observable events, no aggregate scoring, and pending receipt-backed candidates that cannot write directly to personal or shared memory.
 - Seven-part critical-change explanation packages and human-understanding gates with secret/path-safe summaries, low-noise P3/P2 behavior, hash-bound P1 confirmation, explicit P0 authorization, and rejection of AI-originated confirmation.
 - M3 machine-acceptance evidence for explainable risk, Bug root-cause, scope-drift, patch-loop, responsibility, and structured-verification gates, including PowerShell seven-digit ISO timestamp compatibility; M3 is accepted and M4 Tasks 8-9 are complete.
