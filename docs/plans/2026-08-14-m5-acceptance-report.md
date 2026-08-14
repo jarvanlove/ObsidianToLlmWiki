@@ -1,8 +1,10 @@
 # M5 Human-Controlled AI Engineering System 2.0 Acceptance Report
 
-Date: 2026-08-14  
-Branch: `feature/human-controlled-ai-engineering-v2`  
-Runtime: `2.0.0` (`stable`)  
+Date: 2026-08-14
+
+Branch: `feature/human-controlled-ai-engineering-v2`
+
+Runtime: `2.0.0` (`stable`)
 Project scaffold: v4
 
 ## Outcome
