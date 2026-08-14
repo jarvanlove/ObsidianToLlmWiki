@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
+from engineering_governance import classify_risk, load_task_state, save_task_state, set_task_risk
 from wiki_lib import normalize_tags
 
 
@@ -55,6 +57,23 @@ def run_project_session(repo_root: Path, command: str, extra_args: list[str] | N
     run_python("project_session.py", args)
 
 
+def run_project_session_json(repo_root: Path, command: str, extra_args: list[str] | None = None) -> dict[str, object]:
+    args = [command, "--repo-root", str(repo_root), "--format", "json"]
+    if extra_args:
+        args.extend(extra_args)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT_DIR / "project_session.py"), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    payload = json.loads(result.stdout)
+    if not isinstance(payload, dict):
+        raise ValueError("project session JSON must be an object")
+    return payload
+
+
 def load_required_project_context(repo_root: Path) -> tuple[dict[str, object], Path, str, str]:
     context = load_project_context(repo_root)
     if not context:
@@ -66,6 +85,35 @@ def load_required_project_context(repo_root: Path) -> tuple[dict[str, object], P
         raise SystemExit("wiki.context.json 缺少 project_slug")
     project_name = load_project_name(wiki_root, project_slug)
     return context, wiki_root, project_slug, project_name
+
+
+def classify_engineering_intent(text: str) -> str:
+    lowered = text.strip().lower()
+    compact = lowered.replace(" ", "")
+    if any(
+        token in compact
+        for token in ("删除", "清空", "销毁", "永久移除", "drop", "truncate", "destroy", "erase", "removeproduction")
+    ):
+        return "destructive"
+    if any(
+        token in compact
+        for token in ("部署", "上线", "发布到", "推送到", "发送到", "写入外部", "deploy", "publish", "push", "send")
+    ):
+        return "external_mutation"
+    if compact.startswith(
+        ("解释", "说明", "分析", "查看", "审查", "总结", "为什么", "是什么", "怎么理解", "explain", "review", "analyze", "summarize", "why", "what")
+    ):
+        return "read_only"
+    if any(
+        token in compact
+        for token in (
+            "修复", "修改", "新增", "增加", "添加", "创建", "生成", "实现", "重构", "开发", "编码", "改成",
+            "调整", "优化", "更新", "升级", "安装", "执行", "运行", "做一个", "fix", "change", "add", "create",
+            "generate", "implement", "refactor", "build", "update", "upgrade", "install", "run", "execute", "write",
+        )
+    ):
+        return "code_change"
+    return "read_only"
 
 
 def classify_request(text: str) -> str:
@@ -86,6 +134,8 @@ def classify_request(text: str) -> str:
         return "continue_work"
     if compact in {"收工"} or any(token in compact for token in ("今天收工", "整理收工", "当前任务收工")):
         return "close_work"
+    if any(token in compact for token in ("项目现在怎么样", "项目怎么样", "当前状态", "项目状态", "现在做到哪")):
+        return "project_status"
     if "接入wiki" in compact or "接入 wiki" in lowered:
         return "attach_project"
     if "基于当前项目wiki回答" in compact or "当前项目wiki回答" in compact or "基于当前项目 wiki 回答" in lowered:
@@ -98,7 +148,53 @@ def classify_request(text: str) -> str:
         return "ingest_project"
     if any(token in compact for token in ("记下来", "写回", "沉淀")) and "结论" in compact:
         return "file_back"
-    raise SystemExit(f"暂不支持的自然语言请求: {text}")
+    return classify_engineering_intent(text)
+
+
+def classify_ambient_risk(request: str, intent: str) -> dict[str, object]:
+    classification = classify_risk(request, intent=intent)
+    level = str(classification["level"])
+    if intent == "destructive" and level != "P0":
+        return {
+            "level": "P0",
+            "reasons": [*classification["reasons"], "destructive intent requires explicit authorization"],
+            "source": "deterministic-rule",
+        }
+    if intent == "external_mutation" and level in {"P3", "P2"}:
+        return {
+            "level": "P1",
+            "reasons": [*classification["reasons"], "external mutation requires responsibility confirmation"],
+            "source": "deterministic-rule",
+        }
+    return classification
+
+
+def handle_ambient_governance(repo_root: Path, request: str, intent: str) -> None:
+    if intent == "read_only":
+        print("治理未创建任务 · read_only")
+        return
+
+    load_required_project_context(repo_root)
+    report = run_project_session_json(repo_root, "start", ["--task", request.strip()])
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("ambient governance did not create or resume a task")
+
+    if bool(report.get("resumed")):
+        risk = str((state.get("risk") or {}).get("level") or "P2")
+        print(f"治理已恢复 · {state['task_id']} · {risk} · 继续原任务")
+        return
+
+    state["intent"] = intent
+    save_task_state(repo_root, state)
+    state = set_task_risk(repo_root, classify_ambient_risk(request, intent))
+    risk = str(state["risk"]["level"])
+    if risk == "P0":
+        print(f"治理需授权 · {state['task_id']} · P0 · 责任确认和明确授权后才能实施")
+    elif risk == "P1":
+        print(f"治理需确认 · {state['task_id']} · P1 · 责任确认后才能实施")
+    else:
+        print(f"治理已启动 · {state['task_id']} · {risk} · 可继续")
 
 
 def infer_file_back_destination(text: str, has_project_context: bool) -> str:
@@ -124,6 +220,7 @@ def handle_attach_project(repo_root: Path, request: str, tags: str, wiki_root_ar
         args.extend(["--wiki-root", wiki_root_arg.strip()])
     run_python("attach_project.py", args)
     run_project_session(repo_root, "check", ["--strict"])
+    run_project_session(repo_root, "start", ["--task", "Initialize the first evidence-backed project snapshot."])
 
 
 def handle_runtime(command: str, wiki_root_arg: str, *, check_only: bool = False) -> None:
@@ -148,15 +245,25 @@ def handle_continue_work(repo_root: Path, request: str, tags: str, wiki_root_arg
     if not load_project_context(repo_root):
         handle_start_work(repo_root, request, tags, wiki_root_arg, task)
         return
-    run_project_session(repo_root, "check")
-    print("\n继续执行当前项目：请结合 TASKS.md、本次 diff 和上面的驾驶舱状态选择下一步。")
+    extra_args = ["--task", task.strip()] if task.strip() else []
+    run_project_session(repo_root, "start", extra_args)
 
 
-def handle_close_work(repo_root: Path, verification: str, ui_task: str = "") -> None:
+def handle_close_work(
+    repo_root: Path,
+    verification: str,
+    ui_task: str = "",
+    evidence: list[str] | None = None,
+    evidence_file: str = "",
+) -> None:
     load_required_project_context(repo_root)
     extra_args = ["--verification", verification.strip()]
     if ui_task.strip():
         extra_args.extend(["--ui-task", ui_task.strip()])
+    for item in evidence or []:
+        extra_args.extend(["--evidence", item])
+    if evidence_file.strip():
+        extra_args.extend(["--evidence-file", evidence_file.strip()])
     run_project_session(repo_root, "close", extra_args)
 
 
@@ -217,9 +324,28 @@ def handle_answer_project(repo_root: Path, question: str) -> None:
     env["OBSIDIAN_WIKI_ROOT"] = str(wiki_root)
     run_python(
         "search_wiki.py",
-        [question.strip(), "--project", project_slug, "--show-relations"],
+        [
+            question.strip(),
+            "--project",
+            project_slug,
+            "--show-relations",
+            "--format",
+            "context",
+            "--repo-root",
+            str(repo_root),
+            "--task-id",
+            f"answer-{hashlib.sha256(question.strip().encode('utf-8')).hexdigest()[:16]}",
+        ],
         env=env,
     )
+
+
+def handle_project_status(repo_root: Path) -> None:
+    load_required_project_context(repo_root)
+    from project_cockpit import build_cockpit, concise_status
+
+    report = build_cockpit(repo_root)
+    print(concise_status(report["projection"]))
 
 
 def handle_develop_and_file_back(repo_root: Path) -> None:
@@ -261,6 +387,8 @@ def main() -> None:
     parser.add_argument("--tags", default="", help="英文逗号分隔标签")
     parser.add_argument("--task", default="", help="可选，当前自然语言工作请求的任务描述")
     parser.add_argument("--ui-task", default="", help="可选，收工时必须通过 UI 证据门禁的任务 ID")
+    parser.add_argument("--evidence", action="append", default=[], help="结构化验证证据 JSON，可重复")
+    parser.add_argument("--evidence-file", default="", help="结构化验证证据 JSON 文件")
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).expanduser().resolve()
@@ -286,7 +414,10 @@ def main() -> None:
         handle_continue_work(repo_root, args.request, tags, args.wiki_root, args.task)
         return
     if request_kind == "close_work":
-        handle_close_work(repo_root, args.conclusion or args.question, args.ui_task)
+        handle_close_work(repo_root, args.conclusion or args.question, args.ui_task, args.evidence, args.evidence_file)
+        return
+    if request_kind == "project_status":
+        handle_project_status(repo_root)
         return
     if request_kind == "answer_project":
         handle_answer_project(repo_root, args.question)
@@ -302,6 +433,9 @@ def main() -> None:
         return
     if request_kind == "file_back":
         handle_file_back(repo_root, args.request, args.title, args.question, args.conclusion, tags)
+        return
+    if request_kind in {"read_only", "code_change", "external_mutation", "destructive"}:
+        handle_ambient_governance(repo_root, args.request, request_kind)
         return
 
     raise SystemExit(f"未处理的请求类型: {request_kind}")

@@ -2,6 +2,58 @@
 
 ## Now
 
+### Human-Controlled AI Engineering System 2.0
+
+Approved baseline:
+
+- `docs/plans/2026-08-13-human-controlled-ai-engineering-system-design.md`
+- `docs/plans/2026-08-13-human-controlled-ai-engineering-system-implementation-plan.md`
+
+Execution rule: complete and accept one milestone before starting the next. Detailed file-level steps remain in the implementation plan; this page tracks only current execution state.
+
+| Milestone | Tasks | Acceptance checkpoint | Status |
+|---|---|---|---|
+| M0 Product contract and trusted context | Task 1, 0A, 0B | L0-L3 contract is current; read-only integrity checks, bounded Context Contract, and Context Receipt pass damaged/stale/conflict/missing tests | Accepted by product owner on 2026-08-13 |
+| M1 Automatic memory and human product | 0C, 0D, 0E, 0F | Atomic memory is idempotent; current projections stay in budget; empty/100KB projects migrate safely; concierge/action feed/cockpit pass U2 acceptance | Accepted by product owner on 2026-08-13; operational acceptance continues during normal use |
+| M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Accepted by product owner on 2026-08-14 |
+| M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Accepted by product owner on 2026-08-14 |
+| M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Accepted by product owner on 2026-08-14 |
+| M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Accepted by product owner on 2026-08-14; main integration explicitly authorized after documentation and private-Wiki synchronization |
+
+Current batch:
+
+- [x] Product owner approved the 2.0 design and implementation direction on 2026-08-13.
+- [x] Commit and publish the approved product/control baseline; file durable decisions back to the private project wiki.
+- [x] Implement Task 0A: read-only context integrity gate.
+- [x] Implement Task 0B: Context Contract, budget, and Context Receipt.
+- [x] Make the `retrieval-contract` regression pass without trusting or deleting the pre-existing untracked raw UI manual; governed project controls now rank first and the full retrieval evaluation is 1.0.
+- [x] Run M0 full regression, strict doctor, retrieval gates, and compatibility checks; machine evidence is recorded in `docs/plans/2026-08-13-m0-acceptance-report.md`.
+- [x] Product owner explicitly approved M0 and authorized M1 on 2026-08-13.
+- [x] Implement Task 0C: compile resolved, evidence-backed candidates into trusted atomic memory cards with stable identity, review, supersede, dispute, and sensitive-content boundaries.
+- [x] Implement Task 0D: bounded current projections, compression, and non-destructive migration for empty, normal, and 100KB projects.
+- [x] Implement Task 0E: natural-language concierge, action feed, and U2 project cockpit; reused the approved mist-teal-ink baseline and passed desktop/mobile/keyboard/privacy evidence gates.
+- [x] Implement Task 0F: connect memory compilation and cockpit refresh to the existing attach/start/continue/close lifecycle without creating a second memory session; unresolved receipts never compile and maintenance failures remain explicit.
+- [x] Product owner explicitly approved M1 on 2026-08-13. Continue operational acceptance in real attached projects and record failures as follow-up tasks; do not keep M1 formally open or hide findings behind M2.
+- [x] Implement Task 2: add the schema-v1 engineering task state, validated transitions, and atomic local persistence without creating a second tracked task record.
+- [x] Implement Task 3: capture branch, HEAD, tracked/untracked changes and path fingerprints; distinguish pre-existing work from task changes; preserve interrupted task identity and mark branch/HEAD conflicts stale.
+- [x] Run M2 machine acceptance: disposable interruption/Git-conflict rehearsal, 142-test full regression, strict Doctor, and diff checks passed; report published for product-owner review.
+- [x] Product owner explicitly approved M2 and authorized M3 on 2026-08-14.
+- [x] Implement M3 Task 4: deterministic P3-P0 classification returns reasons and source, uncertainty promotes one level, and unconfirmed P1/P0 tasks cannot enter implementation.
+- [x] Implement M3 Task 5: Bug tasks require reproduction evidence, root cause, minimal-fix rationale, and observable acceptance before leaving investigation; non-Bug task types keep their own prerequisites.
+- [x] Implement M3 Task 6: compare task changes with allowed scope, explain and gate drift by effective risk, and block a third distinct failed implementation until root cause is rechecked.
+- [x] Implement M3 Task 7: require schema-v2 structured verification evidence, reject prose-only success and non-zero passing claims, require evidence beyond AI self-check for P1/P0, and read v1 string receipts as blocked `legacy_unstructured` records.
+- [x] Run M3 machine acceptance: disposable P2 Bug and P1 authentication rehearsals exposed and repaired PowerShell seven-digit ISO timestamp compatibility; 35 targeted tests, 174-test full regression, strict Doctor, compilation, scope, and diff checks passed; report published for product-owner review.
+- [x] Product owner explicitly approved M3 and authorized M4 on 2026-08-14; this closes the M3 checkpoint without pre-approving M4 Tasks 8-9.
+- [x] Implement M4 Task 8: generate an exact seven-part safe explanation package, keep P3/P2 low-noise, require hash-bound human understanding for P1, require separate authorization for P0, and reject AI-originated confirmation.
+- [x] Implement M4 Task 9: offer at most one evidence-triggered learning intervention per task, record only allowlisted observable behavior, prohibit aggregate capability scores and direct shared routing, and keep candidates behind understanding, receipt resolution, and memory review.
+- [x] Run M4 machine acceptance: disposable P2/P1/P0 and capability-routing rehearsal, 13 targeted tests, 187-test full regression, strict Doctor, compilation, scope, and diff checks passed; report published for product-owner review. M5 remains blocked until explicit M4 approval.
+- [x] Product owner explicitly approved M4 and authorized M5 on 2026-08-14. This closes the M4 checkpoint without pre-approving Task 10–12 or the final 2.0 release; the next implementation batch starts with Task 10 only.
+- [x] Implement M5 Task 10: classify ordinary requests as read-only, code change, external mutation, or destructive; silently avoid tasks for read-only work, transparently start/resume mutation tasks, keep P3/P2 to one status line, and stop P1/P0 at their human gates without a daemon.
+- [x] Implement M5 Task 11: publish runtime `2.0.0-rc.1` and project scaffold v4, create missing governance controls without overwriting project customization, preserve v1 receipt and active-task compatibility, stage adapter/scaffold conflicts, reject newer task or adapter state schemas instead of downgrading them, and normalize JavaScript UTC `Z` evidence timestamps before deterministic validation.
+- [x] Implement M5 Task 12: pass A-J and boundary E2E acceptance, independently pass clean-project, pre-existing-dirty-worktree, and simulated-P1-authentication pilots, publish the four user promises at the entry points, pass 205-test full regression and strict Doctor, and promote runtime `2.0.0` to stable. Product-owner M5 approval remains explicit and separate.
+- [x] Product owner explicitly approved M5 on 2026-08-14. This closes the M0-M5 implementation iteration.
+- [x] Product owner later authorized merging `feature/human-controlled-ai-engineering-v2` into `main` after the release documentation, indexes, and private Wiki are synchronized and the final verification passes.
+
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|
 | OTW-CTRL-001 | Integrate AI project control workflow into public scaffold | P2 | Public repo has control files, shared workflow assets, and updated project bridge templates without making Codex depend on CLAUDE.md | Done |

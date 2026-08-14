@@ -1,11 +1,11 @@
 ---
 name: obsidiantowiki-manager
-description: Operate ObsidianToWiki from natural language for project attach, daily sessions, retrieval, ingestion, and safe upgrades.
+description: Operate ObsidianToWiki from natural language for ambient engineering governance, project attach, daily sessions, retrieval, ingestion, and safe upgrades.
 ---
 
 # ObsidianToWiki Manager
 
-Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, knowledge ingestion, wiki retrieval, or says `开始工作`, `继续`, or `收工` in a coding project.
+Use this Skill for ordinary coding requests in an attached project as well as when the user mentions ObsidianToWiki, project wiki attachment, knowledge ingestion, wiki retrieval, or says `开始工作`, `继续`, or `收工`.
 
 ## Runtime
 
@@ -22,9 +22,18 @@ Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, k
 
 ## Routing
 
-- `开始工作`: run `otw.py start --repo-root <project> [--task <request>]`.
-- `继续`: run `otw.py continue --repo-root <project> [--task <request>]`.
-- `收工`: run `otw.py close --repo-root <project> --verification <evidence> [--ui-task <id>]`, execute or reject every receipt candidate, then resolve all candidates before reporting completion.
+### Ambient engineering governance
+
+- Before acting on an ordinary request, route the original wording through `otw.py ask "<request>" --repo-root <project>`.
+- The runtime classifies the intent as `read_only`, `code_change`, `external_mutation`, or `destructive`. A read-only request creates no task; every mutation starts or resumes the single governed task before edits or external actions.
+- Keep P3/P2 ambient handling to one status line. Interrupt only for an unknown root cause, scope drift, P1/P0 confirmation, insufficient verification evidence, or a required human-understanding gate.
+- P1 requires accountable-human confirmation. P0 additionally requires explicit authorization. Never self-confirm either gate.
+- Optional adapters may report whether governance coverage is active, but there is no background daemon and correctness must not depend on one.
+- Keep the explicit commands below as manual fallbacks and compatibility routes.
+
+- `开始工作`: run `otw.py start --repo-root <project> [--task <request>]`; use its bounded Context Receipt without asking the user to maintain the wiki.
+- `继续`: run `otw.py continue --repo-root <project> [--task <request>]`; keep the active task identity and rerun the read-only Context/budget check.
+- `收工`: run `otw.py close --repo-root <project> --verification <evidence> [--ui-task <id>]`, execute or reject every receipt candidate, then resolve all candidates. Resolution automatically compiles eligible memory and refreshes bounded projections and the cockpit.
 - Attach current project: run `otw.py attach --repo-root <project>`.
 - Install and initialize once: run `otw.py setup`; provide a private root only when automatic sibling discovery is not desired.
 - Update ObsidianToWiki: run `otw.py update`. Use `otw.py update --check` for a report-only check.
@@ -64,6 +73,7 @@ Before U2/U3 implementation, record `direction_approved` with the user's approva
 
 - Read `wiki.context.json` when present; it owns real local paths and is intentionally ignored by Git.
 - Never infer or hard-code a private wiki path into committed project files.
+- Never compile a pending receipt. If automatic maintenance fails, keep the verified task result, surface `pending_memory_repair`, and do not claim a P1/P0 governance close until required history is repaired.
 - Honor `wiki.private.json`. Never open, index, ingest, summarize, or send excluded paths to a model through ObsidianToWiki.
 - A private policy protects ObsidianToWiki access paths; it is not an operating-system sandbox for unrelated tools.
 - Markdown remains the source of truth. Retrieval indexes are disposable caches.

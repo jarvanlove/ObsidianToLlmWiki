@@ -14,8 +14,12 @@
   Search refreshes the disposable SQLite retrieval cache by default. Use `build_retrieval_index.py --full` only for an explicit full refresh.
 - File back answer: `file_back_query.py` / `.ps1`.
 - Natural language routing: `handle_nl_request.py` / `.ps1`.
+  In an attached project, ordinary requests are classified as `read_only`, `code_change`, `external_mutation`, or `destructive`. Read-only work creates no task. Mutation requests start or resume the existing governed task; P3/P2 emits one status line, P1 requires responsibility confirmation, and P0 additionally requires explicit authorization. This routing is invoked by project entry instructions and the Manager Skill and does not depend on a background daemon.
 - Project AI session checklist: `project_session.py` / `.ps1`.
-  `close` writes `.obsidiantowiki/session-receipt.json`; resolve every candidate before completion.
+  `close` writes schema-v2 `.obsidiantowiki/session-receipt.json`; the Agent passes repeatable `--evidence` JSON or `--evidence-file`, then resolves every candidate. A prose-only `--verification` value is legacy compatibility input and cannot close.
+  P1/P0 close stops at the human-understanding gate and shows the seven-part explanation package. After a real named human confirms impact and remaining risk, run `otw.py understand --repo-root <repo> --confirmed-by <human> --understood-impact-and-risks --confirmation-source human`; P0 also requires `--explicit-authorization`. Never infer confirmation from AI output, tool output, silence, or a generic continuation request.
+  Capability learning remains optional and non-blocking. The Agent offers the fixed three choices only on a bounded trigger, records only an allowlisted observable event with a receipt evidence reference, and leaves the resulting candidate pending for receipt resolution and memory review. Do not manually append observations to `10_personal`, project core pages, or `30_shared`; Task 10 ordinary-request routing starts or resumes governance but does not bypass receipt resolution or memory review.
+- Human project status: ask “项目现在怎么样” or run `otw.py cockpit build --repo-root <repo>`. `cockpit open` opens only the generated local file; the output contains summaries and evidence labels, not source code or private absolute paths.
 - Governance: `lint_wiki.py` / `.ps1`.
 - Rebuild indexes: `rebuild_indexes.py` / `.ps1`.
 - Sync private vault: `sync_private_vault.py` / `.ps1`.
@@ -23,8 +27,12 @@
 - Retrieval evaluation: `evaluate_retrieval.py --cases 00_system/registry/retrieval_eval_cases.json`.
 - Optional agent MCP: install `00_system/requirements-mcp.txt`, then run `mcp_retrieval_server.py` over stdio or the attached project's `scripts/ai/wiki-mcp.py` launcher.
 - Legacy provenance: run `migrate_provenance.py` without `--apply` first. A `partial` result requires original-source review before page refs can be completed.
+- Legacy project memory: run `otw.py memory migrate --repo-root <repo> --dry-run` first. Apply only after reviewing the classification and page list; `--apply` creates byte-exact backups and a manifest. A customization conflict must be reconciled manually and must never be force-overwritten.
 - Compatibility: run `otw.py upgrade` for report-only, then `otw.py upgrade --apply --all-projects` for metadata/hash-safe updates. Uninstalled optional project adapters remain uninstalled.
 - Candidate resolution: after comparing local and `.new`, use `shared_assets.py resolve --path <managed-path> --resolution merged|keep-local` or `project_scaffold.py --repo-root <project> --resolve-lifecycle merged|keep-local`. This is an agent-maintainer operation; normal users keep speaking naturally.
+- Runtime `2.0.0` is the stable Human-Controlled AI Engineering release. Scaffold v4 may create missing governance files, but it must not overwrite an existing project governance guide or other user-owned control content. A state schema newer than the runtime is an upgrade requirement, not permission to rewrite the state.
+- Normal operation is passive: attach once, then describe work normally. Use `开始工作` / `继续` / `收工` only for manual inspection or recovery. If context is damaged, stale, conflicting, or absent, stop or degrade according to the Context Receipt; do not silently substitute model memory.
+- Release acceptance requires the A-J E2E suite and three disposable pilots: clean project lifecycle, pre-existing dirty-worktree recovery, and simulated P1 authentication. Pilot output may retain receipt/state summaries but must never retain credentials or business code.
 - Extraction audit: run `source_quality.py --source <file> --format json`; it never prints source content.
 
 ## Common Incidents
@@ -46,6 +54,7 @@
 | PDF produces no derivatives | source note `quality_status`, `needs_ocr`, coverage | Run OCR or provide a text-layer PDF; blocked sources intentionally create no weak pages |
 | Project remains in `needs_receipt_resolution` | `.obsidiantowiki/session-receipt.json` | Apply, skip, or mark every candidate not applicable, then run `project_session.py resolve` |
 | Agent follows wrong entry file | `AGENTS.md`/`CLAUDE.md` wording | Keep entry files peer-level and point both to control files |
+| Memory compile reports unmanaged core pages | `otw.py memory migrate --repo-root <repo> --dry-run` | Review the migration report, then apply explicitly; do not bypass the backup/manifest boundary |
 
 ## Data Safety
 

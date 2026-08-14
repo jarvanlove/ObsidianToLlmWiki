@@ -59,7 +59,9 @@ def page(
 class RetrievalCoreCliTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.vault = Path(self.temp_dir.name)
+        self.root = Path(self.temp_dir.name)
+        self.vault = self.root / "vault"
+        self.repo = self.root / "project-repo"
         self.index_path = self.vault / ".otw-cache" / "retrieval.sqlite3"
         self.env = os.environ.copy()
         self.env["OBSIDIAN_WIKI_ROOT"] = str(self.vault)
@@ -68,6 +70,9 @@ class RetrievalCoreCliTests(unittest.TestCase):
         (self.vault / "20_projects" / "active" / "demo").mkdir(parents=True)
         (self.vault / "20_projects" / "active" / "other").mkdir(parents=True)
         (self.vault / "30_shared" / "patterns").mkdir(parents=True)
+        self.repo.mkdir()
+        for name in ("PRODUCT_SPEC.md", "ARCHITECTURE.md", "TASKS.md"):
+            (self.repo / name).write_text(f"# {name}\n\nCurrent demo contract.\n", encoding="utf-8")
 
         self.demo_page = self.vault / "20_projects" / "active" / "demo" / "决策.md"
         self.demo_page.write_text(
@@ -105,6 +110,28 @@ class RetrievalCoreCliTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
+        memory_path = self.vault / "20_projects" / "active" / "demo" / "project.memory.md"
+        memory_path.write_text(
+            page(
+                "Demo memory",
+                page_type="项目运行记忆",
+                domain="项目",
+                project="demo",
+                source_refs=["task:setup"],
+                body="## Current\n\nCurrent demo memory.",
+            ),
+            encoding="utf-8",
+        )
+        (self.repo / "wiki.context.json").write_text(
+            json.dumps(
+                {
+                    "wiki_root": str(self.vault),
+                    "project_slug": "demo",
+                    "project_memory": "20_projects/active/demo/project.memory.md",
+                }
+            ),
+            encoding="utf-8",
+        )
 
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
@@ -127,6 +154,8 @@ class RetrievalCoreCliTests(unittest.TestCase):
             "--index-path",
             str(self.index_path),
             "--no-log-failures",
+            "--repo-root",
+            str(self.repo),
             *args,
         )
 
@@ -135,7 +164,7 @@ class RetrievalCoreCliTests(unittest.TestCase):
         self.assertEqual(build.returncode, 0, build.stderr)
         build_payload = json.loads(build.stdout)
         self.assertEqual(build_payload["schema_version"], 1)
-        self.assertEqual(build_payload["indexed_pages"], 3)
+        self.assertEqual(build_payload["indexed_pages"], 4)
 
         result = self.run_search("Redis", "--project", "demo", "--type", "项目决策", "--format", "json")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -205,6 +234,32 @@ class RetrievalCoreCliTests(unittest.TestCase):
         self.assertIn("p.4", result.stdout)
         self.assertIn("Redis 取舍", result.stdout)
         self.assertLess(len(result.stdout), 1200)
+        receipts = list((self.repo / ".obsidiantowiki" / "context-receipts").glob("*.json"))
+        self.assertEqual(len(receipts), 1)
+        receipt = json.loads(receipts[0].read_text(encoding="utf-8"))
+        self.assertEqual(receipt["budget"]["limit"], 220)
+
+    def test_raw_material_remains_searchable_but_does_not_outrank_governed_knowledge(self) -> None:
+        raw = self.vault / "01_inbox" / "raw" / "ui-manual.md"
+        raw.parent.mkdir(parents=True)
+        raw.write_text("# UI manual\n\nSQLite FTS5 context pack token budget token budget.\n", encoding="utf-8")
+        governed = self.vault / "30_shared" / "patterns" / "retrieval-contract.md"
+        governed.write_text(
+            page(
+                "Retrieval contract",
+                page_type="架构",
+                domain="共享",
+                source_refs=["task:retrieval"],
+                body="## Contract\n\nSQLite FTS5 context pack keeps bounded evidence.",
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_search("SQLite FTS5 context pack", "--format", "json", "--limit", "2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["results"][0]["path"], "30_shared/patterns/retrieval-contract.md")
+        self.assertIn("01_inbox/raw/ui-manual.md", [item["path"] for item in payload["results"]])
 
     def test_best_chunk_prefers_query_term_coverage_over_single_fts_term(self) -> None:
         page_path = self.vault / "20_projects" / "active" / "demo" / "架构.md"

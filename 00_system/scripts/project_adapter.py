@@ -31,6 +31,17 @@ def current_adapter_version() -> int:
     return version
 
 
+def adapter_state_schema_version() -> int:
+    try:
+        payload = json.loads(ADAPTER_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"cannot read project adapter schema: {exc}") from exc
+    version = payload.get("state_schema_version") if isinstance(payload, dict) else None
+    if not isinstance(version, int) or version < 1:
+        raise RuntimeError("project adapter schema has an invalid state_schema_version")
+    return version
+
+
 def template_snapshot(template_root: Path) -> dict[str, dict[str, object]]:
     snapshot: dict[str, dict[str, object]] = {}
     for path in sorted(template_root.rglob("*"), key=lambda item: item.as_posix().lower()):
@@ -44,9 +55,10 @@ def template_snapshot(template_root: Path) -> dict[str, dict[str, object]]:
 
 def load_state(repo_root: Path) -> dict[str, object]:
     state_path = repo_root / STATE_REL_PATH
+    supported_schema = adapter_state_schema_version()
     if not state_path.exists():
         return {
-            "schema_version": 1,
+            "schema_version": supported_schema,
             "adapter_version": 0,
             "target_adapter_version": 0,
             "managed_files": {},
@@ -56,8 +68,15 @@ def load_state(repo_root: Path) -> dict[str, object]:
         payload = json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise RuntimeError(f"cannot read adapter state {state_path}: {exc}") from exc
-    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
-        raise RuntimeError(f"adapter state requires schema_version=1: {state_path}")
+    if not isinstance(payload, dict) or not isinstance(payload.get("schema_version"), int):
+        raise RuntimeError(f"adapter state requires schema_version={supported_schema}: {state_path}")
+    actual_schema = int(payload["schema_version"])
+    if actual_schema > supported_schema:
+        raise RuntimeError(
+            f"adapter state schema {actual_schema} is newer than this runtime supports ({supported_schema}): {state_path}"
+        )
+    if actual_schema != supported_schema:
+        raise RuntimeError(f"adapter state requires schema_version={supported_schema}: {state_path}")
     if not isinstance(payload.get("managed_files"), dict):
         raise RuntimeError(f"adapter state managed_files must be an object: {state_path}")
     return payload
@@ -107,7 +126,7 @@ def inspect_adapter(
     else:
         status = "upgrade_available"
     return {
-        "schema_version": 1,
+        "schema_version": adapter_state_schema_version(),
         "repo_root": str(repo_root),
         "state_path": STATE_REL_PATH.as_posix(),
         "adapter_version": installed_version,
@@ -172,7 +191,7 @@ def apply_adapter_upgrade(
     conflicts = [str(item) for item in report["conflicts"]]
     installed_version = int(previous_state.get("adapter_version") or 0) if conflicts else version
     state = {
-        "schema_version": 1,
+        "schema_version": adapter_state_schema_version(),
         "adapter_version": installed_version,
         "target_adapter_version": version,
         "managed_files": managed_files,

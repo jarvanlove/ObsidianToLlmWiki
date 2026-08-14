@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "allowed_states": [
+    "trusted",
+    "review_required",
+    "degraded",
+    "quarantined"
+  ],
+  "default_max_age_days": 180,
+  "default_require_provenance": true,
+  "required_project_context": [
+    {
+      "context_key": "project_memory",
+      "required": true,
+      "max_age_days": 30,
+      "require_provenance": false
+    }
+  ],
+  "card_status_trust": {
+    "active": "trusted",
+    "pending_review": "review_required",
+    "superseded": "degraded",
+    "resolved": "degraded",
+    "disputed": "review_required",
+    "quarantined": "quarantined"
+  },
+  "provenance_fields": [
+    "source_receipt",
+    "source_refs",
+    "evidence_refs"
+  ],
+  "memory_cards": {
+    "directory": "20_projects/active/{project_slug}/memory",
+    "allowed_destinations": ["project", "personal", "shared"],
+    "high_risk_review_levels": ["P0", "P1"],
+    "cross_layer_requires_review": true,
+    "kind_rules": {
+      "decision": {"prefix": "DEC", "review": false},
+      "open_risk": {"prefix": "RISK", "review": false},
+      "root_cause": {"prefix": "ROOT", "review": false},
+      "milestone": {"prefix": "MILE", "review": false},
+      "capability_observation": {"prefix": "CAP", "review": true}
+    }
+  },
+  "projections": {
+    "page_token_budgets": {
+      "概览.md": 1500,
+      "架构.md": 3000,
+      "决策.md": 2000,
+      "任务.md": 1500,
+      "风险.md": 1500,
+      "时间线.md": 1500,
+      "project.memory.md": 1200
+    },
+    "page_item_limits": {
+      "决策.md": 20,
+      "任务.md": 30,
+      "风险.md": 20
+    },
+    "timeline_days": 90,
+    "timeline_max_events": 30
+  }
+}

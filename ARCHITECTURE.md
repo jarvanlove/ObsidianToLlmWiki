@@ -13,6 +13,29 @@ The product boundary spans four cooperating local components: the public runtime
 | Automation layer | `00_system/scripts/`, `00_system/templates/`, `00_system/registry/` | attach, ingest, search, file-back, governance, sync |
 | Documentation layer | root docs, `docs/`, `Home.md`, `README*.md` | user-facing instructions and design plans |
 
+## Human-Controlled AI Engineering 2.0 Target
+
+The approved 2.0 target adds a control and memory-compilation path without replacing the local Markdown-first architecture:
+
+```text
+L0 current code/runtime evidence
+  > L1 current project controls
+  > L2 trusted durable wiki memory
+  > L3 AI inference
+
+task state + Git diff + verification + human decisions
+  -> context integrity gate and Context Receipt
+  -> engineering governance gates
+  -> resolved session receipt
+  -> atomic memory compiler
+  -> bounded current projections
+  -> natural-language concierge / action feed / local static cockpit
+```
+
+Target components are `context_integrity.py`, `context_contract.py`, `engineering_governance.py`, `memory_compiler.py`, `migrate_project_memory.py`, and `project_cockpit.py`. They extend the existing `otw.py`, `project_session.py`, retrieval, attach, and compatibility paths; they do not introduce a hosted service, business database, background daemon, or second lifecycle.
+
+Markdown remains the durable and auditable format, but it is no longer the default whole-context read unit or the only human interface. Atomic cards own durable facts and explicit lifecycle state. Core project pages become bounded current projections. SQLite remains a disposable retrieval cache. The local cockpit is a generated static projection and never becomes a second source of truth.
+
 ## Entry Files
 
 - `AGENTS.md`: Codex entrypoint for this repo.
@@ -28,6 +51,8 @@ Daily project work is exposed through the project cockpit:
 | `开始工作` | Detect attach state, attach if needed, run project session check, summarize next safe action |
 | `继续` | Restore context, inspect task/diff state, run task start guidance |
 | `收工` | Inspect diff and verification, generate control-file and wiki file-back candidates |
+| Ordinary read-only request | Answer without creating engineering task state |
+| Ordinary mutation request | Classify intent, start or resume the single engineering task, then apply P3–P0 gates |
 
 ## Core Scripts
 
@@ -41,9 +66,12 @@ Daily project work is exposed through the project cockpit:
 | `evaluate_retrieval.py` | Run fixed path/heading/provenance/MRR retrieval gates and semantic probes |
 | `mcp_retrieval_server.py` | Expose the stable retrieval contract as two read-only MCP stdio tools |
 | `migrate_provenance.py` | Audit and conservatively recover explicit source metadata from legacy knowledge pages |
+| `memory_compiler.py` | Compile active atomic cards into seven budgeted current projections; refuse unmanaged-page overwrite |
+| `migrate_project_memory.py` | Dry-run, back up, migrate, conflict-check, and restore legacy core memory pages |
+| `project_cockpit.py` | Build one privacy-bounded action projection for both static HTML/JSON and natural-language project status answers |
 | `file_back_query.py` | File answer/analysis back into wiki |
-| `handle_nl_request.py` | Route natural-language requests |
-| `project_session.py` | Generate AI coding task start/close checklists and control-file update candidates |
+| `handle_nl_request.py` | Route explicit commands and ambient ordinary requests; classify read-only/code/external/destructive intent and enter the existing task lifecycle without a daemon |
+| `project_session.py` | Generate AI coding task start/close checklists, schema-v2 structured-evidence receipts, seven-part explanation packages, human-understanding gates, evidence-based capability candidates, and control-file update candidates |
 | `ui_governance.py` | Create and validate project-local UI task records, locked visual baselines, Design Authority approvals, and visual close evidence |
 | `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
 | `runtime_manager.py` | Orchestrate one-command setup and Git-safe whole-product updates |
@@ -72,7 +100,7 @@ Daily project work is exposed through the project cockpit:
 
 ## Version Boundaries
 
-- `runtime_release.json` declares the public runtime, private scaffold, and core project scaffold releases.
+- `runtime_release.json` declares the public runtime channel plus private scaffold, project scaffold, receipt, and task-state contract versions. M5 used `2.0.0-rc.1` until A-J acceptance, full regression, strict Doctor, and three isolated pilots passed; the published runtime is now `2.0.0 stable`.
 - `vault_schema.json` versions knowledge-vault metadata migrations.
 - `private_scaffold_state.json` records hashes for manifest-managed private files.
 - `.obsidiantowiki/project-scaffold-state.json` records an attached project's managed lifecycle baseline.
@@ -85,6 +113,14 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 ## Invariants
 
 - Markdown remains source of truth.
+- Markdown truth is qualified by fact precedence and health: damaged, disputed, stale, or quarantined pages cannot silently become current execution facts.
+- Default model context is contract-driven and budgeted; no task may load the complete project wiki by default.
+- Task evidence, not raw chat transcripts, drives durable memory candidates.
+- Atomic memory cards preserve history; bounded current projections contain only active, relevant facts and links to evidence.
+- Legacy core pages must pass migration dry-run before replacement. Apply preserves byte-exact originals and a manifest; uncertain content remains review-required, and later user customization blocks overwrite.
+- Users are not responsible for manually maintaining generated cards or projections; natural language and the local cockpit are the normal human interface.
+- Ambient governance is entrypoint-driven, not process-driven: managed project instructions and the global Manager Skill route ordinary mutations through the public runtime, while optional adapters may only report coverage and no background daemon is required.
+- Static cockpit HTML/JSON and natural-language status answers must consume the same projection; cockpit output is local derived state under `.obsidiantowiki/`, never a second source of truth.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
 - Topic aliases are an inspectable local hybrid-retrieval layer; vector retrieval is added only when evaluation probes prove it is needed.
@@ -97,6 +133,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Public updates are clean-worktree, upstream-known, fast-forward-only operations. They never stash, reset, or force overwrite.
 - Private root entry files and knowledge are seed-only/protected. Managed scaffold files update only from a recorded unchanged hash; otherwise a candidate and backup are required.
 - Core project scaffold upgrades run for every registered project. Optional adapters remain opt-in and update only when already installed.
+- Project scaffold v4 creates a missing governance guide for new or upgraded projects, updates managed content only when its recorded or legacy hash is unchanged, and stages user-modified conflicts for review. Adapter and task-state readers reject schemas newer than the runtime instead of guessing or downgrading them.
 - Project Skills decide when to retrieve; the optional MCP server only exposes the existing retrieval contract.
 - Public scaffold must not contain private project secrets or private raw sources.
 - Private vault contains real user/project knowledge.
@@ -106,8 +143,10 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Figma, Stitch, hooks, subagents, and named third-party Skills are optional executors; they cannot override a project's Design Authority or silently modify user-global Skill configuration.
 - Hook/subagent adapters are optional execution helpers and must call the lifecycle protocol instead of redefining workflow rules.
 - Natural-language project attach must be followed by a strict project session check before reporting success.
-- User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
-- A close workflow is not complete while `.obsidiantowiki/session-receipt.json` contains pending candidates.
+- User-facing daily workflow should stay low-noise: after one-time attachment, the normal path is a direct natural-language request. `开始工作` -> `继续` -> `收工` remains an optional inspection, recovery, and explicit-close path; advanced commands remain secondary.
+- A close workflow is not complete while `.obsidiantowiki/session-receipt.json` has a blocked verification gate or pending candidates. Schema v2 stores structured `evidence`, `gate_results`, `explanation_package`, and `knowledge_candidates`; v1 prose receipts load as `legacy_unstructured` and cannot silently close.
+- Every new close receipt carries the same seven-part explanation package. P3 passes automatically, P2 displays without ritual, P1 requires hash-bound human understanding, and P0 also requires explicit authorization; AI-originated confirmation is rejected.
+- Capability recovery is signal-based and non-blocking: one lightweight intervention per task, no aggregate score, and only auditable behavior becomes a pending candidate. Capability candidates enter receipts only after verification and understanding pass, never route directly to shared memory, and still require receipt resolution plus the existing memory compiler.
 - Source ingestion runs an extraction gate before derivatives; blocked sources cannot produce document maps or section notes.
 - Long-document maps group front matter and TOC pages separately, accept only defensible chapter headings, and label size-based chapter continuations explicitly.
 - Reingestion may delete only obsolete section files recorded by the previous generated document map; it must not delete hand-authored knowledge pages.

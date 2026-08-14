@@ -27,7 +27,7 @@ Must have:
 - AI project control workflow assets for production-grade AI-assisted development.
 - AI coding lifecycle protocol for task start, verification, close, control-file updates, and wiki file-back candidates.
 - Optional hook/subagent adapter templates that call the lifecycle protocol without becoming a separate source of truth.
-- Project cockpit workflow that lets users operate daily work through only three phrases: `开始工作`, `继续`, and `收工`.
+- Passive project operation after one-time attachment: users describe normal work directly; `开始工作`, `继续`, and `收工` remain optional inspection and recovery controls.
 - Provider-neutral global manager Skill and `otw.py` runtime so agents, rather than users, invoke lifecycle scripts.
 - UI governance for AI coding: U0-U3 task classification, project-local Design Authority, a 19-source visual-direction registry, locked project baselines, direction/RFC gates, visual evidence before UI-task close, and a low-noise feedback flow that turns dissatisfaction into three plain-language recommendations.
 - Optional Figma and Stitch workflow adapters that preserve project-owned design facts without requiring either tool for every project.
@@ -35,6 +35,10 @@ Must have:
 - Separate runtime, private-scaffold, core project-scaffold, and optional adapter versions.
 - Local `wiki.private.json` AI-access exclusions that remove protected paths from ObsidianToWiki indexing and ingestion without deleting the user's files.
 - Extraction quality gates for PDF, DOCX, PPTX, and text sources, including unit coverage, OCR detection, chapter mapping, page references, and bounded excerpts.
+- Human-controlled AI engineering with passive task governance, L0-L3 fact precedence, bounded trusted context, evidence-backed memory compilation, human understanding gates, and capability-recovery opportunities.
+- Engineering risk classification from P3 documentation and low-impact work through P2 normal changes, P1 critical-flow changes, and P0 destructive, security, payment, or migration work, with progressively stronger human approval.
+- Automatic durable-memory maintenance: task evidence becomes reviewable atomic memory cards, current project projections stay within explicit budgets, and obsolete history leaves default context without being deleted.
+- Human-first access through natural-language project answers, a low-noise action feed, and a local static project cockpit; opening or manually maintaining Markdown is not required for normal use.
 
 Explicitly not doing unless added to `TASKS.md`:
 
@@ -43,6 +47,9 @@ Explicitly not doing unless added to `TASKS.md`:
 - Making autonomous high-risk self-modification without human approval.
 - Forcing Codex to read `CLAUDE.md` or Claude Code to read `AGENTS.md`.
 - Storing private project knowledge in the public scaffold repository.
+- Loading all project control files, all wiki core pages, or complete project history into every model context.
+- Treating Markdown page count, Markdown opens, or unbounded knowledge accumulation as product success.
+- Requiring users to manually maintain generated memory cards or current projections.
 
 ## Core User Flows
 
@@ -62,10 +69,17 @@ Explicitly not doing unless added to `TASKS.md`:
 
 ### Project cockpit
 
-- Entry: user says `开始工作`, `继续`, or `收工`.
+- Entry: normal coding intent is routed automatically after one-time attachment; explicit cockpit phrases remain available for inspection and recovery.
 - Steps: infer project state -> run the matching lifecycle check -> execute or report the next safe action.
 - Success: users do not need to remember script names, hook names, or wiki update rules.
 - Failure states: missing project context, missing control files, ambiguous task, unverified changes.
+
+### Govern a coding task and maintain memory passively
+
+- Entry: the user asks normally for an explanation, fix, feature, refactor, release, migration, or operational action.
+- Steps: classify read/write intent -> capture current facts and Git baseline -> apply risk/root-cause/scope/evidence gates -> build a bounded trusted Context Receipt -> close the verified task -> compile only durable evidence into atomic memory -> rebuild bounded current projections and the human cockpit.
+- Success: low-risk work stays low-noise; high-risk or insufficiently understood work stops for human judgment; model context does not grow with project age; the user can understand project state without opening Obsidian.
+- Failure states: required context missing, damaged or conflicting memory, unproven root cause, scope drift, insufficient evidence, unresolved human approval, memory compilation conflict.
 
 ### Deliver a UI task
 
@@ -115,6 +129,11 @@ Explicitly not doing unless added to `TASKS.md`:
 - Retrieval indexes must remain disposable derived data: Markdown is the source of truth, manual edits are visible after incremental refresh, and JSON/context results preserve page paths and source references.
 - Retrieval changes must pass fixed path, heading, provenance, pass-rate, and MRR gates before release; semantic infrastructure is justified by failed semantic probes, not trend pressure.
 - Legacy provenance migration may only write source notes and page references already explicit in the page; uncertain pages remain `partial` or unchanged.
+- Current code/runtime evidence outranks project control files; current project controls outrank trusted durable memory; trusted memory outranks AI inference. Missing facts must remain missing rather than being inferred as project truth.
+- Task close receipts use structured verification evidence. Prose-only success claims and passing results with non-zero exit codes cannot close; P1/P0 tasks cannot rely only on AI self-check evidence.
+- Every default context pack has a hard budget and Context Receipt. Damaged, stale, conflicting, or quarantined memory must be excluded or explicitly degraded according to task risk.
+- Core project wiki pages are bounded current projections, not permanent append-only logs. Historical evidence remains recoverable through atomic cards, task receipts, archives, and Git history.
+- A project that has completed real work must not remain an unexplained empty wiki shell; first snapshots derived from local facts remain `review_required` until confirmed.
 
 ## Change Log
 
@@ -137,3 +156,4 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-07-17 | Added UI governance runtime | Make AI-generated product UI direction, Skill use, and visual acceptance controllable | U0-U3 UI tasks, project UI Contract/Registry, visual evidence gates, optional Figma/Stitch workflow rules |
 | 2026-07-20 | Added governed visual-direction library | Prevent reference-free UI work from becoming a random color choice | 19 auditable source palettes, six stable defaults, controlled selection, locked project baseline, and token constraints |
 | 2026-07-20 | Added low-noise visual feedback | Keep visual governance useful to non-specialists without exposing its mechanics | Natural-language dissatisfaction maps to three plain-language choices; simple confirmation is recorded internally |
+| 2026-08-13 | Approved Human-Controlled AI Engineering System 2.0 baseline | Prevent AI coding governance from depending on unbounded or untrusted Markdown and make durable memory useful without manual maintenance | Adds trusted context, memory compilation, bounded projections, human cockpit, engineering gates, and phased M0-M5 delivery |

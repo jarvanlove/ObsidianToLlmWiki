@@ -106,6 +106,10 @@
     "项目运行记忆": {
       "domain": ["项目"],
       "required": ["project"]
+    },
+    "项目记忆卡": {
+      "domain": ["项目"],
+      "required": ["project", "id", "stable_key", "kind", "source_receipt", "evidence_refs"]
     }
   }
 }

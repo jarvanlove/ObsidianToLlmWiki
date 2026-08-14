@@ -29,7 +29,9 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Treat this file as the bridge from the project repo to the private wiki.
 - Read `wiki.context.json` first when it exists, then use this file as the human-readable bootstrap.
 - Use the public `runtime_root` from `wiki.context.json`; private copied scripts are compatibility assets, not the canonical runtime.
-- Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, checks, and file-back are agent responsibilities.
+- Daily user-facing project commands are `开始工作`, `继续`, and `收工`; Context budget checks, candidate generation, post-resolution memory compilation, and cockpit refresh are agent responsibilities.
+- Classify ordinary requests as `read_only`, `code_change`, `external_mutation`, or `destructive`; read-only work creates no task, while every write or external action must enter the public Runtime governance route first.
+- Keep P3/P2 to one status line. Interrupt only for an unknown root cause, scope drift, P1/P0 confirmation, insufficient evidence, or an understanding gate; do not depend on a background daemon.
 - For local implementation tasks, read `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, and `SECURITY.md` directly.
 - Open the project wiki pages before making changes.
 - Write durable conclusions back into the wiki.
@@ -38,4 +40,5 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Run AI coding work through the lifecycle: confirm task boundary before edits, verify after edits, update control files before close, and file back only durable conclusions.
 - Classify user-facing changes as U0/U1/U2/U3. U1+ work uses `docs/design/UI_CONTRACT.md` and a task record; U2/U3 cannot enter production implementation before visual direction approval.
 - A user-named or third-party UI Skill is an executor, never Design Authority. It must not override approved sources, tokens, components, or release evidence.
-- `close` creates `.obsidiantowiki/session-receipt.json`; resolve every candidate with `project_session.py resolve` before reporting the session closed.
+- `close` creates `.obsidiantowiki/session-receipt.json`; resolve every candidate with `project_session.py resolve` before reporting the session closed. Never compile unresolved candidates; preserve the task result and report `pending_memory_repair` if maintenance fails.
+- Scaffold v4 creates a missing `docs/ai-workflows/ENGINEERING_GOVERNANCE.md`. Upgrades update only managed content that the user has not modified; stage conflicts for review instead of overwriting local customization.

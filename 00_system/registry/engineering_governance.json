@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "task_state_path": ".obsidiantowiki/task-state.json",
+  "default_status": "investigating",
+  "default_risk": "P2",
+  "risk_levels": ["P3", "P2", "P1", "P0"],
+  "risk_rules": [
+    {
+      "level": "P0",
+      "reason": "touches irreversible deletion",
+      "keywords": ["irreversible delete", "irreversibly delete", "不可逆删除", "永久删除"]
+    },
+    {
+      "level": "P0",
+      "reason": "touches production data directly",
+      "keywords": ["production data", "生产数据"]
+    },
+    {
+      "level": "P0",
+      "reason": "touches a high-impact security boundary",
+      "keywords": ["high-impact security boundary", "high impact security boundary", "高影响安全边界"]
+    },
+    {
+      "level": "P1",
+      "reason": "touches authentication boundary",
+      "keywords": ["authentication", "authenticate", "login", "session validation", "鉴权", "认证", "登录"]
+    },
+    {
+      "level": "P1",
+      "reason": "touches authorization or permissions",
+      "keywords": ["authorization", "permissions", "permission", "role access", "权限", "授权"]
+    },
+    {
+      "level": "P1",
+      "reason": "touches data migration",
+      "keywords": ["data migration", "schema migration", "数据迁移", "数据库迁移"]
+    },
+    {
+      "level": "P1",
+      "reason": "touches secrets or credentials",
+      "keywords": ["api secret", "secret", "credential", "密钥", "凭证"]
+    },
+    {
+      "level": "P1",
+      "reason": "touches deployment",
+      "keywords": ["deploy", "deployment", "发布部署", "部署"]
+    },
+    {
+      "level": "P1",
+      "reason": "writes to an external system",
+      "keywords": ["external write", "write the result to an external", "external system write", "外部写操作", "写入外部系统"]
+    },
+    {
+      "level": "P3",
+      "reason": "limited to documentation spelling or copy",
+      "all_keyword_groups": [
+        ["documentation", "docs", "readme", "文档"],
+        ["spelling", "typo", "copy", "拼写", "文案"]
+      ]
+    }
+  ],
+  "statuses": [
+    "detected",
+    "investigating",
+    "planned",
+    "awaiting_approval",
+    "implementing",
+    "verifying",
+    "awaiting_understanding",
+    "ready_to_close",
+    "closed",
+    "blocked",
+    "abandoned",
+    "stale"
+  ],
+  "transitions": {
+    "detected": ["investigating", "blocked", "abandoned", "stale"],
+    "investigating": ["planned", "blocked", "abandoned", "stale"],
+    "planned": ["awaiting_approval", "implementing", "blocked", "abandoned", "stale"],
+    "awaiting_approval": ["implementing", "blocked", "abandoned", "stale"],
+    "implementing": ["verifying", "blocked", "abandoned", "stale"],
+    "verifying": ["awaiting_understanding", "ready_to_close", "blocked", "abandoned", "stale"],
+    "awaiting_understanding": ["ready_to_close", "blocked", "abandoned", "stale"],
+    "ready_to_close": ["closed", "blocked", "abandoned", "stale"],
+    "blocked": ["investigating", "abandoned", "stale"],
+    "stale": ["investigating", "blocked", "abandoned"],
+    "abandoned": [],
+    "closed": []
+  }
+}

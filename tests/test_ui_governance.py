@@ -27,6 +27,17 @@ def run(script: Path, args: list[str], cwd: Path) -> subprocess.CompletedProcess
     )
 
 
+def verification_evidence_json() -> str:
+    return json.dumps({
+        "kind": "test",
+        "command": "python -m unittest tests.test_ui_governance -v",
+        "exit_code": 0,
+        "result": "passed",
+        "recorded_at": "2026-08-14T11:00:00+08:00",
+        "source": "deterministic",
+    })
+
+
 class UiGovernanceTests(unittest.TestCase):
     def initialize(self, repo: Path, level: str, task_id: str = "settings-redesign") -> None:
         result = run(
@@ -441,8 +452,8 @@ class UiGovernanceTests(unittest.TestCase):
                     str(repo),
                     "--ui-task",
                     "settings-redesign",
-                    "--verification",
-                    "unit tests passed",
+                    "--evidence",
+                    verification_evidence_json(),
                 ],
                 REPO_ROOT,
             )
@@ -459,13 +470,16 @@ class UiGovernanceTests(unittest.TestCase):
                     str(repo),
                     "--ui-task",
                     "settings-redesign",
-                    "--verification",
-                    "unit tests passed",
+                    "--evidence",
+                    verification_evidence_json(),
                 ],
                 REPO_ROOT,
             )
             self.assertEqual(closed.returncode, 0, closed.stderr)
-            self.assertTrue(json.loads(closed.stdout)["ui_governance"]["passed"])
+            close_payload = json.loads(closed.stdout)
+            self.assertTrue(close_payload["ui_governance"]["passed"])
+            receipt = json.loads(Path(close_payload["receipt_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(receipt["gate_results"]["verification_evidence"]["status"], "passed")
 
 
 if __name__ == "__main__":

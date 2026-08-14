@@ -68,6 +68,25 @@ class ProjectAdapterUpgradeTests(unittest.TestCase):
         self.assertEqual(result["status"], "current")
         self.assertTrue((self.repo / ".obsidiantowiki" / "adapter-state.json").exists())
 
+    def test_newer_adapter_state_schema_is_rejected_instead_of_downgraded(self) -> None:
+        state_path = self.repo / ".obsidiantowiki" / "adapter-state.json"
+        state_path.parent.mkdir()
+        state_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 2,
+                    "adapter_version": 2,
+                    "target_adapter_version": 2,
+                    "managed_files": {},
+                    "conflicts": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "newer than this runtime"):
+            self.module.load_state(self.repo)
+
 
 if __name__ == "__main__":
     unittest.main()

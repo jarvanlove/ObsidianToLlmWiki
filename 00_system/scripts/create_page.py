@@ -98,6 +98,7 @@ def ensure_project(project_name: str, tags: list[str], status: str, summary: str
     (root / "notes").mkdir(parents=True, exist_ok=True)
     (root / "source-notes").mkdir(parents=True, exist_ok=True)
     (root / "sources").mkdir(parents=True, exist_ok=True)
+    (root / "memory" / "archive").mkdir(parents=True, exist_ok=True)
 
     files = {
         "索引.md": "project-index.md",

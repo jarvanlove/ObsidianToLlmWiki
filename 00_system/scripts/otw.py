@@ -37,6 +37,11 @@ def nl_args(args: argparse.Namespace, request: str) -> list[str]:
         value = str(getattr(args, name, "") or "").strip()
         if value:
             values.extend([f"--{name.replace('_', '-')}", value])
+    for item in getattr(args, "evidence", []) or []:
+        values.extend(["--evidence", str(item)])
+    evidence_file = str(getattr(args, "evidence_file", "") or "").strip()
+    if evidence_file:
+        values.extend(["--evidence-file", evidence_file])
     return values
 
 
@@ -102,6 +107,16 @@ def main() -> None:
             command_parser.add_argument("--task", default="")
         if command == "close":
             command_parser.add_argument("--ui-task", default="")
+            command_parser.add_argument("--evidence", action="append", default=[])
+            command_parser.add_argument("--evidence-file", default="")
+
+    understand = subparsers.add_parser("understand", help="Record a human confirmation for a blocked explanation package.")
+    add_project_options(understand)
+    understand.add_argument("--confirmed-by", required=True)
+    understand.add_argument("--understood-impact-and-risks", action="store_true")
+    understand.add_argument("--explicit-authorization", action="store_true")
+    understand.add_argument("--confirmation-source", required=True)
+    understand.add_argument("--receipt", default="")
 
     ui = subparsers.add_parser("ui", help="Run project-local UI governance checks for an agent-managed UI task.")
     ui.add_argument("action", choices=["assess", "init", "set-stage", "approve-rfc", "record-evidence", "check", "list-directions", "recommend-directions", "select-direction"])
@@ -139,6 +154,29 @@ def main() -> None:
     add_project_options(check)
     check.add_argument("--strict", action="store_true")
 
+    context = subparsers.add_parser("context", help="Inspect required AI context without modifying project or wiki files.")
+    context_subparsers = context.add_subparsers(dest="context_action", required=True)
+    context_check = context_subparsers.add_parser("check")
+    add_project_options(context_check)
+    context_check.add_argument("--strict", action="store_true")
+    context_check.add_argument("--format", choices=["text", "json"], default="text")
+
+    memory = subparsers.add_parser("memory", help="Compile bounded memory projections or migrate legacy project pages.")
+    memory_subparsers = memory.add_subparsers(dest="memory_action", required=True)
+    memory_compile = memory_subparsers.add_parser("compile")
+    add_project_options(memory_compile)
+    memory_compile.add_argument("--dry-run", action="store_true")
+    memory_migrate = memory_subparsers.add_parser("migrate")
+    add_project_options(memory_migrate)
+    migration_mode = memory_migrate.add_mutually_exclusive_group(required=True)
+    migration_mode.add_argument("--dry-run", action="store_true")
+    migration_mode.add_argument("--apply", action="store_true")
+
+    cockpit = subparsers.add_parser("cockpit", help="Build or open the local human-first project cockpit.")
+    cockpit.add_argument("action", choices=["build", "open"])
+    add_project_options(cockpit)
+    cockpit.add_argument("--format", choices=["text", "json"], default="text")
+
     resolve = subparsers.add_parser("resolve")
     add_project_options(resolve)
     resolve.add_argument("--resolution", action="append", required=True)
@@ -175,6 +213,23 @@ def main() -> None:
     elif args.command == "close":
         args.conclusion = args.verification
         run_natural_language(args, "收工")
+    elif args.command == "understand":
+        values = [
+            "understand",
+            "--repo-root",
+            str(Path(args.repo_root).expanduser().resolve()),
+            "--confirmed-by",
+            args.confirmed_by,
+            "--confirmation-source",
+            args.confirmation_source,
+        ]
+        if args.understood_impact_and_risks:
+            values.append("--understood-impact-and-risks")
+        if args.explicit_authorization:
+            values.append("--explicit-authorization")
+        if args.receipt:
+            values.extend(["--receipt", args.receipt])
+        run_script("project_session.py", values)
     elif args.command == "ui":
         values = [args.action, "--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format]
         for name in ("task", "task_id", "level", "requested_skill", "visual_direction", "feedback", "product_context", "stage", "approval_note", "visual_qa", "note", "phase"):
@@ -204,6 +259,25 @@ def main() -> None:
         if args.strict:
             values.append("--strict")
         run_script("project_session.py", values)
+    elif args.command == "context":
+        values = ["--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format]
+        if args.strict:
+            values.append("--strict")
+        run_script("context_integrity.py", values)
+    elif args.command == "memory":
+        values = ["--repo-root", str(Path(args.repo_root).expanduser().resolve())]
+        if args.memory_action == "compile":
+            if args.dry_run:
+                values.append("--dry-run")
+            run_script("memory_compiler.py", values)
+        else:
+            values.append("--apply" if args.apply else "--dry-run")
+            run_script("migrate_project_memory.py", values)
+    elif args.command == "cockpit":
+        run_script(
+            "project_cockpit.py",
+            [args.action, "--repo-root", str(Path(args.repo_root).expanduser().resolve()), "--format", args.format],
+        )
     elif args.command == "resolve":
         values = ["resolve", "--repo-root", str(Path(args.repo_root).expanduser().resolve())]
         for resolution in args.resolution:

@@ -8,7 +8,11 @@ param(
     [string]$标题 = "",
     [string]$问题 = "",
     [string]$结论 = "",
-    [string]$标签 = ""
+    [string]$标签 = "",
+    [string]$任务 = "",
+    [string]$UI任务 = "",
+    [string[]]$验证证据 = @(),
+    [string]$证据文件 = ""
 )
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -24,5 +28,9 @@ if ($标题) { $args += @('--title', $标题) }
 if ($问题) { $args += @('--question', $问题) }
 if ($结论) { $args += @('--conclusion', $结论) }
 if ($标签) { $args += @('--tags', $标签) }
+if ($任务) { $args += @('--task', $任务) }
+if ($UI任务) { $args += @('--ui-task', $UI任务) }
+foreach ($item in $验证证据) { $args += @('--evidence', $item) }
+if ($证据文件) { $args += @('--evidence-file', $证据文件) }
 
 python @args
