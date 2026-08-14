@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "runtime_version": "2.0.0-rc.1",
-  "release_channel": "release-candidate",
+  "runtime_version": "2.0.0",
+  "release_channel": "stable",
   "private_scaffold_version": 1,
   "project_scaffold_version": 4,
   "receipt_schema_version": 2,

@@ -6,6 +6,8 @@ This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](ht
 
 Obsidian-first LLM-maintained knowledge system for durable personal knowledge and project memory.
 
+Attach once, then describe normal work in plain language. The system interrupts only when a root cause, risk, scope, or understanding decision needs you. Project memory is recorded, compressed, and read automatically instead of asking you to maintain seven Markdown pages. The manual phrases `start work`, `continue`, and `close work` remain available for inspection and recovery.
+
 This is not just a note template repository and not just a set of search scripts. It is designed to continuously turn raw material, project context, stable conclusions, and reusable patterns into a maintainable local wiki.
 
 ## TL;DR

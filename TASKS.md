@@ -18,7 +18,7 @@ Execution rule: complete and accept one milestone before starting the next. Deta
 | M2 Recoverable governance | 2, 3 | Task state, Git baseline, dirty-worktree attribution, and interrupted-session recovery are proven | Accepted by product owner on 2026-08-14 |
 | M3 Engineering quality gates | 4, 5, 6, 7 | Risk, root-cause, scope-drift, patch-loop, and structured-evidence gates pass | Accepted by product owner on 2026-08-14 |
 | M4 Human understanding and capability recovery | 8, 9 | Critical-change explanation and P1/P0 understanding gates pass; capability observations remain evidence-based | Accepted by product owner on 2026-08-14 |
-| M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | In progress; Tasks 10–11 implemented, Task 12 not started |
+| M5 Passive operation and release | 10, 11, 12 | Ordinary coding intent triggers governance; compatibility, E2E, three pilots, docs, and release evidence pass | Machine acceptance complete; awaiting product-owner approval |
 
 Current batch:
 
@@ -50,6 +50,7 @@ Current batch:
 - [x] Product owner explicitly approved M4 and authorized M5 on 2026-08-14. This closes the M4 checkpoint without pre-approving Task 10–12 or the final 2.0 release; the next implementation batch starts with Task 10 only.
 - [x] Implement M5 Task 10: classify ordinary requests as read-only, code change, external mutation, or destructive; silently avoid tasks for read-only work, transparently start/resume mutation tasks, keep P3/P2 to one status line, and stop P1/P0 at their human gates without a daemon.
 - [x] Implement M5 Task 11: publish runtime `2.0.0-rc.1` and project scaffold v4, create missing governance controls without overwriting project customization, preserve v1 receipt and active-task compatibility, stage adapter/scaffold conflicts, reject newer task or adapter state schemas instead of downgrading them, and normalize JavaScript UTC `Z` evidence timestamps before deterministic validation.
+- [x] Implement M5 Task 12: pass A-J and boundary E2E acceptance, independently pass clean-project, pre-existing-dirty-worktree, and simulated-P1-authentication pilots, publish the four user promises at the entry points, pass 205-test full regression and strict Doctor, and promote runtime `2.0.0` to stable. Product-owner M5 approval remains explicit and separate.
 
 | ID | Task | Risk | Acceptance | Status |
 |---|---|---|---|---|

@@ -19,13 +19,13 @@ from project_session import load_receipt  # noqa: E402
 
 
 class EngineeringGovernanceCompatibilityTests(unittest.TestCase):
-    def test_release_candidate_declares_all_governance_contract_versions(self) -> None:
+    def test_stable_release_declares_all_governance_contract_versions(self) -> None:
         release = json.loads(
             (REPO_ROOT / "00_system/registry/runtime_release.json").read_text(encoding="utf-8")
         )
 
-        self.assertEqual(release["runtime_version"], "2.0.0-rc.1")
-        self.assertEqual(release["release_channel"], "release-candidate")
+        self.assertEqual(release["runtime_version"], "2.0.0")
+        self.assertEqual(release["release_channel"], "stable")
         self.assertEqual(release["project_scaffold_version"], 4)
         self.assertEqual(release["receipt_schema_version"], 2)
         self.assertEqual(release["task_state_schema_version"], 1)

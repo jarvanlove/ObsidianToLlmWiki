@@ -77,6 +77,7 @@ python .\00_system\scripts\build_retrieval_index.py
 | Global manager/runtime | run manager install and lifecycle E2E tests; verify natural-language attach, local path isolation, opt-in adapters, close receipt, and resolution |
 | Setup/update lifecycle | run runtime setup/update, private-vault setup, private-sync, and project-scaffold tests; verify nonexistent vault creation, provider isolation, dirty Git rejection, fast-forward detection, baseline-safe updates, conflict backup, and no project reattachment |
 | Cross-platform release | GitHub Actions must pass Python 3.10/3.12 on Windows, macOS, and Linux; local platform wrapper smoke test must pass |
+| Human-Controlled AI 2.0 release | `tests.test_human_controlled_ai_e2e` covers A-J plus read-only/unattached boundaries; independently run clean-project, dirty-worktree, and simulated-P1 pilots; then run the full suite and strict Doctor before marking the runtime stable |
 | Source section promotion | promote one disposable section note with `promote_source_section.py`; verify formal page, source section backlink, `source_refs`, `promoted_to`, and section status |
 | Retrieval core | run `python -m unittest tests.test_retrieval_core -v`; verify incremental update/delete refresh, project/type filters, source refs, JSON schema, and context budget |
 | Retrieval quality gate | run `evaluate_retrieval.py`; require gate pass rate `1.0`, MRR at least `0.8`, and review semantic probe recommendation |

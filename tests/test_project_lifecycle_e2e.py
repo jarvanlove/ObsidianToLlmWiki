@@ -48,6 +48,7 @@ class ProjectLifecycleE2ETests(unittest.TestCase):
             self.assertNotIn("请手动", started.stdout)
             context = json.loads((repo / "wiki.context.json").read_text(encoding="utf-8"))
             self.assertEqual(Path(context["wiki_root"]), vault.resolve())
+            self.assertEqual(context["project_scaffold_version"], 4)
             for name in ("PRODUCT_SPEC.md", "ARCHITECTURE.md", "TASKS.md", "TESTING.md", "AGENTS.md", "CLAUDE.md"):
                 self.assertTrue((repo / name).exists(), name)
             for path in (
@@ -132,6 +133,8 @@ class ProjectLifecycleE2ETests(unittest.TestCase):
             resolved_receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
             self.assertEqual(resolved_receipt["status"], "resolved")
             self.assertEqual(resolved_receipt["memory_status"], "pending_memory_repair")
+            task_state = json.loads((repo / ".obsidiantowiki" / "task-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(task_state["task_id"], resolved_receipt["task_id"])
 
 
 if __name__ == "__main__":

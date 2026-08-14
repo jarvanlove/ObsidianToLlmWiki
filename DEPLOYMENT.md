@@ -33,3 +33,5 @@ The update orchestrator owns normal sync. Direct sync is an advanced repair inte
 ## Release Notes
 
 Version-level changes should update `CHANGELOG.md` and private project memory.
+
+Stable `2.0.0` releases additionally require the Human-Controlled AI A-J acceptance suite, full regression, strict Doctor, and three isolated pilots to pass before the runtime manifest changes from a release candidate to `stable`. Pilots use disposable local Git repositories; the P1 pilot simulates an authentication boundary and never uses production credentials or services.
