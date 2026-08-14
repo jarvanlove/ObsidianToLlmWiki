@@ -578,7 +578,6 @@ def finalize_memory_maintenance(repo_root: Path, path: Path, receipt: dict[str, 
     else:
         try:
             from memory_compiler import compile_projections, compile_receipt
-            from project_cockpit import build_cockpit
 
             wiki_root = Path(str(context.get("wiki_root") or ""))
             project_slug = str(context.get("project_slug") or "")
@@ -588,12 +587,10 @@ def finalize_memory_maintenance(repo_root: Path, path: Path, receipt: dict[str, 
             projections = compile_projections(wiki_root=wiki_root, project_slug=project_slug)
             if projections.get("status") == "blocked":
                 raise ValueError(str(projections.get("reason") or "projection_compile_blocked"))
-            cockpit = build_cockpit(repo_root)
             maintenance = {
                 "status": "completed",
                 "cards": cards.get("status"),
                 "projections": projections.get("status"),
-                "cockpit": cockpit.get("status"),
             }
             memory_status = "current"
         except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -646,7 +643,7 @@ def project_state(repo_root: Path) -> dict[str, Any]:
         for item in receipt_candidates
         if isinstance(item, dict) and item.get("status") == "pending"
     ]
-    cockpit_state = (
+    current_project_state = (
         "not_attached"
         if not context
         else "blocked_verification"
@@ -685,7 +682,7 @@ def project_state(repo_root: Path) -> dict[str, Any]:
         "wiki_root": str(context.get("wiki_root") or "") if context else "",
         "project_slug": str(context.get("project_slug") or "") if context else "",
         "wiki_context": "ok" if context else "missing_or_invalid",
-        "cockpit_state": cockpit_state,
+        "project_state": current_project_state,
         "changed_files": changed,
         "missing_required": missing_required,
         "control_files": control_files,
@@ -813,7 +810,7 @@ def close_report(
 
 def render_check_text(report: dict[str, Any]) -> str:
     lines = ["Project session check", f"- repo_root: {report['repo_root']}"]
-    lines.append(f"- cockpit_state: {report.get('cockpit_state', 'unknown')}")
+    lines.append(f"- project_state: {report.get('project_state', 'unknown')}")
     receipt = report.get("session_receipt") or {}
     lines.append(f"- session_receipt: {receipt.get('status', 'none')}")
     if report["wiki_context"] == "ok":

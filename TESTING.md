@@ -88,8 +88,8 @@ python .\00_system\scripts\build_retrieval_index.py
 | Context contract/receipt | run `tests.test_context_contract` and retrieval core; verify L0-L3 precedence, six-card/default 6000-token bounds, deterministic hashes, explicit missing facts, and no quarantined result enters context |
 | Memory compiler/projection | run `tests.test_memory_compiler tests.test_memory_projection`; verify resolved-receipt input, stable IDs, idempotency, supersede/dispute rules, page budgets, archives, and evidence backlinks |
 | Historical memory migration | run `tests.test_memory_migration`; verify dry-run, backup/manifest, empty-template bootstrap, 100KB fixture migration, restoration, and preservation of user customization |
-| Human project cockpit | run `tests.test_project_cockpit tests.test_project_concierge` plus U2 visual close; verify five default areas, progressive disclosure, no secret/absolute-path leak, responsive screenshots, keyboard access, and Context Receipt citations |
-| Automatic memory lifecycle | run `tests.test_automatic_memory_lifecycle tests.test_project_lifecycle_e2e`; verify attach/start/continue/close/resolve/compile/projection/cockpit use one task ID and do not require explicit wiki commands |
+| Natural-language project status | run `tests.test_project_status tests.test_project_concierge`; verify concise current state, pending decisions, risks, next action, no secret/absolute-path leak, Context Receipt citation, and no generated HTML/JSON directory |
+| Automatic memory lifecycle | run `tests.test_automatic_memory_lifecycle tests.test_project_lifecycle_e2e`; verify attach/start/continue/close/resolve/compile/projection use one task ID and do not require explicit wiki commands |
 
 ## Manual Checks
 

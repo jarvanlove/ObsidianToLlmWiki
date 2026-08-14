@@ -96,7 +96,7 @@ class AutomaticMemoryLifecycleTests(unittest.TestCase):
         state = json.loads((self.repo / ".obsidiantowiki" / "task-state.json").read_text(encoding="utf-8"))
         self.assertEqual(state["task_id"], report["task_id"])
 
-    def test_close_candidate_waits_for_receipt_resolution_then_compiles_and_refreshes(self) -> None:
+    def test_close_candidate_waits_for_receipt_resolution_then_compiles_memory(self) -> None:
         started = start_report(self.repo, "Implement passive memory")
         report = {
             "task": started["task"],
@@ -117,7 +117,7 @@ class AutomaticMemoryLifecycleTests(unittest.TestCase):
 
         self.assertEqual(maintained["memory_status"], "current")
         self.assertTrue(list((self.project / "memory").glob("*.md")))
-        self.assertTrue((self.repo / ".obsidiantowiki" / "cockpit" / "index.html").exists())
+        self.assertFalse((self.repo / ".obsidiantowiki" / "cockpit").exists())
 
     def test_memory_failure_preserves_resolved_task_and_marks_repair(self) -> None:
         started = start_report(self.repo, "Implement passive memory")

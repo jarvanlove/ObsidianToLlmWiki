@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-import argparse
-import html
 import json
-import os
 import re
 import subprocess
-import tempfile
-import webbrowser
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -15,8 +10,6 @@ from typing import Any
 from wiki_lib import parse_frontmatter
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-TEMPLATE_DIR = SCRIPT_DIR.parent / "templates" / "cockpit"
 AREA_KEYS = ("current_status", "recent_changes", "pending_decisions", "open_risks", "next_steps")
 AREA_LABELS = {
     "current_status": "当前状态",
@@ -27,19 +20,6 @@ AREA_LABELS = {
 }
 SECRET = re.compile(r"(?i)(api[_-]?key|password|secret|token)\s*[:=]\s*\S+")
 ABSOLUTE_PATH = re.compile(r"(?:[A-Za-z]:\\[^\s<>'\"]+|/(?:Users|home)/[^\s<>'\"]+)")
-
-
-def write_atomic(path: Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(content)
-        os.replace(temporary, path)
-    finally:
-        candidate = Path(temporary)
-        if candidate.exists():
-            candidate.unlink()
 
 
 def sanitize(value: object) -> str:
@@ -105,9 +85,8 @@ def task_items(repo_root: Path) -> list[dict[str, str]]:
 
 
 def card_item(card: dict[str, Any]) -> dict[str, str]:
-    card_id = sanitize(card.get("id"))
     return {
-        "id": card_id,
+        "id": sanitize(card.get("id")),
         "title": sanitize(card.get("summary") or card.get("title")),
         "date": sanitize(card.get("effective_from")),
         "source": sanitize(card.get("relative_path")),
@@ -116,20 +95,22 @@ def card_item(card: dict[str, Any]) -> dict[str, str]:
 
 
 def build_projection(repo_root: Path) -> dict[str, Any]:
-    wiki_root, project_slug = load_context(repo_root)
+    resolved = repo_root.expanduser().resolve()
+    wiki_root, project_slug = load_context(resolved)
     cards = load_cards(wiki_root / "20_projects" / "active" / project_slug)
-    receipt = latest_context_receipt(repo_root)
-    git = git_state(repo_root)
+    receipt = latest_context_receipt(resolved)
+    git = git_state(resolved)
 
     active = [card for card in cards if card.get("status") == "active"]
     recent = [card_item(card) for card in active if card.get("kind") == "milestone"][:8]
     pending = [
         card_item(card)
         for card in cards
-        if card.get("status") in {"pending_review", "disputed"} or card.get("kind") == "decision" and card.get("status") != "active"
+        if card.get("status") in {"pending_review", "disputed"}
+        or card.get("kind") == "decision" and card.get("status") != "active"
     ][:8]
     risks = [card_item(card) for card in active if card.get("kind") == "open_risk"][:8]
-    next_steps = task_items(repo_root)
+    next_steps = task_items(resolved)
     status_text = "上下文可信，可以继续推进" if receipt["status"] == "ready" else "上下文需要复核"
     current = [
         {
@@ -162,64 +143,6 @@ def build_projection(repo_root: Path) -> dict[str, Any]:
     }
 
 
-def _item_markup(item: dict[str, Any]) -> str:
-    title = html.escape(sanitize(item.get("title")))
-    source = html.escape(sanitize(item.get("source")))
-    evidence = html.escape(sanitize(item.get("evidence")))
-    item_id = html.escape(sanitize(item.get("id")))
-    metadata = " · ".join(value for value in (item_id, source, evidence) if value)
-    detail = html.escape(sanitize(item.get("detail") or metadata or "没有更多证据"))
-    return (
-        '<li class="signal"><details>'
-        f'<summary>{title}</summary><small>{metadata}</small><p class="detail">{detail}</p>'
-        '</details></li>'
-    )
-
-
-def render_dashboard(payload: dict[str, Any]) -> str:
-    template = (TEMPLATE_DIR / "index.html").read_text(encoding="utf-8")
-    cards: list[str] = []
-    for index, key in enumerate(AREA_KEYS):
-        area = payload["areas"][key]
-        items = area["items"]
-        body = "".join(_item_markup(item) for item in items)
-        if not body:
-            body = f'<li class="empty">{html.escape(area["empty_message"])}</li>'
-        cards.append(
-            f'<section class="panel panel-{index + 1}" aria-labelledby="area-{key}">'
-            f'<header><span>0{index + 1}</span><h2 id="area-{key}">{html.escape(area["label"])}</h2></header>'
-            f'<ul>{body}</ul></section>'
-        )
-    receipt = payload["receipt"]
-    replacements = {
-        "{{PROJECT}}": html.escape(payload["project"]),
-        "{{SUMMARY}}": html.escape(payload["summary"]),
-        "{{GENERATED_AT}}": html.escape(payload["generated_at"][:19].replace("T", " ")),
-        "{{RECEIPT_HASH}}": html.escape(receipt.get("content_hash", "")[:12] or "尚未生成"),
-        "{{AREAS}}": "\n".join(cards),
-    }
-    for key, value in replacements.items():
-        template = template.replace(key, value)
-    return template
-
-
-def build_cockpit(repo_root: Path) -> dict[str, Any]:
-    resolved = repo_root.expanduser().resolve()
-    payload = build_projection(resolved)
-    rendered = render_dashboard(payload)
-    stylesheet = (TEMPLATE_DIR / "styles.css").read_text(encoding="utf-8")
-    output = resolved / ".obsidiantowiki" / "cockpit"
-    write_atomic(output / "data.json", json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
-    write_atomic(output / "styles.css", stylesheet)
-    write_atomic(output / "index.html", rendered)
-    return {
-        "status": "built",
-        "html_path": str(output / "index.html"),
-        "data_path": str(output / "data.json"),
-        "projection": payload,
-    }
-
-
 def concise_status(payload: dict[str, Any]) -> str:
     lines = [f"当前状态：{payload['summary']}"]
     for key in ("next_steps", "open_risks", "pending_decisions"):
@@ -229,23 +152,3 @@ def concise_status(payload: dict[str, Any]) -> str:
     receipt = payload["receipt"]
     lines.append(f"Context Receipt：{receipt.get('content_hash') or '尚未生成'}")
     return "\n".join(lines)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Build or open the local human-first project cockpit.")
-    parser.add_argument("action", choices=["build", "open"])
-    parser.add_argument("--repo-root", default=".")
-    parser.add_argument("--format", choices=["text", "json"], default="text")
-    args = parser.parse_args()
-    report = build_cockpit(Path(args.repo_root))
-    if args.action == "open":
-        webbrowser.open(Path(report["html_path"]).as_uri())
-    if args.format == "json":
-        printable = {key: value for key, value in report.items() if key != "projection"}
-        print(json.dumps(printable, ensure_ascii=False, indent=2))
-    else:
-        print(concise_status(report["projection"]))
-
-
-if __name__ == "__main__":
-    main()

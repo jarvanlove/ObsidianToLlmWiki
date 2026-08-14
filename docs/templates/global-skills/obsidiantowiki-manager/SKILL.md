@@ -33,7 +33,7 @@ Use this Skill for ordinary coding requests in an attached project as well as wh
 
 - `开始工作`: run `otw.py start --repo-root <project> [--task <request>]`; use its bounded Context Receipt without asking the user to maintain the wiki.
 - `继续`: run `otw.py continue --repo-root <project> [--task <request>]`; keep the active task identity and rerun the read-only Context/budget check.
-- `收工`: run `otw.py close --repo-root <project> --verification <evidence> [--ui-task <id>]`, execute or reject every receipt candidate, then resolve all candidates. Resolution automatically compiles eligible memory and refreshes bounded projections and the cockpit.
+- `收工`: run `otw.py close --repo-root <project> --verification <evidence> [--ui-task <id>]`, execute or reject every receipt candidate, then resolve all candidates. Resolution automatically compiles eligible memory and refreshes bounded projections.
 - Attach current project: run `otw.py attach --repo-root <project>`.
 - Install and initialize once: run `otw.py setup`; provide a private root only when automatic sibling discovery is not desired.
 - Update ObsidianToWiki: run `otw.py update`. Use `otw.py update --check` for a report-only check.

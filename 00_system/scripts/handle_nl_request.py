@@ -342,10 +342,9 @@ def handle_answer_project(repo_root: Path, question: str) -> None:
 
 def handle_project_status(repo_root: Path) -> None:
     load_required_project_context(repo_root)
-    from project_cockpit import build_cockpit, concise_status
+    from project_status import build_projection, concise_status
 
-    report = build_cockpit(repo_root)
-    print(concise_status(report["projection"]))
+    print(concise_status(build_projection(repo_root)))
 
 
 def handle_develop_and_file_back(repo_root: Path) -> None:

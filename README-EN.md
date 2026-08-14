@@ -1,718 +1,180 @@
-This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and adapted into a local Obsidian-first scaffold.
+# ObsidianToWiki
+
+Help AI understand a project before changing code and leave verifiable memory after the work, instead of delivering code that nobody can safely maintain.
+
+ObsidianToWiki is a local-first AI project-memory and engineering-control system. It connects a private Obsidian wiki, project control files, Git facts, and an AI coding lifecycle so knowledge survives beyond a chat session and every AI change has a scope, evidence, and responsibility boundary.
+
+This project is informed by Andrej Karpathy's [Karpathy LLM-Wiki methodology](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): preserve raw sources, maintain durable knowledge through Markdown, indexes, and traceable links, and let an LLM continuously organize, retrieve, and update it. ObsidianToWiki extends that idea with project attachment, engineering gates, risk levels, context receipts, memory compilation, and safe updates.
+
+Attach once. Before a change, the system looks for the root cause and impact scope; after verification, it records traceable conclusions automatically. Users can describe normal work directly, while `start work` remains an optional inspection and recovery command.
 
 [中文](README.md) | [English](README-EN.md)
 
-# ObsidianToWiki
+## What It Solves
 
-Obsidian-first LLM-maintained knowledge system for durable personal knowledge and project memory.
+AI-assisted development commonly fails in three ways:
 
-Attach once, then describe normal work in plain language. The system interrupts only when a root cause, risk, scope, or understanding decision needs you. Project memory is recorded, compressed, and read automatically instead of asking you to maintain seven Markdown pages. The manual phrases `start work`, `continue`, and `close work` remain available for inspection and recovery.
+- Every conversation starts from scratch, so decisions, risks, and constraints disappear.
+- AI optimizes for "it runs," while developers cannot explain what changed, why it changed, or whether it crossed a boundary.
+- Documentation grows until people stop reading it and models cannot safely load it all at once.
 
-This is not just a note template repository and not just a set of search scripts. It is designed to continuously turn raw material, project context, stable conclusions, and reusable patterns into a maintainable local wiki.
-
-## TL;DR
-
-- This is a local wiki system for both personal knowledge and project memory
-- It supports project attachment, source ingestion, retrieval, answer file-back, shared promotion, and ongoing governance
-- Users interact through natural language while scripts, indexing, sync, and maintenance stay inside the system
-- For daily project work, remember only three cockpit phrases first: "start work", "continue", and "close work"
-- Product UI tasks use the same cockpit: the agent classifies UI impact, controls UI Skill authority, and requires approved direction plus visual evidence when the change is material
-- It is meant for long-term use, not for leaving knowledge trapped in chat windows or scattered folders
-
-## Is This Project Now A Skill?
-
-Not by itself. The complete product has four cooperating parts:
-
-1. this public repository provides the runtime, scaffold, validation, retrieval, ingestion, and upgrade tools
-2. your private vault stores personal knowledge and durable project memory
-3. the global `obsidiantowiki-manager` Skill translates natural-language requests into the correct operations
-4. each attached project keeps a small local bridge so the agent can find the right private project memory
-
-Install the Manager Skill once for each AI tool environment that should operate the wiki. Attach each project once. A normal ObsidianToWiki upgrade does not require rebuilding the private vault or attaching existing projects again. Project hooks and subagents are optional adapters, not a prerequisite for daily use.
-
-Daily use remains natural language. In an attached project, say "start work", "continue", or "close work"; for knowledge work, ask the agent to ingest, find, compare, or write back material. The agent is responsible for invoking scripts and strict checks internally.
-
-For a material UI task, describe the page or flow normally. The agent creates project-local UI controls only when needed: local UI fixes stay within the approved system, while new flows or global visual changes require an approved direction before implementation and browser/QA/accessibility evidence before close. A named UI Skill, Figma node, or Stitch output is an executor or reference, never automatic Design Authority.
-
-## Who This Is For
-
-This system is especially useful for:
-
-- individual users who want durable long-term knowledge
-- developers who work across multiple projects and lose context between sessions
-- people who want project experience to become reusable shared knowledge
-- teams or individuals who want Codex, Claude Code, or other agents to keep using the same project memory
-
-## 5-Minute Start
-
-For a first run, do only these four things:
-
-1. download `ObsidianToWiki`
-2. prepare a private vault named `ObsidianToWiki-private`
-3. initialize the private vault with scaffold files, templates, scripts, and entry pages
-4. do one real usage cycle:
-   - attach one project
-   - ingest one source
-
-On first attach, the system now tries to find your private wiki automatically through project bridge files, user-level config, and standard vault naming conventions. If you need to confirm it once, later attaches reuse that result.
-
-After that, use natural language requests such as:
-
-- "start work"
-- "continue"
-- "close work"
-- "attach the current project to the wiki"
-- "ingest this into the current project"
-- "distill this conclusion into personal knowledge"
-- "answer based on the current project's wiki"
-- "save this conclusion into the wiki"
-
-## How To Use It Every Day
-
-For project development, daily use starts with three cockpit phrases.
-
-### 1. Start Work
-
-Say: "start work".
-
-The agent should attach the project if needed, run a strict attach check, or restore context if the project is already attached.
-
-### 2. Continue
-
-Say: "continue".
-
-The agent should inspect project state, tasks, current diff, and wiki binding before choosing the next action.
-
-### 3. Close Work
-
-Say: "close work".
-
-The agent should inspect the diff and verification, update relevant control files, and file back only durable conclusions.
-
-### 4. While You Work
-
-- When new material appears, say: "ingest this into the current project"
-- When a conclusion is worth keeping, say: "save this conclusion into the wiki"
-- If it is a long-term personal method, preference, or lesson, say: "distill this conclusion into personal knowledge"
-- If it is reusable across projects, say: "promote this into shared knowledge"
-
-### 5. When Organizing Personal Knowledge
-
-- You can also work directly inside the private wiki
-- Common requests are: "ingest this into personal knowledge"
-- Or: "find what I already know about this topic"
-- Or: "distill this conclusion into personal knowledge"
-
-In short:
-
-- project-specific material goes to the project layer
-- long-lived personal knowledge goes to the personal layer
-- reusable cross-project experience goes to the shared layer
-- one-off analyses go to the outputs layer
-
-## Core Capability Overview
+ObsidianToWiki changes the workflow:
 
 ```text
-Source Layer
-raw files / temporary material / project sources
-    ->
-Memory Layer
-personal knowledge / project knowledge / shared knowledge / filed-back outputs
-    ->
-Automation Layer
-project attachment / source ingestion / retrieval / answer file-back / governance / private vault sync
-    ->
-Outcome
-context recovery in any window / durable knowledge accumulation / reusable cross-project experience
+The user describes a request in natural language
+        ↓
+AI reads current code, project controls, and bounded wiki context
+        ↓
+Risk determines scope, planning, approval, and verification requirements
+        ↓
+Implementation is proven with tests, Git diff, screenshots, or runtime evidence
+        ↓
+Only reusable and traceable conclusions are filed back to the private wiki
 ```
 
-You can think of it as a continuous loop:
+Git remains the authority for code. The private wiki provides durable memory. AI reasoning never becomes a project fact merely because a model said it.
 
-- new material enters the system
-- the agent helps structure and link it
-- stable conclusions are filed back into the wiki
-- reusable experience is promoted into the shared layer
-- future projects keep benefiting from that knowledge
+## What Users Need To Do
 
-## Product Positioning
-
-ObsidianToWiki serves two practical scopes:
-
-1. long-term personal knowledge
-2. long-term software project memory
-
-It is built to capture and maintain:
-
-- raw files
-- temporary material
-- project context
-- architecture notes
-- decision records
-- task state
-- analyses and retrospectives
-- reusable prompts, tools, and patterns
-
-In short:
-
-the code repository holds deliverables, while the wiki holds memory, explanation, write-back, and review.
-
-## Design Principles
-
-The system is built around six principles.
-
-### 1. Markdown is the source of truth
-
-Knowledge should end up in files that humans can read, edit, diff, and maintain over time.
-
-### 2. Intake and knowledge should be separated
-
-Raw material should enter an intake layer first, then be distilled into durable knowledge. This prevents the wiki from becoming an unstructured dump.
-
-### 3. Personal and project knowledge should coexist
-
-The system supports both long-term personal knowledge and project-specific memory without flattening them into a single note pile.
-
-### 4. Users express needs, not low-level commands
-
-The intended user interface is natural language. Scripts, indexing, sync, and governance are implementation details.
-
-### 5. Any coding window should recover project context
-
-A project only needs one attach step. After that, any future coding window can recover the right project wiki context.
-
-### 6. Knowledge should be promotable and reusable
-
-Useful experience discovered in one project should be able to move into the shared layer and help future projects.
-
-## Functional Modules
-
-From a product perspective, the system consists of eight functional modules.
-
-### 1. Project attachment
-
-Attach an existing project to the wiki and establish a stable bridge between the code repository and its project sub-wiki.
-
-### 2. Source ingestion
-
-Ingest documents, PDFs, meeting notes, design files, screenshots, and other material while preserving originals and generating source notes.
-
-Common file types that can be brought into the system include:
-
-- text and code: `md`, `markdown`, `txt`, `py`, `js`, `ts`, `json`, `yaml`, `yml`, `html`, `css`, `java`, `go`, `rs`, `sql`
-- document formats: `docx`, `pptx`, `pdf`
-- image formats: `png`, `jpg`, `jpeg`, `webp`, `bmp`, `gif`, `tif`, `tiff`
-- audio formats: `mp3`, `wav`, `m4a`, `aac`, `flac`, `ogg`, `opus`
-- video formats: `mp4`, `mov`, `avi`, `mkv`, `webm`, `wmv`, `m4v`
-
-Notes:
-
-- text, `docx`, `pptx`, and `pdf` support direct extraction with pass/review/blocked quality gates
-- blocked extraction preserves the original and source note but creates no weak derivatives; scanned PDFs are marked `needs_ocr`
-- long documents create a document map before section notes, preserve page/slide/heading refs, and never auto-promote formal knowledge pages
-- images, audio, and video can already be formally ingested and registered as media sources
-- their semantic understanding should, by default, be delegated to the user's own multimodal LLM / API
-
-### 3. Project memory maintenance
-
-Maintain project pages for:
-
-- overview
-- architecture
-- decisions
-- tasks
-- sources
-- risks
-- timeline
-- runtime memory
-
-### 4. Personal knowledge distillation
-
-Distill long-lived personal insights, methods, workflows, and preferences into a durable personal layer.
-
-Personal pages now begin to support a minimal relationship model:
-
-- `related_to`
-- `builds_on`
-
-In the first stage, these fields are used only to express "topically related" and "built on prior knowledge" links without introducing a heavier graph layer.
-
-### 5. Shared knowledge promotion
-
-Promote cross-project reusable content into the shared layer, including patterns, prompts, architecture notes, and tool usage knowledge.
-
-### 6. Search and answer file-back
-
-The system not only retrieves knowledge, it can also file useful answers back into the wiki so knowledge does not remain trapped in chat sessions.
-
-Retrieval now incrementally projects Markdown into a local SQLite FTS5 cache. Searches check created, changed, and deleted pages by default and can return human-readable text, stable JSON, or a bounded context pack with paths, headings, and `source_refs`. The cache is disposable and never replaces Markdown as source of truth.
-
-### 7. Governance and linting
-
-The system continuously checks for issues such as:
-
-- orphan pages
-- stale pages
-- duplicate topics
-- undistilled sources
-- structural gaps
-
-### 8. Private vault sync
-
-Scaffold updates can be synced into the private vault so the real working environment stays aligned with the public system.
-
-## Architecture
-
-The system can be understood as a three-layer architecture.
-
-### 1. Source layer
-
-This layer receives raw input:
-
-- raw files
-- clips
-- temporary working artifacts
-- project source files
-
-Primary locations:
-
-- `01_inbox/`
-- project `sources/`
-- project `source-notes/`
-
-### 2. Memory layer
-
-This layer contains durable structured knowledge:
-
-- `10_personal/`
-- `20_projects/`
-- `30_shared/`
-- `40_outputs/`
-
-This is the actual knowledge body of the system.
-
-### 3. Automation layer
-
-This layer keeps the system operational:
-
-- page creation
-- source ingestion
-- project attachment
-- retrieval
-- answer file-back
-- relation sync
-- source sync
-- governance
-- private vault sync
-
-Primary locations:
-
-- `00_system/scripts/`
-- `00_system/templates/`
-- `00_system/registry/`
-
-## Repository Structure
+Install once, attach each project once, and then speak normally:
 
 ```text
-ObsidianToWiki/
-├─ .obsidian/
-├─ 00_system/
-│  ├─ registry/
-│  ├─ scripts/
-│  └─ templates/
-├─ 01_inbox/
-│  ├─ clips/
-│  ├─ raw/
-│  └─ scratch/
-├─ 10_personal/
-├─ 20_projects/
-│  ├─ active/
-│  ├─ archive/
-│  ├─ 关系索引.md
-│  └─ 索引.md
-├─ 30_shared/
-│  ├─ architectures/
-│  ├─ patterns/
-│  ├─ prompts/
-│  ├─ tools/
-│  └─ 索引.md
-├─ 40_outputs/
-│  ├─ analyses/
-│  ├─ briefings/
-│  ├─ reflections/
-│  └─ 索引.md
-├─ 90_archive/
-├─ docs/
-├─ Home.md
-├─ README.md                     # Chinese primary guide
-├─ README-EN.md                  # English guide
-├─ 快速开始.md
-├─ 使用手册.md
-├─ 标准自然语言话术清单.md
-└─ 会话启动页.md
+Fix the login timeout problem.
+Continue.
+What is the current project status?
+Close work.
 ```
 
-## Installation And Usage
+The agent handles file reading, context checks, task planning, verification, receipts, and wiki file-back. `start work`, `continue`, and `close work` are optional inspection and recovery commands, not a daily ritual.
 
-The product consists of a public runtime, a private vault, a global Manager Skill, and a small local bridge in each attached project. A new user clones the public repository and runs one root installer. The installer creates `.venv`, installs dependencies, creates or discovers the private vault, seeds private entry files and policy, synchronizes managed assets, migrates schemas, installs the selected provider Skill, and runs strict diagnostics.
+`What is the current project status?` returns a direct text summary. It does not generate an HTML dashboard or another project database.
 
-Windows:
+## Current Capabilities
+
+### 1. Private Wiki and Durable Project Memory
+
+- Create and maintain a private local Obsidian vault.
+- Attach code projects through `wiki.context.json`, `AGENTS.md`, and `CLAUDE.md`.
+- Maintain project overview, architecture, decisions, tasks, sources, risks, timeline, and long-term memory.
+- Separate personal knowledge, project knowledge, shared methods, and outputs.
+
+### 2. Source Ingestion, Retrieval, and File-Back
+
+- Ingest Markdown, text, code, PDF, DOCX, PPTX, and other supported sources.
+- Split long documents into source notes, document maps, and traceable chapter notes.
+- Search through a local SQLite FTS5 index; the index is a rebuildable cache, not the source of truth.
+- File useful answers back into the wiki so conclusions do not remain trapped in chat history.
+
+### 3. Human-Controlled AI Engineering
+
+- Run tasks through start, plan, implement, verify, close, and memory file-back stages.
+- Prefer current code and runtime evidence over project documents, trusted memory over model guesses, and never treat guesses as facts.
+- Classify risk from P3 to P0; higher risk requires stronger human confirmation and independent evidence.
+- Use Context Receipts to record what a task actually read, what was missing, and what was untrusted.
+- Compile only evidenced, stable conclusions into long-term memory; stale history leaves the default context without being deleted.
+- Use human-understanding gates and capability-recovery opportunities so developers regain knowledge of code, impact, and risk instead of delegating judgment to AI.
+
+### 4. UI Design Governance
+
+- Classify UI impact from U0 to U3.
+- Provide 19 traceable color directions, with 6 reliable defaults for work without a reference design.
+- When users dislike a result, diagnose whether the issue is local or directional and offer three understandable alternatives.
+- Require approved direction, browser screenshots, Visual QA, and accessibility evidence for material UI changes.
+- Treat Figma, Stitch, and UI Skills as executors, not as authorities that can override approved project design facts.
+
+### 5. Safe Installation and Updates
+
+- Version the public runtime, private wiki, global Skill, and project bridge separately.
+- Update the public repository only through a clean, fast-forward workflow without automatic stash, reset, or force overwrite.
+- Preserve modified private files and generate candidates and backups for human review.
+- Let `wiki.private.json` exclude paths that ObsidianToWiki must not index or ingest.
+- Use the same core workflow on Windows, macOS, and Linux.
+
+## Major Iterations
+
+| Period | Iteration | Result |
+|---|---|---|
+| 2026-04 | LLM-Wiki foundation | Established the Markdown, source, index, log, and LLM-maintenance loop |
+| 2026-05 to 06 | Project attachment and lifecycle | Added project controls, private-wiki memory, and start/verify/close workflows |
+| 2026-06 | Structured source ingestion | Replaced thin long-document summaries with traceable chapters and sources |
+| 2026-07 | Local retrieval and safe upgrades | Added FTS5 retrieval, quality evaluation, compatibility migration, and safe one-command updates |
+| 2026-07 | UI design governance | Added U0-U3 classification, 19 color directions, 6 defaults, and visual acceptance rules |
+| 2026-08 | Human-Controlled AI Engineering 2.0 | Added fact priority, context receipts, risk gates, memory compilation, human understanding, and capability recovery |
+| 2026-08 | Simpler interaction | Removed the low-value local HTML dashboard and kept direct natural-language project status |
+
+## Installation
+
+### Windows
 
 ```powershell
+git clone https://github.com/jarvanlove/ObsidianToLlmWiki.git
+cd ObsidianToWiki
 .\install.ps1
 ```
 
-macOS / Linux:
+### macOS / Linux
 
 ```bash
-chmod +x install.sh
+git clone https://github.com/jarvanlove/ObsidianToLlmWiki.git
+cd ObsidianToWiki
 ./install.sh
 ```
 
-The two installers intentionally live at repository root because they are the only bootstrap entrypoints a new user should need to find. `00_system/scripts/` contains internal operations rather than onboarding steps.
+The installer creates an isolated Python environment, initializes or discovers the private wiki, installs the Manager Skill, migrates state, and runs checks. The private wiki remains local by default and is not uploaded to the public repository.
 
-The default private vault is a sibling named `<public-repository-name>-private`. Use `-PrivateRoot` on PowerShell or `--private-root` on shell to choose another location. Providers are `agents`, `claude`, or `all`.
+## Attach a Project to the Wiki
 
-After installation, normal use is natural language: "start work", "continue", "close work", "attach this project to the wiki", "ingest this source", or "answer from this project's wiki". The agent owns script execution and checks.
-
-### Existing User Upgrade
-
-Tell an agent with the Manager Skill: "update ObsidianToWiki". The update workflow performs Git fast-forward preflight, records pre-update baselines, updates dependencies and Skills, safely synchronizes the private scaffold, migrates the vault, upgrades every registered core project bridge, upgrades only optional adapters already installed, rebuilds indexes, and runs strict doctor. Existing projects are not reattached.
-
-Updates stop on a dirty public repository, diverged history, or missing upstream. They never stash, reset, or force overwrite. A private managed file is updated only when its recorded hash proves it is unchanged; otherwise the original remains, the new file is staged under `40_outputs/upgrade-candidates/private-scaffold/`, and a timestamped backup is written.
-
-Advanced equivalents are `00_system/scripts/otw.ps1 update` and `00_system/scripts/otw.sh update`; add `--check` for report-only behavior. Internal scripts remain diagnostics and development interfaces, not onboarding steps.
-
-## How Projects Use The System
-
-This is one of the most important use cases.
-
-### Attach once
-
-Each project only needs one formal attach step. After that, the project repo root will contain:
-
-- AI tool entrypoints
-- a local project control plane
-- the matching project wiki area
-
-Together, these form the bridge from the project repository to the project wiki and the local execution control plane.
-
-Tool entrypoints are peers, not parent/child files. Shared project facts should live in the project control plane and project wiki, not only in one tool-specific entry file.
-
-If the project already has entrypoint or control files, the attach script preserves existing content and only updates its managed block. Re-running attach is safe.
-
-When attaching a completely new project for the first time, the system tries this order:
-
-1. existing wiki binding information in the project
-2. user-level wiki defaults in the local environment
-3. a sibling `ObsidianToWiki-private` next to the scaffold
-
-Only if all of those fail does the user need to specify the private wiki location explicitly.
-
-### Work in any window
-
-In any future coding window, just say:
+Inside the project, tell the AI:
 
 ```text
-work according to the current project rules
+Attach the current project to my private wiki.
 ```
 
-The agent should automatically restore project context, read the required rules, locate the project wiki, and continue from the current task.
+The system creates a project entrypoint and local context. Real local paths are written only to Git-ignored configuration; committed templates must not contain absolute paths from a user's machine.
 
-### Accumulate knowledge during development
+After attachment, continue describing real work. The AI should read the project's `AGENTS.md` and relevant control files before deciding scope, risk, and verification.
 
-Recommended pattern:
+## Where Data Lives
 
-1. read project memory before work
-2. ingest new source material during work
-3. file stable conclusions back after work
-4. if the outcome is a durable method, habit, preference, or workflow, say "distill this conclusion into personal knowledge" directly in the project window
+```text
+Public ObsidianToWiki repository
+├─ Reusable scripts, templates, protocols, and shared methods
+└─ No real user project knowledge
 
-The main write-back targets are usually:
+User's private wiki
+├─ Personal knowledge
+├─ Durable project memory
+├─ Reviewed shared methods
+└─ Outputs and upgrade candidates
 
-- `概览.md`
-- `架构.md`
-- `决策.md`
-- `任务.md`
-- `来源.md`
+Attached code project
+├─ Git-managed code and project control files
+└─ .obsidiantowiki/ local task state and receipts (ignored by default)
+```
 
-If you explicitly route a conclusion to the personal layer, the system should write it into `10_personal/` while keeping a backlink to the originating project instead of forcing everything back into the project layer.
+`.obsidiantowiki/` is local execution state, not a knowledge base or a page for users to browse. It may contain machine-specific paths, so Git must ignore it by default. Durable conclusions belong in the private wiki; code facts belong in Git.
 
-### Skill and MCP configuration
+## Boundaries
 
-- The global manager Skill is installed once per agent configuration root and safely upgraded by the installer. It maps natural language to the unified `otw.py` runtime.
-- Project retrieval Skills and hook/subagent helpers remain opt-in. Only `--install-ai-adapters` places them under `.agents/skills/`, `.claude/skills/`, and `scripts/ai/`; normal upgrades do not force-enable them.
-- MCP belongs to the AI tool capability layer. Configure it once per Codex, Claude Code, Cursor, or compatible tool when the tool launches it from the active project.
-- Without MCP or project adapters, the global manager Skill uses the public runtime directly.
-- MCP exposes only read-only `search_wiki` and `get_wiki_context` tools.
+- This is a local tool and engineering method, not a hosted knowledge platform.
+- It does not replace developer understanding or guarantee that AI-generated code is correct.
+- If wiki evidence is missing or damaged, the system must degrade explicitly or stop instead of filling gaps with model hallucinations.
+- `wiki.private.json` limits ObsidianToWiki itself; AI tools with broader filesystem access still need workspace and permission restrictions in those tools.
+- High-risk work requires a named human to confirm impact and remaining risk; AI cannot approve its own work.
 
-See `docs/agent-retrieval.md` for the boundary and setup details.
+## Documentation
 
-## Multimodal Support
+- [Quick Start](快速开始.md)
+- [User Manual](使用手册.md)
+- [Product Specification](PRODUCT_SPEC.md)
+- [Architecture](ARCHITECTURE.md)
+- [Tasks](TASKS.md)
+- [Testing](TESTING.md)
+- [Security](SECURITY.md)
+- [Deployment and Updates](DEPLOYMENT.md)
+- [Operations](OPERATIONS.md)
+- [Changelog](CHANGELOG.md)
 
-Current stable support includes:
+## License
 
-- text
-- markdown
-- code
-- `docx`
-- `pptx`
-- `pdf`
-
-Images, audio, and video should be added in stages:
-
-1. ingest and register them as sources
-2. connect the user's own multimodal LLM / API parsing
-3. automatically distill them into project or personal pages
-
-P0 first pass is now in place:
-
-- images, audio, and video can be formally ingested
-- source notes record `media_type` and `parse_status`
-- governance can surface media sources that are still waiting for processing
-
-Current directory conventions:
-
-- personal images: `01_inbox/raw/personal/images/`
-- personal audio: `01_inbox/raw/personal/audio/`
-- personal video: `01_inbox/raw/personal/video/`
-- OCR scratch: `01_inbox/scratch/ocr/`
-- transcript scratch: `01_inbox/scratch/transcripts/`
-- keyframe scratch: `01_inbox/scratch/keyframes/`
-- summary scratch: `01_inbox/scratch/summaries/`
-
-The recommended multimodal direction is now:
-
-- use the user's own multimodal LLM / API for image, audio, and video understanding
-- keep the wiki system responsible for intake, source registration, file-back, indexing, and governance
-- do not require users to install local OCR / ASR / video-processing tools
-- do not require extra provider / adapter configuration files for multimodal use
-
-Multimodal use now keeps only one recommended route:
-
-### In-session parsing, the default and only recommended path
-
-Use this when:
-
-- you are already inside Codex or Claude Code
-- or tools such as Cursor, Trae, QClaw, WorkBuddy, Hermes Agent, or OpenClaw that already integrate third-party model access
-- you give the current AI a file path
-- you want the AI to understand the file and file the result back into the wiki
-
-Characteristics:
-
-- no extra API key setup
-- no `~/.obsidiantowiki-multimodal.json`
-- best fit for day-to-day usage
-- directly reuses the multimodal ability that your current tool has already integrated
-
-Related design plans for the current evolution:
-
-- [2026-04-17-multimodal-support-plan.md](docs/plans/2026-04-17-multimodal-support-plan.md)
-- [2026-04-22-user-wiki-discovery-design.md](docs/plans/2026-04-22-user-wiki-discovery-design.md)
-- [2026-04-22-personal-knowledge-routing-design.md](docs/plans/2026-04-22-personal-knowledge-routing-design.md)
-
-## Inbox Policy
-
-Keep the inbox role-based:
-
-- `raw`: original files
-- `clips`: source notes not yet fully distilled
-- `scratch`: temporary working artifacts
-
-## Documentation Entry Points
-
-If you are new to the system, start here:
-
-1. [Home.md](Home.md)
-2. [快速开始.md](快速开始.md)
-3. [使用手册.md](使用手册.md)
-4. [标准自然语言话术清单.md](标准自然语言话术清单.md)
-
-Document roles:
-
-- `README.md` (Chinese) / `README-EN.md` (English)
-  product overview, design principles, architecture, and usage
-- `Home.md`
-  main entry page
-- `快速开始.md`
-  shortest onboarding path
-- `使用手册.md`
-  day-to-day usage guide
-- `标准自然语言话术清单.md`
-  fixed list of common user requests
-- `会话启动页.md`
-  copyable prompts for agents
-
-## Core Scripts
-
-If you want to understand which scripts matter most, start with these.
-
-### Attachment
-
-- `attach_project.py`
-  attaches a project to the wiki, writes safe bridge blocks, creates missing project control files, and creates the project memory area. Optional hook/subagent adapters are installed only with `--install-ai-adapters`
-
-- `project_session.py`
-  generates AI coding lifecycle `check/start/close` checklists and control-file update candidates. By default it only reports suggestions and does not write project files or sync the private wiki
-
-### Ingestion
-
-- `ingest_source.py`
-  ingests material, stores the original file, and creates a source note
-
-### Retrieval and file-back
-
-- `search_wiki.py`
-  refreshes the local retrieval cache, preserves page weighting and relation summaries, and returns text, JSON, or bounded context packs
-- `build_retrieval_index.py`
-  incrementally builds or fully refreshes the disposable SQLite FTS5 retrieval cache
-- `evaluate_retrieval.py`
-  gates path, heading, provenance, pass rate, MRR, and separate synonym probes
-- `mcp_retrieval_server.py`
-  exposes structured search and bounded context as read-only MCP stdio tools
-- `migrate_provenance.py`
-  audits legacy knowledge pages and migrates only explicit source links and page references
-- `file_back_query.py`
-  files an answer or analysis back into the wiki
-- `handle_nl_request.py`
-  natural-language request router
-
-### Sync
-
-- `sync_source_notes.py`
-  backfills source status and derived-page links
-- `sync_project_relations.py`
-  syncs project relations
-- `sync_personal_relations.py`
-  syncs personal-page relation fields
-- `sync_private_vault.py`
-  syncs only manifest-managed public scaffold files and protects private runtime state
-
-### Governance
-
-- `lint_wiki.py`
-  runs governance and health checks
-- `schema_lib.py`
-  validates page schema
-- `wiki_lib.py`
-  shared low-level utilities
-
-### Learning and promotion
-
-- `record_learning_candidate.py`
-  records learning candidates
-- `discover_learning_candidates.py`
-  discovers candidates automatically
-- `curate_learning_candidates.py`
-  archives low-score stale learning candidates
-- `review_learning_candidates.py`
-  batch-approves, archives, or reopens learning candidates
-- `promote_learning_candidate.py`
-  promotes a candidate into a formal asset
-- `recommend_source_promotions.py`
-  recommends promotion targets for source notes
-
-Learning candidates now begin to carry:
-
-- `candidate_risk_level`
-- `candidate_upgrade_mode`
-- `candidate_repeat_count`
-- `candidate_freshness`
-- `candidate_domain`
-
-This means the system is moving from simple candidate discovery toward controlled handling of:
-
-- low-risk candidates that can be treated semi-automatically
-- high-risk candidates that still require human review
-
-This stage also adds:
-
-- `40_outputs/学习候选审批视图.md`
-- explicit approval before promoting high-risk or manual-review candidates
-
-### Indexes and status
-
-- `rebuild_indexes.py`
-  rebuilds indexes
-- `log_event.py`
-  writes logs
-- `version_status.py`
-  reports version state
-- `version_closure_report.py`
-  generates a closure report
-
-If you only remember six scripts, remember these:
-
-- `attach_project.py`
-- `project_session.py`
-- `ingest_source.py`
-- `handle_nl_request.py`
-- `search_wiki.py`
-- `file_back_query.py`
-
-## Personal Knowledge Graph P0
-
-The personal knowledge layer now supports a minimal first-step relationship model:
-
-- `related_to`
-- `builds_on`
-
-Use them like this:
-
-- `related_to`
-  marks pages that are topically related and should be read together
-- `builds_on`
-  marks pages that build on prior concepts, methods, or knowledge pages
-
-At this stage, the system only does:
-
-- template support
-- schema validation
-- personal relation index generation
-- personal relation summaries in retrieval results
-
-At this stage, it does not yet do:
-
-- automatic relation extraction
-- deeper semantic relation inference
-
-The first P2 pass now follows a conservative automation path:
-
-- infer relations from explicit personal-page links
-- use shared tags and shared source projects as low-risk supplements
-- avoid heavier semantic graph inference for now
-
-It is now concretely wired into:
-
-- `10_personal/关系索引.md`
-- personal relation summaries in retrieval results
-- the `sync_personal_relations.py` sync script
-
-## Retrieval Scaling P1
-
-The current stage still stays on lightweight retrieval instead of heavier infrastructure.
-
-What is already added:
-
-- page-type weighting
-- stronger downranking for stale output pages, reflection candidates, and source pages
-- relation summaries for personal and shared pages
-- failure logging for zero-result queries
-- disposable local SQLite FTS5 derived index
-- incremental freshness checks for created, changed, and deleted Markdown pages
-- stable JSON result contract
-- best matching heading and bounded snippet localization
-- bounded context packs for agents
-- query-coverage ranking and Chinese short-term chunk localization
-- inspectable local topic-alias hybrid recall
-- fixed retrieval gates with MRR and semantic probes
-- project Agent Skills and optional read-only MCP stdio tools
-- `source_notes` / `source_refs` output plus conservative legacy migration
-
-What this stage still does not do:
-
-- vector retrieval
-- semantic reranking
-- background file watching
-
-The current fixed evaluation reports a `1.0` gate pass rate, `1.00` MRR, and `1.0` semantic-probe pass rate, so embeddings and vector infrastructure are not justified yet.
+[MIT](LICENSE)

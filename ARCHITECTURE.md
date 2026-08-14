@@ -29,12 +29,13 @@ task state + Git diff + verification + human decisions
   -> resolved session receipt
   -> atomic memory compiler
   -> bounded current projections
-  -> natural-language concierge / action feed / local static cockpit
+  -> bounded current projections
+  -> concise natural-language project status
 ```
 
-Target components are `context_integrity.py`, `context_contract.py`, `engineering_governance.py`, `memory_compiler.py`, `migrate_project_memory.py`, and `project_cockpit.py`. They extend the existing `otw.py`, `project_session.py`, retrieval, attach, and compatibility paths; they do not introduce a hosted service, business database, background daemon, or second lifecycle.
+The main components are `context_integrity.py`, `context_contract.py`, `engineering_governance.py`, `memory_compiler.py`, `migrate_project_memory.py`, and `project_status.py`. They extend the existing `otw.py`, `project_session.py`, retrieval, attach, and compatibility paths; they do not introduce a hosted service, business database, background daemon, or second lifecycle.
 
-Markdown remains the durable and auditable format, but it is no longer the default whole-context read unit or the only human interface. Atomic cards own durable facts and explicit lifecycle state. Core project pages become bounded current projections. SQLite remains a disposable retrieval cache. The local cockpit is a generated static projection and never becomes a second source of truth.
+Markdown remains the durable and auditable format, but it is no longer the default whole-context read unit. Atomic cards own durable facts and explicit lifecycle state. Core project pages become bounded current projections. SQLite remains a disposable retrieval cache. Human status questions read the same bounded projection without generating another interface or source of truth.
 
 ## Entry Files
 
@@ -44,7 +45,7 @@ Markdown remains the durable and auditable format, but it is no longer the defau
 
 Important: `AGENTS.md` and `CLAUDE.md` are peer entrypoints. Shared project facts belong in `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, `SECURITY.md`, and private wiki project pages.
 
-Daily project work is exposed through the project cockpit:
+Daily project work is exposed through natural language:
 
 | User phrase | Internal lifecycle |
 |---|---|
@@ -68,7 +69,7 @@ Daily project work is exposed through the project cockpit:
 | `migrate_provenance.py` | Audit and conservatively recover explicit source metadata from legacy knowledge pages |
 | `memory_compiler.py` | Compile active atomic cards into seven budgeted current projections; refuse unmanaged-page overwrite |
 | `migrate_project_memory.py` | Dry-run, back up, migrate, conflict-check, and restore legacy core memory pages |
-| `project_cockpit.py` | Build one privacy-bounded action projection for both static HTML/JSON and natural-language project status answers |
+| `project_status.py` | Build one privacy-bounded projection and concise natural-language project status answer without writing HTML/JSON |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route explicit commands and ambient ordinary requests; classify read-only/code/external/destructive intent and enter the existing task lifecycle without a daemon |
 | `project_session.py` | Generate AI coding task start/close checklists, schema-v2 structured-evidence receipts, seven-part explanation packages, human-understanding gates, evidence-based capability candidates, and control-file update candidates |
@@ -118,9 +119,9 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Task evidence, not raw chat transcripts, drives durable memory candidates.
 - Atomic memory cards preserve history; bounded current projections contain only active, relevant facts and links to evidence.
 - Legacy core pages must pass migration dry-run before replacement. Apply preserves byte-exact originals and a manifest; uncertain content remains review-required, and later user customization blocks overwrite.
-- Users are not responsible for manually maintaining generated cards or projections; natural language and the local cockpit are the normal human interface.
+- Users are not responsible for manually maintaining generated cards or projections; natural language is the normal human interface.
 - Ambient governance is entrypoint-driven, not process-driven: managed project instructions and the global Manager Skill route ordinary mutations through the public runtime, while optional adapters may only report coverage and no background daemon is required.
-- Static cockpit HTML/JSON and natural-language status answers must consume the same projection; cockpit output is local derived state under `.obsidiantowiki/`, never a second source of truth.
+- Natural-language status answers must consume bounded projections and must not create a parallel HTML/JSON state store.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.
 - Topic aliases are an inspectable local hybrid-retrieval layer; vector retrieval is added only when evaluation probes prove it is needed.

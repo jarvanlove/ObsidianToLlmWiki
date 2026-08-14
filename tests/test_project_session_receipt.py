@@ -143,7 +143,7 @@ class ProjectSessionReceiptTests(unittest.TestCase):
                 [sys.executable, str(SCRIPT), "check", "--repo-root", str(repo), "--format", "json"],
                 REPO_ROOT,
             )
-            self.assertEqual(json.loads(checked.stdout)["cockpit_state"], "not_attached")
+            self.assertEqual(json.loads(checked.stdout)["project_state"], "not_attached")
             self.assertEqual(json.loads(checked.stdout)["session_receipt"]["status"], "pending")
 
             resolve_command = [sys.executable, str(SCRIPT), "resolve", "--repo-root", str(repo), "--format", "json"]
@@ -197,7 +197,7 @@ class ProjectSessionReceiptTests(unittest.TestCase):
                 REPO_ROOT,
             )
             self.assertEqual(checked.returncode, 0, checked.stderr)
-            self.assertEqual(json.loads(checked.stdout)["cockpit_state"], "closed_pending_commit")
+            self.assertEqual(json.loads(checked.stdout)["project_state"], "closed_pending_commit")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ This project has optional ObsidianToWiki AI adapters installed.
 
 Adapters are execution helpers, not a second source of truth.
 
-The primary daily interface remains the project cockpit:
+The primary daily interface remains natural-language project operation:
 
 ```text
 开始工作

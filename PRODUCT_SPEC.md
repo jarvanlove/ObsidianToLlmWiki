@@ -38,7 +38,7 @@ Must have:
 - Human-controlled AI engineering with passive task governance, L0-L3 fact precedence, bounded trusted context, evidence-backed memory compilation, human understanding gates, and capability-recovery opportunities.
 - Engineering risk classification from P3 documentation and low-impact work through P2 normal changes, P1 critical-flow changes, and P0 destructive, security, payment, or migration work, with progressively stronger human approval.
 - Automatic durable-memory maintenance: task evidence becomes reviewable atomic memory cards, current project projections stay within explicit budgets, and obsolete history leaves default context without being deleted.
-- Human-first access through natural-language project answers, a low-noise action feed, and a local static project cockpit; opening or manually maintaining Markdown is not required for normal use.
+- Human-first access through concise natural-language project answers; opening or manually maintaining Markdown is not required for normal use.
 
 Explicitly not doing unless added to `TASKS.md`:
 
@@ -67,9 +67,9 @@ Explicitly not doing unless added to `TASKS.md`:
 - Success: future AI sessions can recover project context, and the attach report proves required files exist.
 - Failure states: private wiki not found, path ambiguity, existing bridge conflict.
 
-### Project cockpit
+### Natural-language project operation
 
-- Entry: normal coding intent is routed automatically after one-time attachment; explicit cockpit phrases remain available for inspection and recovery.
+- Entry: normal coding intent is routed automatically after one-time attachment; `开始工作`, `继续`, `收工`, and `项目现在怎么样` remain available for inspection and recovery.
 - Steps: infer project state -> run the matching lifecycle check -> execute or report the next safe action.
 - Success: users do not need to remember script names, hook names, or wiki update rules.
 - Failure states: missing project context, missing control files, ambiguous task, unverified changes.
@@ -77,14 +77,14 @@ Explicitly not doing unless added to `TASKS.md`:
 ### Govern a coding task and maintain memory passively
 
 - Entry: the user asks normally for an explanation, fix, feature, refactor, release, migration, or operational action.
-- Steps: classify read/write intent -> capture current facts and Git baseline -> apply risk/root-cause/scope/evidence gates -> build a bounded trusted Context Receipt -> close the verified task -> compile only durable evidence into atomic memory -> rebuild bounded current projections and the human cockpit.
+- Steps: classify read/write intent -> capture current facts and Git baseline -> apply risk/root-cause/scope/evidence gates -> build a bounded trusted Context Receipt -> close the verified task -> compile only durable evidence into atomic memory -> rebuild bounded current projections for later natural-language answers.
 - Success: low-risk work stays low-noise; high-risk or insufficiently understood work stops for human judgment; model context does not grow with project age; the user can understand project state without opening Obsidian.
 - Failure states: required context missing, damaged or conflicting memory, unproven root cause, scope drift, insufficient evidence, unresolved human approval, memory compilation conflict.
 
 ### Deliver a UI task
 
 - Entry: user describes a page or flow in natural language, optionally naming a Skill, Stitch, or an approved Figma node.
-- Steps: Agent classifies U0-U3 -> creates project UI task only when U1+ -> selects the existing visual baseline or a fixed fallback when no reference exists -> records requested Skill and design sources -> obtains direction/RFC approval when required -> implements under the UI Contract -> records browser, Visual QA, and accessibility evidence -> closes through the normal cockpit.
+- Steps: Agent classifies U0-U3 -> creates project UI task only when U1+ -> selects the existing visual baseline or a fixed fallback when no reference exists -> records requested Skill and design sources -> obtains direction/RFC approval when required -> implements under the UI Contract -> records browser, Visual QA, and accessibility evidence -> closes through the normal governed task lifecycle.
 - Success: a named Skill cannot override project design facts; color direction is never randomized; controlled colors require explicit user selection; U2/U3 cannot write production UI before approval; UI release evidence remains in the project repository.
 - Failure states: missing selected direction, unapproved controlled direction, baseline change without U3 RFC, missing RFC, absent project design contract, missing screenshot/QA/accessibility evidence.
 
@@ -142,7 +142,7 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-05-19 | Added AI project control workflow to public scaffold | Make production-grade AI coding workflow reusable across attached projects | Documentation/control-plane only |
 | 2026-06-10 | Added AI coding lifecycle protocol scaffold | Make project control files update during AI coding instead of remaining static attach artifacts | Scaffold protocol and checklist tooling |
 | 2026-06-10 | Added optional AI adapter layer | Allow projects to opt into hook/subagent helpers after the lifecycle protocol is stable | Source scaffold only; adapters are not installed by default |
-| 2026-06-10 | Added project cockpit workflow | Reduce daily user burden to start / continue / close while keeping lifecycle checks internal | Product workflow and natural-language entry hardening |
+| 2026-06-10 | Added natural-language project workflow | Reduce daily user burden to start / continue / close while keeping lifecycle checks internal | Product workflow and natural-language entry hardening |
 | 2026-06-10 | Added structured source ingestion P0 | Prevent long documents from collapsing into one weak summary | Source note, document map, section notes, and routing candidates |
 | 2026-06-11 | Hardened natural-language project attach | Make `开始工作` stable for empty but valid wiki roots | Missing runtime templates/schema are bootstrapped before project page creation |
 | 2026-06-11 | Added structured source section quality checks | Make source ingestion outputs reviewable before promotion | Section notes gain quality fields and lint reports malformed structured ingestion outputs |
@@ -156,4 +156,5 @@ Explicitly not doing unless added to `TASKS.md`:
 | 2026-07-17 | Added UI governance runtime | Make AI-generated product UI direction, Skill use, and visual acceptance controllable | U0-U3 UI tasks, project UI Contract/Registry, visual evidence gates, optional Figma/Stitch workflow rules |
 | 2026-07-20 | Added governed visual-direction library | Prevent reference-free UI work from becoming a random color choice | 19 auditable source palettes, six stable defaults, controlled selection, locked project baseline, and token constraints |
 | 2026-07-20 | Added low-noise visual feedback | Keep visual governance useful to non-specialists without exposing its mechanics | Natural-language dissatisfaction maps to three plain-language choices; simple confirmation is recorded internally |
-| 2026-08-13 | Approved Human-Controlled AI Engineering System 2.0 baseline | Prevent AI coding governance from depending on unbounded or untrusted Markdown and make durable memory useful without manual maintenance | Adds trusted context, memory compilation, bounded projections, human cockpit, engineering gates, and phased M0-M5 delivery |
+| 2026-08-13 | Approved Human-Controlled AI Engineering System 2.0 baseline | Prevent AI coding governance from depending on unbounded or untrusted Markdown and make durable memory useful without manual maintenance | Adds trusted context, memory compilation, bounded projections, natural-language status, engineering gates, and phased M0-M5 delivery |
+| 2026-08-14 | Removed the local HTML project dashboard | The generated page duplicated project state, added maintenance cost, and did not improve the private-wiki workflow | Keeps concise natural-language status; removes HTML/JSON generation, templates, commands, visual evidence, and related tests |

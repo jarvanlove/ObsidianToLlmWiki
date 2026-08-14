@@ -8,6 +8,10 @@ All notable changes to this repository should be documented in this file.
 
 ## Unreleased
 
+### Removed
+
+- Removed the local HTML/JSON project dashboard, its command surface, templates, screenshots, QA records, and browser-oriented tests. `项目现在怎么样` remains available as a direct, read-only natural-language answer over bounded project state.
+
 ## 2.0.0 - 2026-08-14
 
 ### Added
@@ -21,13 +25,13 @@ All notable changes to this repository should be documented in this file.
 - Seven-part critical-change explanation packages and human-understanding gates with secret/path-safe summaries, low-noise P3/P2 behavior, hash-bound P1 confirmation, explicit P0 authorization, and rejection of AI-originated confirmation.
 - M3 machine-acceptance evidence for explainable risk, Bug root-cause, scope-drift, patch-loop, responsibility, and structured-verification gates, including PowerShell seven-digit ISO timestamp compatibility; M3 is accepted and M4 Tasks 8-9 are complete.
 - Schema-v2 task close receipts with structured verification evidence, source allowlisting, non-zero exit/result consistency, P1/P0 independent-evidence gates, and fail-closed v1 prose receipt compatibility.
-- Human-first local project cockpit with five action-oriented regions, native evidence disclosure, Context Receipt citation, responsive static HTML/JSON, and natural-language “项目现在怎么样” routing.
+- Human-first natural-language “项目现在怎么样” routing over bounded project state and Context Receipt evidence.
 - Seven bounded current-memory projections, a 90-day/30-event timeline, active-only fact filtering, and public `otw memory compile` commands.
 - Dry-run-first legacy memory migration with byte-exact backups, source backlinks, review-required snapshots, idempotent manifests, customization conflict protection, and restoration support.
 - Deterministic atomic-memory compiler for resolved task receipts, with stable card identity, idempotent compilation, explicit supersede/dispute states, high-risk and cross-layer review, sensitive-content rejection, and cards that pass the existing context-integrity gate.
 - Bounded Context Contracts and persisted Context Receipts with L0 Git state, L1 control hashes, trusted project memory, whole-card budgets, explicit missing/conflict states, and deterministic content hashes.
 - Read-only context integrity gate with deterministic trusted/review/degraded/quarantined states, strict fail-closed handling for damaged or missing required context, unified `otw context check`, and doctor integration.
-- Approved and delivered the Human-Controlled AI Engineering System 2.0 baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and a human-first local cockpit.
+- Approved and delivered the Human-Controlled AI Engineering System 2.0 baseline: L0-L3 fact precedence, context integrity and receipts, bounded context, atomic evidence-backed memory, bounded current projections, passive engineering gates, human understanding, capability recovery, and human-first natural-language status.
 
 - Initial ObsidianToWiki scaffold
 - Dual agent entrypoints for Codex and Claude Code

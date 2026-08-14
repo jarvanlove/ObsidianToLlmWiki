@@ -35,7 +35,7 @@ from engineering_governance import (  # noqa: E402
     transition_task,
 )
 from migrate_project_memory import CORE_PAGE_NAMES, migrate_project_memory  # noqa: E402
-from project_cockpit import build_cockpit  # noqa: E402
+from project_status import build_projection  # noqa: E402
 from project_session import build_receipt  # noqa: E402
 from wiki_lib import parse_frontmatter  # noqa: E402
 
@@ -228,7 +228,7 @@ class HumanControlledAiE2ETests(unittest.TestCase):
             self.assertTrue(all(parse_frontmatter(path.read_text(encoding="utf-8"))[0]["status"] == "pending_review" for path in cards))
             self.assertTrue(Path(migrated["manifest"]).exists())
 
-    def test_i_j_damaged_context_is_excluded_while_natural_language_cockpit_remains_available(self) -> None:
+    def test_i_j_damaged_context_is_excluded_while_natural_language_status_remains_available(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             repo, vault, env = self.attach(Path(temp))
             context = json.loads((repo / "wiki.context.json").read_text(encoding="utf-8"))
@@ -242,13 +242,13 @@ class HumanControlledAiE2ETests(unittest.TestCase):
                 "private_policy": {"ai_access": {"excluded_paths": [], "excluded_globs": []}},
             }
             integrity = inspect_page(memory, policy=policy, today=date(2026, 8, 14))
-            cockpit = build_cockpit(repo)
+            status = build_projection(repo)
             answer = self.request(repo, env, "项目现在怎么样")
             self.assertEqual(integrity["status"], "quarantined")
-            self.assertNotIn("Broken", json.dumps(cockpit, ensure_ascii=False))
+            self.assertNotIn("Broken", json.dumps(status, ensure_ascii=False))
             self.assertEqual(answer.returncode, 0, answer.stderr)
             self.assertIn("当前状态", answer.stdout)
-            self.assertTrue(Path(cockpit["html_path"]).exists())
+            self.assertFalse((repo / ".obsidiantowiki" / "cockpit").exists())
 
     def test_boundaries_read_only_creates_nothing_and_unattached_mutation_is_blocked(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

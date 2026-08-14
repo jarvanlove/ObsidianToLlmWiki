@@ -2,7 +2,7 @@
 
 This project is attached to ObsidianToWiki and uses project control files as the local execution layer.
 
-## Project Cockpit
+## Natural-language project lifecycle
 
 Daily user-facing commands:
 

@@ -34,7 +34,7 @@ class EngineeringGovernanceContractTests(unittest.TestCase):
             "human understanding gate": ("human understanding",),
             "structured evidence": ("structured-evidence",),
             "capability recovery": ("capability recovery", "capability observations"),
-            "human cockpit": ("human-first", "local cockpit"),
+            "human status": ("human-first", "natural-language project status"),
             "privacy boundary": ("private-policy", "secrets"),
             "compatibility strategy": ("compatibility", "idempotency"),
         }
