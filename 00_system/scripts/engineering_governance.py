@@ -41,6 +41,21 @@ EXPLANATION_FIELDS = (
     "remaining_risks",
     "rollback",
 )
+CAPABILITY_INTERVENTION_OPTIONS = (
+    {"id": "root_cause_first", "label": "让我先判断根因"},
+    {"id": "explain_call_chain", "label": "给我解释调用链"},
+    {"id": "skip_learning", "label": "这次跳过学习"},
+)
+CAPABILITY_OBSERVATION_KINDS = frozenset(
+    {
+        "call_chain_explained",
+        "root_cause_proposed",
+        "risk_boundary_identified",
+        "rollback_point_identified",
+        "scope_expansion_identified",
+        "verification_gap_identified",
+    }
+)
 
 
 def _now() -> str:
@@ -141,6 +156,9 @@ def _validate_state(state: dict[str, Any]) -> None:
             raise ValueError("task understanding has invalid risk level")
         if not re.fullmatch(r"[0-9a-f]{64}", str(understanding.get("explanation_package_hash") or "")):
             raise ValueError("task understanding has invalid explanation package hash")
+    capability_recovery = state.get("capability_recovery")
+    if capability_recovery is not None and not isinstance(capability_recovery, dict):
+        raise ValueError("task capability_recovery must be an object")
 
 
 def save_task_state(repo_root: Path, state: dict[str, Any]) -> None:
@@ -196,6 +214,7 @@ def create_task_state(repo_root: Path, task: str, intent: str) -> dict[str, Any]
         "diagnosis": {"reproduction": None, "root_cause": None, "minimal_fix": None},
         "verification": [],
         "understanding": {},
+        "capability_recovery": {},
         "knowledge_candidates": [],
         "timestamps": {"created_at": now, "updated_at": now, "status_changed_at": now},
         "history": [
@@ -209,6 +228,160 @@ def create_task_state(repo_root: Path, task: str, intent: str) -> dict[str, Any]
     }
     save_task_state(repo_root, state)
     return state
+
+
+def assess_capability_intervention(
+    *,
+    risk_level: str = "P2",
+    new_concept: bool = False,
+    repeated_module_issues: int = 0,
+    ai_misjudgment: bool = False,
+    consecutive_understanding_skips: int = 0,
+) -> dict[str, Any]:
+    selected_risk = risk_level.strip().upper()
+    if selected_risk not in RISK_LEVELS:
+        raise ValueError("capability intervention has invalid risk level")
+    for name, value in (
+        ("repeated_module_issues", repeated_module_issues),
+        ("consecutive_understanding_skips", consecutive_understanding_skips),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"{name} must be a non-negative integer")
+    reasons: list[str] = []
+    if new_concept:
+        reasons.append("new_concept")
+    if selected_risk in {"P1", "P0"}:
+        reasons.append("high_risk")
+    if repeated_module_issues >= 2:
+        reasons.append("repeated_module_issue")
+    if ai_misjudgment:
+        reasons.append("ai_misjudgment")
+    if consecutive_understanding_skips >= 2:
+        reasons.append("consecutive_understanding_skips")
+    return {
+        "triggered": bool(reasons),
+        "reasons": reasons,
+        "options": [dict(item) for item in CAPABILITY_INTERVENTION_OPTIONS] if reasons else [],
+    }
+
+
+def plan_capability_intervention(
+    repo_root: Path,
+    *,
+    topic: str,
+    risk_level: str = "P2",
+    new_concept: bool = False,
+    repeated_module_issues: int = 0,
+    ai_misjudgment: bool = False,
+    consecutive_understanding_skips: int = 0,
+) -> dict[str, Any]:
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    recovery = dict(state.get("capability_recovery") or {})
+    existing = recovery.get("intervention")
+    if isinstance(existing, dict):
+        return {**dict(existing), "status": "already_offered"}
+    selected_topic = _safe_summary(topic, limit=160)
+    if selected_topic == "unknown":
+        raise ValueError("capability intervention topic is required")
+    assessment = assess_capability_intervention(
+        risk_level=risk_level,
+        new_concept=new_concept,
+        repeated_module_issues=repeated_module_issues,
+        ai_misjudgment=ai_misjudgment,
+        consecutive_understanding_skips=consecutive_understanding_skips,
+    )
+    if not assessment["triggered"]:
+        return {**assessment, "status": "not_needed", "topic": selected_topic}
+    intervention_id = "learn-" + hashlib.sha256(
+        f"{state['task_id']}|{selected_topic}".encode("utf-8")
+    ).hexdigest()[:12]
+    intervention = {
+        **assessment,
+        "status": "offered",
+        "intervention_id": intervention_id,
+        "topic": selected_topic,
+        "offered_at": _now(),
+    }
+    recovery["intervention"] = intervention
+    updated = dict(state)
+    updated["capability_recovery"] = recovery
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return intervention
+
+
+def _capability_evidence_ref(value: object) -> str:
+    selected = str(value or "").strip()
+    if re.fullmatch(r"session-receipt\.json#evidence-[0-9]+", selected):
+        return selected
+    if re.fullmatch(r"receipt:[A-Za-z0-9_.:-]+#evidence-[0-9]+", selected):
+        return selected
+    raise ValueError("capability observation requires an auditable evidence reference")
+
+
+def record_capability_observation(
+    repo_root: Path,
+    *,
+    topic: str,
+    observation_kind: str,
+    observation: str,
+    evidence_ref: str,
+    suggested_destination: str = "personal",
+    sensitive: bool = False,
+) -> dict[str, Any]:
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("task state does not exist")
+    selected_kind = observation_kind.strip()
+    if selected_kind not in CAPABILITY_OBSERVATION_KINDS:
+        raise ValueError("unsupported capability observation kind")
+    selected_destination = suggested_destination.strip().lower()
+    if selected_destination == "shared":
+        raise ValueError("capability observations cannot be routed to shared memory")
+    if selected_destination not in {"personal", "project"}:
+        raise ValueError("capability observation destination must be personal or project")
+    if sensitive:
+        raise ValueError("sensitive capability observations cannot be recorded")
+    selected_topic = _safe_summary(topic, limit=160)
+    selected_observation = _safe_summary(observation, limit=500)
+    if selected_topic == "unknown" or selected_observation == "unknown":
+        raise ValueError("capability observation requires topic and observation")
+    selected_evidence = _capability_evidence_ref(evidence_ref)
+    topic_key = "-".join(re.findall(r"[a-z0-9]+", selected_topic.lower())) or hashlib.sha256(
+        selected_topic.encode("utf-8")
+    ).hexdigest()[:12]
+    evidence_key = hashlib.sha256(selected_evidence.encode("utf-8")).hexdigest()[:8]
+    stable_key = f"capability-{topic_key[:80]}-{selected_kind}-{evidence_key}"
+    candidate = {
+        "type": "capability_observation",
+        "kind": "capability_observation",
+        "stable_key": stable_key,
+        "topic": selected_topic,
+        "observation_kind": selected_kind,
+        "observation": selected_observation,
+        "summary": selected_observation,
+        "evidence_ref": selected_evidence,
+        "evidence_refs": [selected_evidence],
+        "suggested_destination": f"{selected_destination}_memory",
+        "destination": selected_destination,
+        "sensitive": False,
+        "status": "pending",
+    }
+    candidates = [dict(item) for item in state.get("knowledge_candidates", []) if isinstance(item, dict)]
+    for existing in candidates:
+        if existing.get("kind") == "capability_observation" and existing.get("stable_key") == stable_key:
+            return existing
+    candidates.append(candidate)
+    updated = dict(state)
+    updated["knowledge_candidates"] = candidates
+    recovery = dict(state.get("capability_recovery") or {})
+    recovery["observation_count"] = int(recovery.get("observation_count") or 0) + 1
+    updated["capability_recovery"] = recovery
+    updated["timestamps"] = {**dict(state["timestamps"]), "updated_at": _now()}
+    save_task_state(repo_root, updated)
+    return candidate
 
 
 def classify_risk(

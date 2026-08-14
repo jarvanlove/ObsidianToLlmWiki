@@ -69,7 +69,7 @@ Daily project work is exposed through the project cockpit:
 | `project_cockpit.py` | Build one privacy-bounded action projection for both static HTML/JSON and natural-language project status answers |
 | `file_back_query.py` | File answer/analysis back into wiki |
 | `handle_nl_request.py` | Route natural-language requests |
-| `project_session.py` | Generate AI coding task start/close checklists, schema-v2 structured-evidence receipts, seven-part explanation packages, human-understanding gates, and control-file update candidates |
+| `project_session.py` | Generate AI coding task start/close checklists, schema-v2 structured-evidence receipts, seven-part explanation packages, human-understanding gates, evidence-based capability candidates, and control-file update candidates |
 | `ui_governance.py` | Create and validate project-local UI task records, locked visual baselines, Design Authority approvals, and visual close evidence |
 | `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
 | `runtime_manager.py` | Orchestrate one-command setup and Git-safe whole-product updates |
@@ -142,6 +142,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - User-facing daily workflow should stay low-noise: normal path is `开始工作` -> `继续` -> `收工`; advanced commands remain available but secondary.
 - A close workflow is not complete while `.obsidiantowiki/session-receipt.json` has a blocked verification gate or pending candidates. Schema v2 stores structured `evidence`, `gate_results`, `explanation_package`, and `knowledge_candidates`; v1 prose receipts load as `legacy_unstructured` and cannot silently close.
 - Every new close receipt carries the same seven-part explanation package. P3 passes automatically, P2 displays without ritual, P1 requires hash-bound human understanding, and P0 also requires explicit authorization; AI-originated confirmation is rejected.
+- Capability recovery is signal-based and non-blocking: one lightweight intervention per task, no aggregate score, and only auditable behavior becomes a pending candidate. Capability candidates enter receipts only after verification and understanding pass, never route directly to shared memory, and still require receipt resolution plus the existing memory compiler.
 - Source ingestion runs an extraction gate before derivatives; blocked sources cannot produce document maps or section notes.
 - Long-document maps group front matter and TOC pages separately, accept only defensible chapter headings, and label size-based chapter continuations explicitly.
 - Reingestion may delete only obsolete section files recorded by the previous generated document map; it must not delete hand-authored knowledge pages.

@@ -37,4 +37,18 @@ otw.py understand --repo-root <repo> --confirmed-by <human> --understood-impact-
 
 For P0, also pass `--explicit-authorization`. Then resolve the receipt candidates normally.
 
-Capability-recovery observation and review-card behavior belong to M4 Task 9 and are not defined here.
+## Capability Recovery
+
+Capability recovery is optional learning support, not a score or release gate. Offer one lightweight intervention per task only when at least one observable signal exists: a new concept, P1/P0 risk, a repeated issue in the same module, an AI misjudgment, or consecutive skipped understanding opportunities.
+
+Offer exactly three choices:
+
+1. Let me judge the root cause first.
+2. Explain the call chain.
+3. Skip learning this time.
+
+Record only auditable events such as identifying a root cause, call chain, risk boundary, rollback point, scope expansion, or verification gap. Never record a comprehensive ability score, personality judgment, source code, secret, or private absolute path.
+
+Capability observations are pending knowledge candidates. They appear in a close receipt only after verification and human-understanding gates pass, then wait for the existing receipt resolution and memory compiler. The default suggested destination is personal memory; project memory is allowed when explicitly justified. Capability observations never route directly to shared memory, and no candidate writes directly to a core Wiki page.
+
+Ordinary natural-language auto-triggering belongs to Task 10. Until then, the Agent invokes the deterministic governance interface when an observable trigger or event occurs.

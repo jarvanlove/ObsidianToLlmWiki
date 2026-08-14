@@ -224,18 +224,24 @@ def _initial_snapshot_candidate(repo_root: Path) -> dict[str, Any] | None:
 
 def _automatic_candidates(repo_root: Path, report: dict[str, Any]) -> list[dict[str, Any]]:
     state = load_task_state(repo_root)
-    candidates = [dict(item) for item in state.get("knowledge_candidates", []) if isinstance(item, dict)]
+    stored_candidates = [dict(item) for item in state.get("knowledge_candidates", []) if isinstance(item, dict)]
     task = str(report.get("task") or state.get("task") or "").strip()
     task_id = str(report.get("task_id") or state.get("task_id") or "").strip()
     gate_results = report.get("gate_results") if isinstance(report.get("gate_results"), dict) else {}
     verification_gate = gate_results.get("verification_evidence") if isinstance(gate_results.get("verification_evidence"), dict) else {}
     understanding_gate = gate_results.get("human_understanding") if isinstance(gate_results.get("human_understanding"), dict) else {}
-    if (
+    gates_passed = (
         task
         and task_id
         and verification_gate.get("status") == "passed"
         and understanding_gate.get("status") == "passed"
-    ):
+    )
+    candidates = [
+        candidate
+        for candidate in stored_candidates
+        if candidate.get("kind") != "capability_observation" or gates_passed
+    ]
+    if gates_passed:
         candidates.append(
             {
                 "kind": "milestone",

@@ -17,6 +17,7 @@
 - Project AI session checklist: `project_session.py` / `.ps1`.
   `close` writes schema-v2 `.obsidiantowiki/session-receipt.json`; the Agent passes repeatable `--evidence` JSON or `--evidence-file`, then resolves every candidate. A prose-only `--verification` value is legacy compatibility input and cannot close.
   P1/P0 close stops at the human-understanding gate and shows the seven-part explanation package. After a real named human confirms impact and remaining risk, run `otw.py understand --repo-root <repo> --confirmed-by <human> --understood-impact-and-risks --confirmation-source human`; P0 also requires `--explicit-authorization`. Never infer confirmation from AI output, tool output, silence, or a generic continuation request.
+  Capability learning remains optional and non-blocking. The Agent offers the fixed three choices only on a bounded trigger, records only an allowlisted observable event with a receipt evidence reference, and leaves the resulting candidate pending for receipt resolution and memory review. Do not manually append observations to `10_personal`, project core pages, or `30_shared`; ordinary-request auto-triggering is not available until Task 10.
 - Human project status: ask “项目现在怎么样” or run `otw.py cockpit build --repo-root <repo>`. `cockpit open` opens only the generated local file; the output contains summaries and evidence labels, not source code or private absolute paths.
 - Governance: `lint_wiki.py` / `.ps1`.
 - Rebuild indexes: `rebuild_indexes.py` / `.ps1`.
