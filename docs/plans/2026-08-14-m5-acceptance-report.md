@@ -11,7 +11,7 @@ Project scaffold: v4
 
 M5 Tasks 10–12 are machine-accepted. Ordinary requests can enter governance without requiring the user to remember a command; the system stops only at a real root-cause, scope, risk, or human-understanding boundary. Stable `2.0.0` was selected only after all three disposable pilots passed.
 
-Product-owner approval of M5 remains an explicit checkpoint and is not inferred from machine acceptance.
+The product owner explicitly approved M5 on 2026-08-14. This closes the M0-M5 implementation iteration. The feature branch intentionally remains unmerged because approval did not authorize a `main` merge.
 
 ## A-J Acceptance
 
@@ -56,4 +56,4 @@ All pilots use temporary local Git projects. Their directories are removed after
 - Git remains the code authority; the private Wiki records durable rationale and evidence, not a second code copy.
 - Human confirmation is a governance record, not an operating-system permission boundary. Production authorization still depends on the real deployment platform.
 - The current attached project has zero active atomic memory cards; compiler dry-run is valid, but existing manually maintained core pages should only be migrated through the explicit backup/manifest workflow.
-- M5 is ready for product-owner review. Do not merge the feature branch to `main` until the user approves the large-version iteration.
+- M5 is product-owner approved. Keep the feature branch separate until the user gives a later, explicit instruction to merge `main`.
