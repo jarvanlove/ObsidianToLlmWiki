@@ -51,6 +51,8 @@ Daily project work is exposed through the project cockpit:
 | `开始工作` | Detect attach state, attach if needed, run project session check, summarize next safe action |
 | `继续` | Restore context, inspect task/diff state, run task start guidance |
 | `收工` | Inspect diff and verification, generate control-file and wiki file-back candidates |
+| Ordinary read-only request | Answer without creating engineering task state |
+| Ordinary mutation request | Classify intent, start or resume the single engineering task, then apply P3–P0 gates |
 
 ## Core Scripts
 
@@ -68,7 +70,7 @@ Daily project work is exposed through the project cockpit:
 | `migrate_project_memory.py` | Dry-run, back up, migrate, conflict-check, and restore legacy core memory pages |
 | `project_cockpit.py` | Build one privacy-bounded action projection for both static HTML/JSON and natural-language project status answers |
 | `file_back_query.py` | File answer/analysis back into wiki |
-| `handle_nl_request.py` | Route natural-language requests |
+| `handle_nl_request.py` | Route explicit commands and ambient ordinary requests; classify read-only/code/external/destructive intent and enter the existing task lifecycle without a daemon |
 | `project_session.py` | Generate AI coding task start/close checklists, schema-v2 structured-evidence receipts, seven-part explanation packages, human-understanding gates, evidence-based capability candidates, and control-file update candidates |
 | `ui_governance.py` | Create and validate project-local UI task records, locked visual baselines, Design Authority approvals, and visual close evidence |
 | `otw.py` | Unified agent-facing runtime for natural language, lifecycle, retrieval, ingestion, doctor, and safe upgrade workflows |
@@ -117,6 +119,7 @@ Normal update order is preflight -> matching-baseline capture -> Git fast-forwar
 - Atomic memory cards preserve history; bounded current projections contain only active, relevant facts and links to evidence.
 - Legacy core pages must pass migration dry-run before replacement. Apply preserves byte-exact originals and a manifest; uncertain content remains review-required, and later user customization blocks overwrite.
 - Users are not responsible for manually maintaining generated cards or projections; natural language and the local cockpit are the normal human interface.
+- Ambient governance is entrypoint-driven, not process-driven: managed project instructions and the global Manager Skill route ordinary mutations through the public runtime, while optional adapters may only report coverage and no background daemon is required.
 - Static cockpit HTML/JSON and natural-language status answers must consume the same projection; cockpit output is local derived state under `.obsidiantowiki/`, never a second source of truth.
 - The SQLite retrieval index is derived cache only; it must be safe to delete and rebuild from Markdown.
 - Agent/API integrations consume stable retrieval results instead of redefining vault scanning, filtering, provenance, or freshness rules.

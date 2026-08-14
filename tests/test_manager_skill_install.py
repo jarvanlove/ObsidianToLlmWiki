@@ -36,7 +36,14 @@ class ManagerSkillInstallTests(unittest.TestCase):
 
             agents_skill = agents_root / "obsidiantowiki-manager" / "SKILL.md"
             claude_skill = claude_root / "obsidiantowiki-manager" / "SKILL.md"
-            self.assertIn(REPO_ROOT.as_posix(), agents_skill.read_text(encoding="utf-8"))
+            installed_text = agents_skill.read_text(encoding="utf-8")
+            self.assertIn(REPO_ROOT.as_posix(), installed_text)
+            self.assertIn("read_only", installed_text)
+            self.assertIn("code_change", installed_text)
+            self.assertIn("external_mutation", installed_text)
+            self.assertIn("destructive", installed_text)
+            self.assertIn("one status line", installed_text)
+            self.assertIn("no background daemon", installed_text)
             self.assertTrue(claude_skill.exists())
 
             agents_skill.write_text("# User customized manager\n", encoding="utf-8")

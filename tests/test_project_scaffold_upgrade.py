@@ -49,6 +49,8 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
 
             agents = repo / "AGENTS.md"
             agents.write_text(agents.read_text(encoding="utf-8") + "\nUser-owned rule.\n", encoding="utf-8")
+            claude = repo / "CLAUDE.md"
+            claude.write_text(claude.read_text(encoding="utf-8") + "\nUser-owned Claude rule.\n", encoding="utf-8")
             lifecycle = repo / "docs/ai-workflows/AI_CODING_LIFECYCLE.md"
             lifecycle.write_text("# User lifecycle\n", encoding="utf-8")
             upgraded = subprocess.run(
@@ -61,7 +63,14 @@ class ProjectScaffoldUpgradeTests(unittest.TestCase):
                 encoding="utf-8",
             )
             self.assertEqual(upgraded.returncode, 0, upgraded.stderr)
-            self.assertIn("User-owned rule.", agents.read_text(encoding="utf-8"))
+            agents_text = agents.read_text(encoding="utf-8")
+            claude_text = claude.read_text(encoding="utf-8")
+            self.assertIn("User-owned rule.", agents_text)
+            self.assertIn("User-owned Claude rule.", claude_text)
+            self.assertIn("read_only", agents_text)
+            self.assertIn("code_change", agents_text)
+            self.assertIn("external_mutation", claude_text)
+            self.assertIn("destructive", claude_text)
             self.assertEqual(lifecycle.read_text(encoding="utf-8"), "# User lifecycle\n")
             self.assertTrue(candidate.exists())
 

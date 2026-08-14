@@ -34,6 +34,9 @@ Read `wiki.context.json` first if it exists. Use the paths below as the human-re
 - Reuse shared patterns when similar problems have already been solved elsewhere.
 - Do not treat `AGENTS.md` as this tool's parent instruction file.
 - Daily user-facing project commands are `开始工作`, `继续`, and `收工`; file reading, strict checks, and file-back are agent responsibilities.
+- Classify every ordinary request before acting: `read_only` creates no task; `code_change`, `external_mutation`, and `destructive` must enter the public runtime governance route before edits or external actions.
+- Keep ambient P3/P2 governance to one status line. Interrupt only for an unknown root cause, scope drift, P1/P0 confirmation, insufficient evidence, or a required understanding gate.
+- Optional adapters may report governance coverage, but ambient governance must not depend on a background daemon.
 - Run AI coding tasks through the project lifecycle: task_start -> task_plan -> task_implement -> task_verify -> task_close -> memory_file_back.
 - Classify user-facing work as U0/U1/U2/U3 UI impact. For U1+ tasks, create and follow `docs/design/UI_CONTRACT.md` and the matching `docs/design/ui-tasks/<id>.yaml` through the public runtime.
 - A named UI Skill is an executor, not design authority. U2/U3 production implementation requires an approved visual direction; UI close requires browser screenshots, Visual QA, and accessibility evidence.

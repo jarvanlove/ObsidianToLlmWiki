@@ -1,11 +1,11 @@
 ---
 name: obsidiantowiki-manager
-description: Operate ObsidianToWiki from natural language for project attach, daily sessions, retrieval, ingestion, and safe upgrades.
+description: Operate ObsidianToWiki from natural language for ambient engineering governance, project attach, daily sessions, retrieval, ingestion, and safe upgrades.
 ---
 
 # ObsidianToWiki Manager
 
-Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, knowledge ingestion, wiki retrieval, or says `开始工作`, `继续`, or `收工` in a coding project.
+Use this Skill for ordinary coding requests in an attached project as well as when the user mentions ObsidianToWiki, project wiki attachment, knowledge ingestion, wiki retrieval, or says `开始工作`, `继续`, or `收工`.
 
 ## Runtime
 
@@ -21,6 +21,15 @@ Use this Skill when the user mentions ObsidianToWiki, project wiki attachment, k
 - Keep advanced commands as a diagnostic fallback, not the normal interaction.
 
 ## Routing
+
+### Ambient engineering governance
+
+- Before acting on an ordinary request, route the original wording through `otw.py ask "<request>" --repo-root <project>`.
+- The runtime classifies the intent as `read_only`, `code_change`, `external_mutation`, or `destructive`. A read-only request creates no task; every mutation starts or resumes the single governed task before edits or external actions.
+- Keep P3/P2 ambient handling to one status line. Interrupt only for an unknown root cause, scope drift, P1/P0 confirmation, insufficient verification evidence, or a required human-understanding gate.
+- P1 requires accountable-human confirmation. P0 additionally requires explicit authorization. Never self-confirm either gate.
+- Optional adapters may report whether governance coverage is active, but there is no background daemon and correctness must not depend on one.
+- Keep the explicit commands below as manual fallbacks and compatibility routes.
 
 - `开始工作`: run `otw.py start --repo-root <project> [--task <request>]`; use its bounded Context Receipt without asking the user to maintain the wiki.
 - `继续`: run `otw.py continue --repo-root <project> [--task <request>]`; keep the active task identity and rerun the read-only Context/budget check.

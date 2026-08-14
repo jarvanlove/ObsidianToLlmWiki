@@ -8,6 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from engineering_governance import classify_risk, load_task_state, save_task_state, set_task_risk
 from wiki_lib import normalize_tags
 
 
@@ -56,6 +57,23 @@ def run_project_session(repo_root: Path, command: str, extra_args: list[str] | N
     run_python("project_session.py", args)
 
 
+def run_project_session_json(repo_root: Path, command: str, extra_args: list[str] | None = None) -> dict[str, object]:
+    args = [command, "--repo-root", str(repo_root), "--format", "json"]
+    if extra_args:
+        args.extend(extra_args)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT_DIR / "project_session.py"), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    payload = json.loads(result.stdout)
+    if not isinstance(payload, dict):
+        raise ValueError("project session JSON must be an object")
+    return payload
+
+
 def load_required_project_context(repo_root: Path) -> tuple[dict[str, object], Path, str, str]:
     context = load_project_context(repo_root)
     if not context:
@@ -67,6 +85,35 @@ def load_required_project_context(repo_root: Path) -> tuple[dict[str, object], P
         raise SystemExit("wiki.context.json 缺少 project_slug")
     project_name = load_project_name(wiki_root, project_slug)
     return context, wiki_root, project_slug, project_name
+
+
+def classify_engineering_intent(text: str) -> str:
+    lowered = text.strip().lower()
+    compact = lowered.replace(" ", "")
+    if any(
+        token in compact
+        for token in ("删除", "清空", "销毁", "永久移除", "drop", "truncate", "destroy", "erase", "removeproduction")
+    ):
+        return "destructive"
+    if any(
+        token in compact
+        for token in ("部署", "上线", "发布到", "推送到", "发送到", "写入外部", "deploy", "publish", "push", "send")
+    ):
+        return "external_mutation"
+    if compact.startswith(
+        ("解释", "说明", "分析", "查看", "审查", "总结", "为什么", "是什么", "怎么理解", "explain", "review", "analyze", "summarize", "why", "what")
+    ):
+        return "read_only"
+    if any(
+        token in compact
+        for token in (
+            "修复", "修改", "新增", "增加", "添加", "创建", "生成", "实现", "重构", "开发", "编码", "改成",
+            "调整", "优化", "更新", "升级", "安装", "执行", "运行", "做一个", "fix", "change", "add", "create",
+            "generate", "implement", "refactor", "build", "update", "upgrade", "install", "run", "execute", "write",
+        )
+    ):
+        return "code_change"
+    return "read_only"
 
 
 def classify_request(text: str) -> str:
@@ -101,7 +148,53 @@ def classify_request(text: str) -> str:
         return "ingest_project"
     if any(token in compact for token in ("记下来", "写回", "沉淀")) and "结论" in compact:
         return "file_back"
-    raise SystemExit(f"暂不支持的自然语言请求: {text}")
+    return classify_engineering_intent(text)
+
+
+def classify_ambient_risk(request: str, intent: str) -> dict[str, object]:
+    classification = classify_risk(request, intent=intent)
+    level = str(classification["level"])
+    if intent == "destructive" and level != "P0":
+        return {
+            "level": "P0",
+            "reasons": [*classification["reasons"], "destructive intent requires explicit authorization"],
+            "source": "deterministic-rule",
+        }
+    if intent == "external_mutation" and level in {"P3", "P2"}:
+        return {
+            "level": "P1",
+            "reasons": [*classification["reasons"], "external mutation requires responsibility confirmation"],
+            "source": "deterministic-rule",
+        }
+    return classification
+
+
+def handle_ambient_governance(repo_root: Path, request: str, intent: str) -> None:
+    if intent == "read_only":
+        print("治理未创建任务 · read_only")
+        return
+
+    load_required_project_context(repo_root)
+    report = run_project_session_json(repo_root, "start", ["--task", request.strip()])
+    state = load_task_state(repo_root)
+    if not state:
+        raise ValueError("ambient governance did not create or resume a task")
+
+    if bool(report.get("resumed")):
+        risk = str((state.get("risk") or {}).get("level") or "P2")
+        print(f"治理已恢复 · {state['task_id']} · {risk} · 继续原任务")
+        return
+
+    state["intent"] = intent
+    save_task_state(repo_root, state)
+    state = set_task_risk(repo_root, classify_ambient_risk(request, intent))
+    risk = str(state["risk"]["level"])
+    if risk == "P0":
+        print(f"治理需授权 · {state['task_id']} · P0 · 责任确认和明确授权后才能实施")
+    elif risk == "P1":
+        print(f"治理需确认 · {state['task_id']} · P1 · 责任确认后才能实施")
+    else:
+        print(f"治理已启动 · {state['task_id']} · {risk} · 可继续")
 
 
 def infer_file_back_destination(text: str, has_project_context: bool) -> str:
@@ -340,6 +433,9 @@ def main() -> None:
         return
     if request_kind == "file_back":
         handle_file_back(repo_root, args.request, args.title, args.question, args.conclusion, tags)
+        return
+    if request_kind in {"read_only", "code_change", "external_mutation", "destructive"}:
+        handle_ambient_governance(repo_root, args.request, request_kind)
         return
 
     raise SystemExit(f"未处理的请求类型: {request_kind}")

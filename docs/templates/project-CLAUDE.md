@@ -30,6 +30,8 @@ project_memory: 20_projects/active/<project-slug>/project.memory.md
 - Read `wiki.context.json` first when it exists, then use this file as the human-readable bootstrap.
 - Use the public `runtime_root` from `wiki.context.json`; private copied scripts are compatibility assets, not the canonical runtime.
 - Daily user-facing project commands are `开始工作`, `继续`, and `收工`; Context budget checks, candidate generation, post-resolution memory compilation, and cockpit refresh are agent responsibilities.
+- Classify ordinary requests as `read_only`, `code_change`, `external_mutation`, or `destructive`; read-only work creates no task, while every write or external action must enter the public Runtime governance route first.
+- Keep P3/P2 to one status line. Interrupt only for an unknown root cause, scope drift, P1/P0 confirmation, insufficient evidence, or an understanding gate; do not depend on a background daemon.
 - For local implementation tasks, read `PRODUCT_SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `TESTING.md`, `DEPLOYMENT.md`, `OPERATIONS.md`, and `SECURITY.md` directly.
 - Open the project wiki pages before making changes.
 - Write durable conclusions back into the wiki.

@@ -11,4 +11,4 @@ else
     exit 127
 fi
 
-"$PYTHON_BIN" "$SCRIPT_DIR/handle_nl_request.py" "$@"
+exec "$PYTHON_BIN" "$SCRIPT_DIR/handle_nl_request.py" "$@"
